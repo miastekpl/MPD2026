@@ -16,6 +16,7 @@
 // ============================================================
 
 #include "pattern_buttons.h"
+#include "pattern_layout.h"
 #include "patterns.h"
 #include "painting_engine.h"
 #include "buzzer.h"
@@ -103,7 +104,15 @@ uint16_t PatternButtonHandler::readAllPins() {
 
 // ============ Inicjalizacja ============
 
+void PatternButtonHandler::setLayout(uint8_t l) {
+    layout = (l == PBL_SOFTKEY) ? PBL_SOFTKEY : PBL_CLASSIC;
+    storage.saveButtonLayout(layout);
+    DBG_PRINTF("[PAT_BTN] Uklad przyciskow: %s\n", layout == PBL_SOFTKEY ? "SOFT-KEY 10+GRUPA" : "KLASYCZNY 15");
+}
+
 void PatternButtonHandler::begin() {
+    layout = (storage.loadButtonLayout() == PBL_SOFTKEY) ? PBL_SOFTKEY : PBL_CLASSIC;
+
     // Wire juz zainicjalizowany przez RTC (begin w rtc_handler)
     // Sprawdz czy MCP23017 odpowiada na I2C
     Wire.beginTransmission(MCP23017_I2C_ADDR);
@@ -138,6 +147,15 @@ void PatternButtonHandler::begin() {
 // ============ Cykliczna aktualizacja ============
 
 void PatternButtonHandler::update() {
+    // Grupa OŚ/KRAWĘDŹ podąża za wybranym wzorcem (z dowolnego źródła: przyciski, WWW, moduł 7")
+    STATE_LOCK();
+    PatternID curPat = g_state.currentPattern;
+    STATE_UNLOCK();
+    if ((int8_t)curPat != lastPatSeen) {
+        lastPatSeen = (int8_t)curPat;
+        group = patternGroupOf((int)curPat, group);
+    }
+
     if (!ready) {
         // Proba reconnectu co 5s
         unsigned long now = millis();
@@ -184,7 +202,22 @@ void PatternButtonHandler::update() {
     // Znajdz pierwszy wciśnięty przycisk (priorytet: najniższy bit)
     for (uint8_t i = 0; i < MCP23017_NUM_BUTTONS; i++) {
         if (pressed & (1 << i)) {
-            PatternID pat = bitToPattern(i);
+            PatternID pat;
+            if (layout == PBL_SOFTKEY) {
+                if (i == SOFTKEY_GROUP_BIT) {
+                    group = (group == PGROUP_AXIS) ? PGROUP_EDGE : PGROUP_AXIS;
+                    g_state.displayNeedsUpdate = true;
+                    buzzer.beep(1800, 60);
+                    eventLog.logf("PAT_BTN", "Grupa wzorcow: %s", group == PGROUP_AXIS ? "OS" : "KRAWEDZ");
+                    break;
+                }
+                int pi = softKeyPattern(group, i);
+                if (pi < 0) break;                                   // przycisk nieaktywny na tej stronie
+                pat = (PatternID)pi;
+                if (pat == PAT_CUSTOM && !patternMgr.isCustomValid()) break;   // wzorzec własny niezapisany
+            } else {
+                pat = bitToPattern(i);
+            }
 
             // Zmień wzorzec (z uwzględnieniem Smart/Instant)
             if (g_state.machineState == STATE_PAINTING) {

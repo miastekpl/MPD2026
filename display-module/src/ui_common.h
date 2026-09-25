@@ -73,7 +73,7 @@ void      uiGlyphSet(lv_obj_t* o, int patIdx, bool reversed, const Status& st);
 
 // ---- Ekrany / nakładki ----
 void uiBuildMain();
-void uiOpenPicker(bool assignMode, int favSlot);
+void uiOpenPicker();
 void uiOpenMenu();
 void uiOpenStats();
 void uiOpenSettings();

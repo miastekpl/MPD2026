@@ -217,6 +217,16 @@ bool StorageManager::loadSwitchMode() {
     return prefs.getBool("sw_smart", true);
 }
 
+void StorageManager::saveButtonLayout(uint8_t layout) {
+    NvsSession s(false);
+    prefs.putUChar("pat_btn_lay", layout);
+}
+
+uint8_t StorageManager::loadButtonLayout() {
+    NvsSession s(true);
+    return prefs.getUChar("pat_btn_lay", 0);
+}
+
 void StorageManager::saveMTH(uint32_t totalSec) {
     NvsSession s(false);
     prefs.putUInt("mth_sec", totalSec);

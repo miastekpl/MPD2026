@@ -16,6 +16,7 @@
 #include "statistics.h"
 #include "guns.h"
 #include "patterns.h"
+#include "pattern_buttons.h"
 #include "rtc_handler.h"
 #include "storage.h"
 #include "report_logger.h"
@@ -626,6 +627,22 @@ void TrassarWebServer::handleControl() {
             storage.saveSwitchMode(smart);
             DBG_PRINTF("[WWW] Tryb przelaczania: %s\n", smart ? "SMART" : "INSTANT");
         }
+    } else if (action == "set_pattern_group") {
+        if (server.hasArg("value")) {
+            int val = server.arg("value").toInt();
+            if (val == 0 || val == 1) patternButtons.setGroup((uint8_t)val);
+            else result = "grupa 0 (os) lub 1 (krawedz)";
+        } else {
+            result = "brak parametru value";
+        }
+    } else if (action == "set_pattern_layout") {
+        if (server.hasArg("value")) {
+            int val = server.arg("value").toInt();
+            if (val == 0 || val == 1) patternButtons.setLayout((uint8_t)val);
+            else result = "uklad 0 (klasyczny) lub 1 (soft-key)";
+        } else {
+            result = "brak parametru value";
+        }
     } else if (action == "set_tank_capacity") {
         if (server.hasArg("value")) {
             float val = server.arg("value").toFloat();
@@ -925,6 +942,8 @@ String TrassarWebServer::getStateJson() {
     doc["autoResumeEnabled"] = paintEngine.isAutoResumeEnabled();
     doc["semiSegment"] = paintEngine.getSemiSegmentNum();
     doc["patDist"] = serialized(String(paintEngine.getPatternDistance(), 2));
+    doc["patGroup"] = (int)patternButtons.getGroup();          // 0 = OS, 1 = KRAWEDZ
+    doc["patBtnLayout"] = (int)patternButtons.getLayout();     // 0 = klasyczny 15, 1 = soft-key 10+GRUPA
 
     // Przelaczanie wzorcow
     doc["smartSwitch"] = paintEngine.isSmartSwitch();

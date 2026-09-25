@@ -82,6 +82,8 @@ Wszystkie wartości liczbowe (`speed`, `distance`, `area`, `ppm`, `gpsLat`, …)
 | `reversed` | bool | wzorzec odwrócony (P-3a/P-3b) |
 | `gapStart` | bool | aktywny start od przerwy |
 | `customValid` | bool | wzorzec własny zapisany i gotowy |
+| `patGroup` | int | aktywna grupa wzorców dla przycisków soft-key i ekranu 7": 0 = OŚ, 1 = KRAWĘDŹ. Podąża za wybranym wzorcem (WŁASNY nie zmienia grupy) |
+| `patBtnLayout` | int | układ fizycznych przycisków wzorców: 0 = klasyczny (15), 1 = soft-key (10 + GRUPA) |
 | `activeSlot` | int | aktywny slot wzorca własnego (0–2) |
 | `slotsValid` | bool[3] | które sloty są zapisane |
 | `customGuns` | array | konfiguracja wzorca własnego: `[nazwa, szer.cm, kreska_m, przerwa_m]`; kreska = 0 → pistolet ciągły; tylko pistolety aktywne (obecne, gdy `customValid`) |
@@ -142,6 +144,8 @@ jest chwilowo zablokowany (klient powinien ponowić); HTTP 400 przy braku `actio
 | `set_tank_capacity` | 1–1000 | pojemność zbiornika [L]; zapis NVS |
 | `set_paint_rate` | 0.1–5.0 | współczynnik zużycia [l/m²]; zapis NVS |
 | `refuel` | 1–1000 | dolanie farby [L] (dodaje do bieżącego poziomu) |
+| `set_pattern_group` | 0 / 1 | aktywna grupa wzorców: 0 = OŚ, 1 = KRAWĘDŹ (zmienia mapowanie przycisków soft-key i strony na ekranie 7"; RAM) |
+| `set_pattern_layout` | 0 / 1 | układ przycisków wzorców: 0 = klasyczny 15, 1 = soft-key 10 + GRUPA; zapis NVS |
 | `save_custom_pattern` | patrz niżej | zapis wzorca własnego do slotu i aktywacja slotu |
 | `activate_slot` | 0–2 | aktywuj zapisany slot |
 | `get_slot_config` | `slot`=0–2 | zwraca `{"guns":[{"mode":0..2,"ln":..,"gp":..}, ...],"valid":bool}` (odpowiedź JSON, nie `result`) |
@@ -158,6 +162,15 @@ jest chwilowo zablokowany (klient powinien ponowić); HTTP 400 przy braku `actio
 | `slot` | 0–2 | slot (domyślnie 0) |
 
 Po zapisie slot jest aktywowany (wzorzec własny staje się ważny); aby go użyć, wyślij `set_pattern` z wartością 15.
+
+### Grupy wzorców (OŚ / KRAWĘDŹ)
+
+| Grupa | Wzorce (indeksy) | Przyciski soft-key S1…S10 |
+|-------|------------------|---------------------------|
+| 0 = OŚ | P-1a … P-4 (0–9) | S1…S10 = indeksy 0…9 |
+| 1 = KRAWĘDŹ | P-6, P-7a … P-7d (10–14), WŁASNY (15) | S1…S6 = 10, 11, 12, 13, 14, 15; S7…S10 puste |
+
+Odpowiada `src/pattern_layout.h` (`softKeyPattern`, `patternGroupOf`).
 
 ### Indeksy wzorców
 

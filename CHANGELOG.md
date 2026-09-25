@@ -14,10 +14,16 @@ Repozytorium MPD2026 powstało jako kopia `Trassar_251v3` (firmware 2.52.0, comm
 ### Dodano
 - **Moduł wyświetlacza 7"** (`display-module/`, wersja 0.1.0) — Sunton ESP32-8048S070C (ESP32-S3, 800×480, GT911), LVGL 8.3.
   - Klient WiFi sterownika: WebSocket `:81` (status) + `POST /api/control` (polecenia), fallback HTTP, kolejka poleceń z priorytetem STOP i ponawianiem.
-  - Ekran roboczy w stylu kabinowym: prędkość 7-segmentowa, animowany widok drogi w perspektywie zsynchronizowany z dystansem wzorca, 9 szybkich wzorców + lista wszystkich 16, pasek trybów AUTO/SEMI/RĘCZNY, START/PAUZA/WZNÓW/NASTĘPNA LINIA, STOP, START OD PRZERWY, odwracanie P-3a/P-3b, kapsuły pistoletów, banery alarmów, ostrzeżenie o utracie łączności.
+  - Ekran roboczy w stylu kabinowym: prędkość 7-segmentowa, animowany widok drogi w perspektywie zsynchronizowany z dystansem wzorca, wzorce na dwóch stronach **OŚ / KRAWĘDŹ** (10 przycisków S1–S10) + lista wszystkich 16 w menu, pasek trybów AUTO/SEMI/RĘCZNY, START/PAUZA/WZNÓW/NASTĘPNA LINIA, STOP, START OD PRZERWY, odwracanie P-3a/P-3b, kapsuły pistoletów, banery alarmów, ostrzeżenie o utracie łączności.
   - Menu: statystyki, edytor wzorca własnego (3 sloty), kalibracja enkodera, farba/zbiornik (tankowanie), ustawienia (progi prędkości, Smart/Instant, auto-wznowienie, jasność), hasło WiFi, informacje.
   - Zawsze dostępny przycisk STOP (także w oknach menu); polecenie STOP wysyłane priorytetowo.
 - **Sterownik:** pole `patDist` w `GET /api/status` i broadcastcie WebSocket (dystans od startu wzorca). Zmiana wyłącznie addytywna.
+- **Ograniczenie liczby przycisków fizycznych wzorców (bez utraty wzorców):** nowy układ **soft-key** — 10 przycisków S1–S10 + przycisk GRUPA (11 zamiast 15). Wzorce podzielone na grupy: **OŚ** (P-1a…P-4, 10 wzorców) i **KRAWĘDŹ** (P-6, P-7a…P-7d, WŁASNY). Etykiety wzorców widnieją na ekranie 7" obok przycisków (styl STiM).
+  - `src/pattern_layout.h` — czysta logika mapowania (z testami jednostkowymi w `test/test_native`).
+  - `src/pattern_buttons.*` — układ klasyczny (15, domyślny, bez zmian) lub soft-key; grupa automatycznie podąża za wybranym wzorcem; przycisk GRUPA na GPB2 (krótki ton 1,8 kHz).
+  - API: pola `patGroup`, `patBtnLayout` w statusie; polecenia `set_pattern_group`, `set_pattern_layout` (zapis układu w NVS).
+  - Moduł 7": przełącznik OŚ/KRAWĘDŹ w pasku górnym, kolumny S1–S10 pokazują wzorce grupy, ustawienie układu przycisków w MENU → USTAWIENIA, „WSZYSTKIE WZORCE" w MENU. Zastąpiło to wcześniejsze „ulubione" wzorce.
+- **Grafiki SVG** (`docs/schematy/`, generator `generate_svgs.py`): pełny **schemat elektryczny** wszystkich połączeń (piny z `src/config.h`, złącza J1–J5, zawory, WiFi do modułu 7", przyciski soft-key na MCP23017), makieta ekranu roboczego oraz **4 propozycje wizualizacji panelu** (A kabinowy, B pas pod ekranem, C pionowy, D grzybek STOP) — opis w `docs/WIZUALIZACJE.md`.
 - **Dokumentacja napisana od nowa:** `README.md`, `docs/INSTRUKCJA_OBSLUGI.md`, `docs/SCHEMAT_PODLACZEN.md` (diagramy, mapa GPIO, schematy modułów, złącza J1–J5, zasilanie, diagnostyka), `docs/API_WWW.md`, nowy `docs/MODUL_WYSWIETLACZA.md`, `CLAUDE.md`.
 
 ### Poprawiono (dokumentacja)

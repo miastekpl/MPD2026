@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="760" viewBox="0 0 1100 760">
+<rect x="0" y="0" width="1100" height="760" fill="#f8f9fa"/>
+<text x="30" y="38" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="22" fill="#0b1f4a" text-anchor="start" font-weight="bold" >Propozycja D — duży grzybek awaryjnego STOP + blok klawiszy 2x5</text>
+<text x="30" y="62" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#444" text-anchor="start" font-weight="normal" >Fizyczny STOP jako czerwony grzybek (styk NO równolegle do przycisku STOP, GPIO 39). Klawisze wzorców w bloku po prawej.</text>
+<rect x="40" y="90" width="1020" height="640" rx="26" fill="#e9ecef" stroke="#495057" stroke-width="4" />
+<rect x="50" y="100" width="1000" height="620" rx="20" fill="#dee2e6" stroke="#adb5bd" stroke-width="1.5" />
+<text x="68" y="126" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#212529" text-anchor="start" font-weight="bold" >TRASSAR  MPD2026</text>
+<rect x="222" y="142" width="576" height="352" rx="8" fill="#111" stroke="#000" stroke-width="2" />
+<g transform="translate(230,150) scale(0.7)">
+<rect x="0" y="0" width="800" height="480" rx="0" fill="#07142e" stroke="#000" stroke-width="0" />
+<text x="12" y="34" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#35f27a" text-anchor="start" font-weight="bold" >POŁĄCZONO</text>
+<text x="212" y="34" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#35f27a" text-anchor="start" font-weight="bold" >GPS 8 sat</text>
+<rect x="350" y="12" width="110" height="30" rx="6" fill="#0f2557" stroke="none" stroke-width="1" />
+<rect x="350" y="12" width="82" height="30" rx="6" fill="#1fa34a" stroke="none" stroke-width="1" />
+<text x="405" y="33" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#fff" text-anchor="middle" font-weight="normal" >FARBA 72%</text>
+<rect x="470" y="6" width="78" height="46" rx="10" fill="#2f86ff" stroke="#ffd400" stroke-width="5" />
+<text x="509" y="36" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="middle" font-weight="bold" >OŚ</text>
+<rect x="552" y="6" width="96" height="46" rx="10" fill="#1f52d6" stroke="none" stroke-width="1" />
+<text x="600" y="34" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >KRAWĘDŹ</text>
+<rect x="654" y="6" width="138" height="46" rx="10" fill="#1f52d6" stroke="none" stroke-width="1" />
+<text x="723" y="36" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="middle" font-weight="bold" >MENU</text>
+<rect x="6" y="62" width="138" height="62" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
+<rect x="12" y="69" width="40" height="48" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="30" y="72" width="4" height="42" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="138" y="103" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="26" fill="#fff" text-anchor="end" font-weight="bold" >P-6</text>
+<rect x="6" y="128" width="138" height="62" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
+<rect x="12" y="135" width="40" height="48" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="30" y="138" width="4" height="42" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="138" y="169" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="26" fill="#fff" text-anchor="end" font-weight="bold" >P-7a</text>
+<rect x="6" y="194" width="138" height="62" rx="10" fill="#2f86ff" stroke="#ffd400" stroke-width="5" />
+<rect x="12" y="201" width="40" height="48" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="30" y="204" width="4" height="42" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="138" y="235" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="26" fill="#fff" text-anchor="end" font-weight="bold" >P-7b</text>
+<rect x="6" y="260" width="138" height="62" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
+<rect x="12" y="267" width="40" height="48" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="30" y="270" width="4" height="42" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="138" y="301" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="26" fill="#fff" text-anchor="end" font-weight="bold" >P-7c</text>
+<rect x="6" y="326" width="138" height="62" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
+<rect x="12" y="333" width="40" height="48" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="30" y="336" width="4" height="42" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="138" y="367" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="26" fill="#fff" text-anchor="end" font-weight="bold" >P-7d</text>
+<rect x="656" y="62" width="138" height="62" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
+<rect x="662" y="69" width="40" height="48" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="680" y="72" width="4" height="42" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="788" y="103" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#fff" text-anchor="end" font-weight="bold" >WŁASNY</text>
+<rect x="656" y="128" width="138" height="62" rx="10" fill="#27314d" stroke="#3b4a73" stroke-width="2" />
+<rect x="656" y="194" width="138" height="62" rx="10" fill="#27314d" stroke="#3b4a73" stroke-width="2" />
+<rect x="656" y="260" width="138" height="62" rx="10" fill="#27314d" stroke="#3b4a73" stroke-width="2" />
+<rect x="656" y="326" width="138" height="62" rx="10" fill="#27314d" stroke="#3b4a73" stroke-width="2" />
+<text x="156" y="134" font-size="84" fill="#fff" text-anchor="start" font-weight="bold" font-family="Consolas, monospace">12.5</text>
+<text x="364" y="130" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="28" fill="#8fa3cc" text-anchor="start" font-weight="normal" >km/h</text>
+<text x="650" y="104" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="44" fill="#ffd400" text-anchor="end" font-weight="bold" >P-7b</text>
+<text x="650" y="130" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#35f27a" text-anchor="end" font-weight="normal" >AUTO  MALOWANIE</text>
+<text x="156" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="start" font-weight="normal" >DYST 1234.5 m    POW 148.1 m2    CZAS 12:34</text>
+<rect x="150" y="176" width="500" height="176" rx="6" fill="#143a7a" stroke="none" stroke-width="1" />
+<polygon points="230,350 570,350 450,180 350,180" fill="#1b1b1f" stroke="none" stroke-width="1" opacity="1"/>
+<polygon points="390,342 410,342 409,320 391,320" fill="#35f27a" stroke="none" stroke-width="1" opacity="1"/>
+<polygon points="392,286 408,286 407,270 393,270" fill="#ffd400" stroke="none" stroke-width="1" opacity="1"/>
+<polygon points="394,241 406,241 405,230 395,230" fill="#ffd400" stroke="none" stroke-width="1" opacity="1"/>
+<polygon points="396,212 404,212 403,205 397,205" fill="#ffd400" stroke="none" stroke-width="1" opacity="1"/>
+<rect x="240" y="346" width="320" height="4" rx="0" fill="#fff" stroke="none" stroke-width="1" />
+<rect x="150" y="356" width="78" height="32" rx="16" fill="#0f2557" stroke="#ffd400" stroke-width="3" />
+<text x="189" y="379" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="18" fill="#fff" text-anchor="middle" font-weight="normal" >P1</text>
+<rect x="234" y="356" width="78" height="32" rx="16" fill="#0f2557" stroke="#0f2557" stroke-width="3" />
+<text x="273" y="379" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="18" fill="#fff" text-anchor="middle" font-weight="normal" >P2</text>
+<rect x="318" y="356" width="78" height="32" rx="16" fill="#0f2557" stroke="#ffd400" stroke-width="3" />
+<text x="357" y="379" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="18" fill="#fff" text-anchor="middle" font-weight="normal" >P3</text>
+<rect x="402" y="356" width="78" height="32" rx="16" fill="#0f2557" stroke="#0f2557" stroke-width="3" />
+<text x="441" y="379" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="18" fill="#fff" text-anchor="middle" font-weight="normal" >P4</text>
+<rect x="486" y="356" width="78" height="32" rx="16" fill="#0f2557" stroke="#0f2557" stroke-width="3" />
+<text x="525" y="379" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="18" fill="#fff" text-anchor="middle" font-weight="normal" >P5</text>
+<rect x="570" y="356" width="78" height="32" rx="16" fill="#35f27a" stroke="#0f2557" stroke-width="3" />
+<text x="609" y="379" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="18" fill="#03210f" text-anchor="middle" font-weight="normal" >P6</text>
+<rect x="6" y="394" width="104" height="80" rx="10" fill="#2f86ff" stroke="#ffd400" stroke-width="5" />
+<text x="58" y="442" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="middle" font-weight="bold" >AUTO</text>
+<rect x="114" y="394" width="104" height="80" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
+<text x="166" y="442" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="middle" font-weight="bold" >SEMI</text>
+<rect x="222" y="394" width="104" height="80" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
+<text x="274" y="442" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="middle" font-weight="bold" >RĘCZNY</text>
+<rect x="336" y="394" width="214" height="80" rx="10" fill="#1fa34a" stroke="none" stroke-width="1" />
+<text x="443" y="445" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="28" fill="#fff" text-anchor="middle" font-weight="bold" >▶ START</text>
+<rect x="556" y="394" width="132" height="80" rx="10" fill="#d62828" stroke="none" stroke-width="1" />
+<text x="622" y="445" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="28" fill="#fff" text-anchor="middle" font-weight="bold" >■ STOP</text>
+<rect x="694" y="394" width="100" height="80" rx="10" fill="#1f52d6" stroke="none" stroke-width="1" />
+<text x="744" y="428" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="normal" >START OD</text>
+<text x="744" y="448" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="normal" >PRZERWY</text>
+</g>
+<circle cx="140" cy="270" r="70" fill="#7a0f0f" stroke="#450a0a" stroke-width="4"/>
+<circle cx="140" cy="270" r="58" fill="#d62828" stroke="#a01010" stroke-width="3"/>
+<text x="140" y="278" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="26" fill="#fff" text-anchor="middle" font-weight="bold" >STOP</text>
+<text x="140" y="366" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#495057" text-anchor="middle" font-weight="normal" >grzybek awaryjny</text>
+<rect x="840" y="154" width="94" height="56" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="887.0" y="188.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S1</text>
+<rect x="944" y="154" width="94" height="56" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="991.0" y="188.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S6</text>
+<rect x="840" y="221" width="94" height="56" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="887.0" y="255.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S2</text>
+<rect x="944" y="221" width="94" height="56" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="991.0" y="255.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S7</text>
+<rect x="840" y="288" width="94" height="56" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="887.0" y="322.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S3</text>
+<rect x="944" y="288" width="94" height="56" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="991.0" y="322.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S8</text>
+<rect x="840" y="355" width="94" height="56" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="887.0" y="389.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S4</text>
+<rect x="944" y="355" width="94" height="56" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="991.0" y="389.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S9</text>
+<rect x="840" y="422" width="94" height="56" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="887.0" y="456.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S5</text>
+<rect x="944" y="422" width="94" height="56" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="991.0" y="456.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S10</text>
+<rect x="80" y="410" width="130" height="62" rx="10" fill="#7a4b00" stroke="#ffd400" stroke-width="2" />
+<text x="145.0" y="443.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >GRUPA</text>
+<text x="145.0" y="459.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >OŚ ⇄ KRAWĘDŹ</text>
+<rect x="80" y="526" width="110" height="66" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="135.0" y="565.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >SELEKTOR</text>
+<rect x="210" y="526" width="110" height="66" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="265.0" y="561.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >GAP</text>
+<text x="265.0" y="577.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >od przerwy</text>
+<rect x="370" y="526" width="330" height="66" rx="12" fill="#1fa34a" stroke="#0b6b2e" stroke-width="3" />
+<text x="535" y="568" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="26" fill="#fff" text-anchor="middle" font-weight="bold" >START</text>
+<text x="70" y="710" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#495057" text-anchor="start" font-weight="normal" >Zaleta: najlepsza widoczność i dostępność STOP, klawisze wzorców zgrupowane. Wada: większa obudowa, więcej otworów (grzybek).</text>
+</svg>

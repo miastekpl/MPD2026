@@ -12,6 +12,7 @@
 
 // Import czystej logiki strzalu — IMPORT zamiast kopii!
 #include "gun_logic.h"
+#include "pattern_layout.h"
 
 // ============ Testy ============
 
@@ -188,10 +189,63 @@ void test_all_gun_modes_coverage() {
     }
 }
 
+// ============ Uklad przyciskow soft-key (pattern_layout.h) ============
+
+void test_softkey_axis_page_is_identity() {
+    for (int k = 0; k < SOFTKEY_COUNT; k++) {
+        TEST_ASSERT_EQUAL_INT(k, softKeyPattern(PGROUP_AXIS, k));
+    }
+}
+
+void test_softkey_edge_page_mapping() {
+    TEST_ASSERT_EQUAL_INT(10, softKeyPattern(PGROUP_EDGE, 0));   // P-6
+    TEST_ASSERT_EQUAL_INT(11, softKeyPattern(PGROUP_EDGE, 1));   // P-7a
+    TEST_ASSERT_EQUAL_INT(14, softKeyPattern(PGROUP_EDGE, 4));   // P-7d
+    TEST_ASSERT_EQUAL_INT(15, softKeyPattern(PGROUP_EDGE, 5));   // WLASNY
+    for (int k = 6; k < SOFTKEY_COUNT; k++) {
+        TEST_ASSERT_EQUAL_INT(-1, softKeyPattern(PGROUP_EDGE, k));
+    }
+}
+
+void test_softkey_out_of_range() {
+    TEST_ASSERT_EQUAL_INT(-1, softKeyPattern(PGROUP_AXIS, -1));
+    TEST_ASSERT_EQUAL_INT(-1, softKeyPattern(PGROUP_AXIS, SOFTKEY_COUNT));
+    TEST_ASSERT_EQUAL_INT(-1, softKeyPattern(PGROUP_EDGE, 99));
+}
+
+void test_softkey_all_16_patterns_reachable() {
+    bool reach[16] = {false};
+    for (int g = 0; g < 2; g++) {
+        for (int k = 0; k < SOFTKEY_COUNT; k++) {
+            int p = softKeyPattern((uint8_t)g, k);
+            if (p >= 0) reach[p] = true;
+        }
+    }
+    for (int p = 0; p < 16; p++) {
+        TEST_ASSERT_TRUE(reach[p]);
+    }
+}
+
+void test_pattern_group_of() {
+    TEST_ASSERT_EQUAL_UINT8(PGROUP_AXIS, patternGroupOf(0, PGROUP_EDGE));
+    TEST_ASSERT_EQUAL_UINT8(PGROUP_AXIS, patternGroupOf(9, PGROUP_EDGE));
+    TEST_ASSERT_EQUAL_UINT8(PGROUP_EDGE, patternGroupOf(10, PGROUP_AXIS));
+    TEST_ASSERT_EQUAL_UINT8(PGROUP_EDGE, patternGroupOf(14, PGROUP_AXIS));
+    // WLASNY zachowuje biezaca grupe
+    TEST_ASSERT_EQUAL_UINT8(PGROUP_AXIS, patternGroupOf(15, PGROUP_AXIS));
+    TEST_ASSERT_EQUAL_UINT8(PGROUP_EDGE, patternGroupOf(15, PGROUP_EDGE));
+}
+
 // ============ Main ============
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
+
+    RUN_TEST(test_softkey_axis_page_is_identity);
+    RUN_TEST(test_softkey_edge_page_mapping);
+    RUN_TEST(test_softkey_out_of_range);
+    RUN_TEST(test_softkey_all_16_patterns_reachable);
+    RUN_TEST(test_pattern_group_of);
 
     RUN_TEST(test_gun_off_never_fires);
     RUN_TEST(test_gun_continuous_always_fires);

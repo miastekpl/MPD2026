@@ -90,7 +90,7 @@ void uiOpenStats() {
 // ------------------------------------------------------------
 // Ustawienia
 // ------------------------------------------------------------
-static lv_obj_t *s_setMax, *s_setMin, *s_setBri, *s_setSwitch, *s_setResume;
+static lv_obj_t *s_setMax, *s_setMin, *s_setBri, *s_setSwitch, *s_setResume, *s_setLayout;
 static float    s_vMax = 15, s_vMin = 0;
 static uint32_t s_setTouchMs = 0;
 
@@ -130,6 +130,11 @@ static void onSetResume(lv_event_t*) {
     uiSendAction("set_auto_resume", g_st.autoResume ? 0 : 1);
 }
 
+static void onSetLayout(lv_event_t*) {
+    if (!requireOnline()) return;
+    uiSendAction("set_pattern_layout", g_st.patBtnLayout == 1 ? 0 : 1);
+}
+
 static void settingsUpdate() {
     if (!s_setMax) return;
     if (millis() - s_setTouchMs > 2500) { s_vMax = g_st.maxSpeed; s_vMin = g_st.minSpeed; }
@@ -144,11 +149,13 @@ static void settingsUpdate() {
     uiBtnSetColor(s_setSwitch, g_st.smartSwitch ? C_GREEN : C_ORANGE);
     uiBtnSetText(s_setResume, g_st.autoResume ? "WLACZONE" : "WYLACZONE");
     uiBtnSetColor(s_setResume, g_st.autoResume ? C_GREEN : C_BTN_DIS);
+    uiBtnSetText(s_setLayout, g_st.patBtnLayout == 1 ? "SOFT-KEY 10 + GRUPA" : "KLASYCZNE 15");
+    uiBtnSetColor(s_setLayout, g_st.patBtnLayout == 1 ? C_GREEN : C_BTN);
 }
 
 static void settingsClosed() {
     g_settings.save();
-    s_setMax = s_setMin = s_setBri = s_setSwitch = s_setResume = nullptr;
+    s_setMax = s_setMin = s_setBri = s_setSwitch = s_setResume = s_setLayout = nullptr;
 }
 
 void uiOpenSettings() {
@@ -158,19 +165,22 @@ void uiOpenSettings() {
     s_vMin = g_st.minSpeed;
     s_setTouchMs = 0;
 
-    int y = 76;
+    int y = 68;
     uiLabel(ov, "Maks. predkosc malowania [km/h]", 16, y + 14, FONT_M, C_TEXT);
     s_setMax = makeStepper(ov, 470, y, 0, onSetStep, 130);
-    y += 76;
+    y += 66;
     uiLabel(ov, "Min. predkosc malowania [km/h]", 16, y + 14, FONT_M, C_TEXT);
     s_setMin = makeStepper(ov, 470, y, 1, onSetStep, 130);
-    y += 76;
+    y += 66;
     uiLabel(ov, "Zmiana wzorca w trakcie pracy", 16, y + 14, FONT_M, C_TEXT);
     s_setSwitch = uiBtn(ov, "", 470, y, 320, 52, C_GREEN, onSetSwitch, nullptr, FONT_M);
-    y += 76;
+    y += 66;
     uiLabel(ov, "Auto-wznowienie po postoju", 16, y + 14, FONT_M, C_TEXT);
     s_setResume = uiBtn(ov, "", 470, y, 320, 52, C_GREEN, onSetResume, nullptr, FONT_M);
-    y += 76;
+    y += 66;
+    uiLabel(ov, "Przyciski wzorcow (sterownik)", 16, y + 14, FONT_M, C_TEXT);
+    s_setLayout = uiBtn(ov, "", 470, y, 320, 52, C_BTN, onSetLayout, nullptr, FONT_M);
+    y += 66;
     uiLabel(ov, "Jasnosc ekranu", 16, y + 14, FONT_M, C_TEXT);
     s_setBri = makeStepper(ov, 470, y, 2, onSetStep, 130);
     settingsUpdate();

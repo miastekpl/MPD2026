@@ -43,7 +43,8 @@ src/                    # Cały kod źródłowy (.cpp + .h w jednym katalogu)
   buzzer.cpp/.h         # Buzzer pasywny (LEDC PWM)
   button_handler.cpp/.h # 3 przyciski fizyczne (START, STOP, SELECT)
   joystick.cpp/.h       # Joystick analogowy KY-023
-  pattern_buttons.cpp/.h # 15 przycisków wzorców (MCP23017 I2C)
+  pattern_buttons.cpp/.h # Przyciski wzorców (MCP23017 I2C): układ klasyczny 15 lub soft-key 10 + GRUPA
+  pattern_layout.h      # Czysta logika: grupy OŚ/KRAWĘDŹ i mapowanie soft-key (kopia w display-module/src/model.cpp!)
   rtc_handler.cpp/.h    # Zegar RTC DS1307
   gps_handler.cpp/.h    # GPS NEO-6M (UART2)
   gps_track.cpp/.h      # Zapis trasy GPS (GPX na SD, bufor PSRAM)

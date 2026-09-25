@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="1120" viewBox="0 0 760 1120">
+<rect x="0" y="0" width="760" height="1120" fill="#f8f9fa"/>
+<text x="30" y="38" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="22" fill="#0b1f4a" text-anchor="start" font-weight="bold" >Propozycja C — panel pionowy (jak na zdjęciu STiM)</text>
+<text x="30" y="62" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#444" text-anchor="start" font-weight="normal" >Ekran obrócony do pionu (480x800). Wymaga trybu portretowego UI (LVGL) — do wykonania.</text>
+<rect x="40" y="90" width="680" height="980" rx="26" fill="#e9ecef" stroke="#495057" stroke-width="4" />
+<rect x="50" y="100" width="660" height="960" rx="20" fill="#dee2e6" stroke="#adb5bd" stroke-width="1.5" />
+<text x="68" y="126" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#212529" text-anchor="start" font-weight="bold" >TRASSAR  MPD2026</text>
+<rect x="228.0" y="152" width="304" height="496" rx="8" fill="#111" stroke="#000" stroke-width="2" />
+<rect x="236.0" y="160" width="288" height="480" rx="0" fill="#07142e" stroke="none" stroke-width="1" />
+<text x="380.0" y="190" font-size="30" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas, monospace">12.5 km/h</text>
+<text x="380.0" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#35f27a" text-anchor="middle" font-weight="normal" >P-3a  AUTO  MALOWANIE</text>
+<polygon points="276.0,630 484.0,630 434.0,360 326.0,360" fill="#1b1b1f" stroke="none" stroke-width="1" opacity="1"/>
+<polygon points="372.0,464 388.0,464 387.0,430 373.0,430" fill="#ffd400" stroke="none" stroke-width="1" opacity="1"/>
+<polygon points="374.0,394 386.0,394 385.0,370 375.0,370" fill="#ffd400" stroke="none" stroke-width="1" opacity="1"/>
+<polygon points="375.0,336 385.0,336 384.0,320 376.0,320" fill="#ffd400" stroke="none" stroke-width="1" opacity="1"/>
+<polygon points="376.0,291 384.0,291 383.0,280 377.0,280" fill="#ffd400" stroke="none" stroke-width="1" opacity="1"/>
+<polygon points="377.0,257 383.0,257 382.0,250 378.0,250" fill="#ffd400" stroke="none" stroke-width="1" opacity="1"/>
+<text x="380.0" y="258" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#8fa3cc" text-anchor="middle" font-weight="bold" >OŚ   |   KRAWĘDŹ</text>
+<rect x="80" y="166" width="92" height="76" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="126.0" y="206.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S1</text>
+<text x="126.0" y="222.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >◄</text>
+<rect x="588" y="166" width="92" height="76" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="634.0" y="206.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S6</text>
+<text x="634.0" y="222.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >►</text>
+<rect x="80" y="262" width="92" height="76" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="126.0" y="302.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S2</text>
+<text x="126.0" y="318.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >◄</text>
+<rect x="588" y="262" width="92" height="76" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="634.0" y="302.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S7</text>
+<text x="634.0" y="318.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >►</text>
+<rect x="80" y="358" width="92" height="76" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="126.0" y="398.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S3</text>
+<text x="126.0" y="414.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >◄</text>
+<rect x="588" y="358" width="92" height="76" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="634.0" y="398.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S8</text>
+<text x="634.0" y="414.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >►</text>
+<rect x="80" y="454" width="92" height="76" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="126.0" y="494.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S4</text>
+<text x="126.0" y="510.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >◄</text>
+<rect x="588" y="454" width="92" height="76" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="634.0" y="494.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S9</text>
+<text x="634.0" y="510.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >►</text>
+<rect x="80" y="550" width="92" height="76" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="126.0" y="590.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S5</text>
+<text x="126.0" y="606.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >◄</text>
+<rect x="588" y="550" width="92" height="76" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="634.0" y="590.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >S10</text>
+<text x="634.0" y="606.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >►</text>
+<rect x="80" y="690" width="130" height="70" rx="10" fill="#7a4b00" stroke="#ffd400" stroke-width="2" />
+<text x="145.0" y="727.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >GRUPA</text>
+<text x="145.0" y="743.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >OŚ ⇄ KRAWĘDŹ</text>
+<rect x="230" y="690" width="130" height="70" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="295.0" y="731.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >SELEKTOR</text>
+<rect x="380" y="690" width="130" height="70" rx="10" fill="#2a3a6a" stroke="#8fa3cc" stroke-width="2" />
+<text x="445.0" y="727.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold" >GAP</text>
+<text x="445.0" y="743.0" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="normal" >od przerwy</text>
+<rect x="100" y="790" width="270" height="110" rx="16" fill="#1fa34a" stroke="#0b6b2e" stroke-width="3" />
+<text x="235" y="858" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="30" fill="#fff" text-anchor="middle" font-weight="bold" >START</text>
+<rect x="390" y="790" width="270" height="110" rx="16" fill="#d62828" stroke="#7a0f0f" stroke-width="3" />
+<text x="525" y="858" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="30" fill="#fff" text-anchor="middle" font-weight="bold" >STOP</text>
+<text x="70" y="1050" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#495057" text-anchor="start" font-weight="normal" >Zaleta: kształt znany operatorom STiM, wąska obudowa. Wada: wymaga przeróbki UI na tryb pionowy.</text>
+</svg>

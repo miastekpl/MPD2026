@@ -49,6 +49,10 @@ public:
     void saveSwitchMode(bool smart);
     bool loadSwitchMode();
 
+    // Uklad przyciskow wzorcow: 0 = klasyczny (15), 1 = soft-key (10 + GRUPA)
+    void saveButtonLayout(uint8_t layout);
+    uint8_t loadButtonLayout();
+
     // Motogodziny (MTH) - calkowity czas pracy silnika
     void saveMTH(uint32_t totalSec);
     uint32_t loadMTH();

@@ -44,7 +44,7 @@ flowchart LR
         MCU["ESP32-S3<br/>Core 1: logika, pistolety<br/>Core 0: WiFi AP, HTTP, WebSocket"]
         TFT["TFT ILI9341 2.8 in<br/>+ karta SD"]
         BTN["Przyciski: START, STOP,<br/>SELEKTOR, GAP + joystick"]
-        MCP["MCP23017 + 15 przycisków<br/>wzorców"]
+        MCP["MCP23017 + przyciski wzorców<br/>(15 klasycznych albo 10 + GRUPA)"]
         RTC["RTC DS1307"]
         REL["Moduł przekaźników<br/>6 kanałów, opto"]
         BUZ["Buzzer pasywny"]
@@ -101,7 +101,7 @@ Szczegóły API: [API_WWW.md](API_WWW.md). Moduł 7": [MODUL_WYSWIETLACZA.md](MO
 | 6 | Enkoder | KY-040 / HW-040 (inkrementalny + przycisk SW) | 1 | 5-pin, na kole pomiarowym |
 | 7 | Przyciski sterujące | BS-33B monostabilne NO | 3 | START, STOP, SELEKTOR (panel) |
 | 8 | Ekspander I/O | MCP23017 DIP-28 | 1 | I2C 0x20, zasilanie 3,3 V |
-| 9 | Przyciski wzorców | Monostabilne NO, montaż panelowy | 15 | Po jednym na wzorzec P-1a … P-7d |
+| 9 | Przyciski wzorców | Monostabilne NO, montaż panelowy | 15 (układ klasyczny) albo **11** (soft-key: 10 + GRUPA) | Klasyczny: po jednym na wzorzec P-1a … P-7d. Soft-key: S1–S10 przy krawędziach ekranu 7" + GRUPA |
 | 10 | Moduł przekaźników | 6-kanałowy 5 V, opto-izolowany, SRD-05VDC-SL-C | 1 | Wejścia aktywne stanem HIGH |
 | 11 | GPS | GY-NEO6MV2 (u-blox NEO-6M + antena) | 1 | UART2, 9600 baud |
 | 12 | Joystick | KY-023 analogowy 2-osiowy + przycisk | 1 | 3,3 V |
@@ -246,10 +246,47 @@ Przewody SPI: ekranowane, max 15–20 cm.
    Pull-up 4,7 kΩ na SDA/SCL są na module DS1307.
 ```
 
-### 4.3 MCP23017 — 15 przycisków wzorców
+### 4.3 MCP23017 — przyciski wzorców (układ klasyczny 15 lub soft-key 10 + GRUPA)
 
 Każdy przycisk: jeden styk do pinu MCP23017, drugi do GND. Pull-up włączane programowo (bez rezystorów
-zewnętrznych). Skan co 20 ms z debounce (dwa zgodne odczyty).
+zewnętrznych). Skan co 20 ms z debounce (dwa zgodne odczyty). Wybór układu: moduł 7" (MENU → USTAWIENIA →
+*Przyciski wzorców*) lub polecenie `set_pattern_layout` (0 = klasyczny, 1 = soft-key); zapis w NVS sterownika.
+Okablowanie MCP23017 jest wspólne — zmienia się tylko liczba zamontowanych przycisków i ich znaczenie.
+
+#### Układ soft-key: 11 przycisków (zalecany przy module 7")
+
+```
+        ┌────────────────────── ekran 7" ──────────────────────┐
+   S1 ◄─┤ etykieta P-1a / P-6                 etykieta P-2a / WŁASNY ├─► S6
+   S2 ◄─┤ etykieta P-1b / P-7a                etykieta P-2b          ├─► S7
+   S3 ◄─┤ etykieta P-1c / P-7b                etykieta P-3a          ├─► S8
+   S4 ◄─┤ etykieta P-1d / P-7c                etykieta P-3b          ├─► S9
+   S5 ◄─┤ etykieta P-1e / P-7d                etykieta P-4           ├─► S10
+        └───────────────────────────────────────────────────────────┘
+                                 [ GRUPA OŚ/KRAWĘDŹ ]   (np. przy narożniku ekranu)
+```
+
+| Przycisk | Pin MCP23017 | Bit | Wzorzec — grupa OŚ | Wzorzec — grupa KRAWĘDŹ |
+|----------|--------------|-----|--------------------|--------------------------|
+| S1 | GPA0 (pin 21) | 0 | P-1a | P-6 |
+| S2 | GPA1 (22) | 1 | P-1b | P-7a |
+| S3 | GPA2 (23) | 2 | P-1c | P-7b |
+| S4 | GPA3 (24) | 3 | P-1d | P-7c |
+| S5 | GPA4 (25) | 4 | P-1e | P-7d |
+| S6 | GPA5 (26) | 5 | P-2a | WŁASNY |
+| S7 | GPA6 (27) | 6 | P-2b | — |
+| S8 | GPA7 (28) | 7 | P-3a | — |
+| S9 | GPB0 (1) | 8 | P-3b | — |
+| S10 | GPB1 (2) | 9 | P-4 | — |
+| **GRUPA** | **GPB2 (3)** | 10 | przełącza OŚ ⇄ KRAWĘDŹ | |
+
+Piny GPB3–GPB6 (pozycje 4–7) są w układzie soft-key nieużywane. Przycisk GRUPA daje krótki ton 1,8 kHz;
+aktywna grupa jest zapamiętywana w RAM i **podąża za wybranym wzorcem** (zmiana wzorca z panelu WWW lub ekranu 7"
+przełącza grupę). Etykiety wzorców na ekranie 7" są zawsze zgodne z aktualną grupą.
+
+#### Układ klasyczny: 15 przycisków (domyślny, działa bez modułu 7")
+
+Jeden przycisk na wzorzec — tabela poniżej.
 
 ```
    MCP23017 DIP-28 (widok z góry)
@@ -570,6 +607,15 @@ STOP z pilota lub pedału wyzwala tę samą ścieżkę co przycisk panelowy, w t
 
 ## 8. Kompletny diagram okablowania
 
+Pełny schemat elektryczny (wszystkie moduły, numery GPIO, złącza, zasilanie, zawory, WiFi do modułu 7" oraz
+układ przycisków soft-key na MCP23017) jest w pliku graficznym — otwórz go w przeglądarce lub VS Code:
+
+![Schemat połączeń elektronicznych](schematy/schemat_polaczen.svg)
+
+Plik: [schematy/schemat_polaczen.svg](schematy/schemat_polaczen.svg) (generowany skryptem
+[generate_svgs.py](schematy/generate_svgs.py) na podstawie pinów z `src/config.h`). Propozycje wyglądu panelu:
+[WIZUALIZACJE.md](WIZUALIZACJE.md). Schemat blokowy w ASCII poniżej zachowano dla podglądu w terminalu.
+
 ```
                                     ANTENA GPS (na zewnątrz)
                                            │
@@ -578,7 +624,7 @@ STOP z pilota lub pedału wyzwala tę samą ścieżkę co przycisk panelowy, w t
    │   ┌───────────┐ SPI  ┌──────────────────┐                                  │
    │   │           │◄────►│ TFT ILI9341 + SD │                                  │
    │   │           │ I2C  ├──────────────────┤                                  │
-   │   │ ESP32-S3  │◄────►│ DS1307 │ MCP23017│◄── 15 przycisków wzorców         │
+   │   │ ESP32-S3  │◄────►│ DS1307 │ MCP23017│◄── przyciski wzorców (15 / 10+GR)│
    │   │  N16R8    │ UART │ GPS NEO-6M       │                                  │
    │   │           │◄────►│                  │                                  │
    │   │           │◄─────── START/STOP/SEL (panel)  ◄── J4 pilot, J5 nożny     │

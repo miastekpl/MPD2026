@@ -45,7 +45,7 @@ display-module/
     ├── lgfx_sunton7.h          # konfiguracja panelu RGB, podświetlenia i dotyku GT911
     ├── lv_conf.h               # konfiguracja LVGL (16 bit, czcionki 12–48, wyłączone zbędne widgety)
     ├── app_config.h            # SSID, IP, porty, LINK_STALE_MS, ANIM_PERIOD_MS
-    ├── settings_store.h        # ustawienia w NVS: hasło WiFi, jasność, 9 ulubionych wzorców
+    ├── settings_store.h        # ustawienia w NVS: hasło WiFi, jasność
     ├── model.h/.cpp            # struktury Status/StatsData/SlotCfg, parsery JSON, tabela PATTERNS
     ├── link.h/.cpp             # WiFi STA + WebSocket + HTTP + kolejka poleceń (zadanie FreeRTOS)
     ├── ui_common.h             # paleta, deklaracje pomocnicze, widgety
@@ -146,13 +146,30 @@ pozycja w cyklu zgadza się z rzeczywistością (z dokładnością ekstrapolacji
 bloki) pochodzi bezpośrednio z pola `guns` i jest źródłem prawdy. Przy starszym sterowniku bez `patDist` używany
 jest dystans sesji (przybliżenie).
 
-### 7.4 Ustawienia lokalne (NVS, przestrzeń `mpddisp`)
+### 7.4 Strony wzorców OŚ / KRAWĘDŹ
+
+Boczne kolumny (5 + 5 przycisków S1–S10) pokazują wzorce aktywnej **grupy**:
+
+| Grupa | S1…S10 |
+|-------|--------|
+| OŚ (0) | P-1a, P-1b, P-1c, P-1d, P-1e, P-2a, P-2b, P-3a, P-3b, P-4 |
+| KRAWĘDŹ (1) | P-6, P-7a, P-7b, P-7c, P-7d, WŁASNY, —, —, —, — |
+
+- Mapowanie `softKeyPattern(grupa, klawisz)` w `model.cpp` jest **kopią `src/pattern_layout.h` sterownika** —
+  zmieniać oba miejsca razem (test jednostkowy w `test/test_native`).
+- Grupa jest **jednym źródłem prawdy w sterowniku** (`patGroup` w statusie): sterują nią fizyczny przycisk GRUPA,
+  przełącznik OŚ/KRAWĘDŹ na ekranie (`set_pattern_group`) i automatyczne podążanie za wybranym wzorcem. Ekran po dotknięciu
+  zakładki pokazuje wybór natychmiast (nadpisanie na 1,5 s), po czym przyjmuje wartość ze sterownika.
+- Starszy sterownik bez `patGroup`: strona wyznaczana lokalnie z aktualnego wzorca.
+- Układ fizycznych przycisków (klasyczny 15 / soft-key 10 + GRUPA) przełącza się w MENU → USTAWIENIA
+  (`set_pattern_layout`); nie zmienia wyglądu ekranu — strony OŚ/KRAWĘDŹ są zawsze dostępne dotykiem.
+
+### 7.5 Ustawienia lokalne (NVS, przestrzeń `mpddisp`)
 
 | Klucz | Znaczenie |
 |-------|-----------|
 | `wpass` | hasło WiFi sterownika |
 | `bright` | jasność podświetlenia (20–255) |
-| `fav` | 9 indeksów ulubionych wzorców (domyślnie 0, 1, 5, 7, 8, 9, 11, 12, 15) |
 
 ## 8. Dodawanie funkcji
 
@@ -174,8 +191,8 @@ uzasadnieniem niejawnych ograniczeń.
 - Brak w module: pobieranie raportów SD, czyszczenie dysz, pomiar dystansu, reset etapu/liczników, eksport
   statystyk, factory reset, tryb nocny, wybór DEMO — dostępne na sterowniku i w panelu WWW.
 - Tryb RĘCZNY wymaga fizycznego START na sterowniku (zabezpieczenie sprzętowe, celowe).
-- Przyciski fizyczne obok ekranu (soft-key) — planowane przy projekcie obudowy; przewidziano dołożenie ich do
-  modułu lub przejęcie 15 przycisków wzorców sterownika.
+- Przyciski fizyczne S1–S10 + GRUPA (soft-key) są podłączone do MCP23017 **sterownika** (nie do modułu 7"); moduł tylko
+  wyświetla etykiety obok nich. Rozmieszczenie mechaniczne — przy projekcie obudowy.
 - Weryfikacja na sprzęcie: firmware kompiluje się poprawnie; ustawienia panelu (timingi, piny) pochodzą z
   dokumentacji społeczności i wymagają potwierdzenia na egzemplarzu.
 - Sygnał dźwiękowy z modułu — brak (alarmy słychać z buzzera sterownika).

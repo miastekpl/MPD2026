@@ -11,21 +11,10 @@
 #include <esp_heap_caps.h>
 
 // ------------------------------------------------------------
-// Wybór wzorca (wszystkie 16) lub przypisanie do przycisku ulubionego
+// Wybór wzorca — wszystkie 16 na jednej liście (poza stronami OŚ/KRAWĘDŹ)
 // ------------------------------------------------------------
-static bool s_assignMode = false;
-static int  s_assignSlot = -1;
-
 static void onPickCard(lv_event_t* e) {
     int pat = (int)(intptr_t)lv_event_get_user_data(e);
-    if (s_assignMode) {
-        if (s_assignSlot >= 0 && s_assignSlot < NUM_FAV) {
-            g_settings.fav[s_assignSlot] = (uint8_t)pat;
-            g_settings.save();
-        }
-        uiCloseOverlay();
-        return;
-    }
     if (!g_online) { uiToast("brak lacznosci ze sterownikiem", true); return; }
     if (pat == PAT_CUSTOM_IDX && !g_st.customValid) {
         uiToast("wzorzec wlasny nie jest zapisany", true);
@@ -35,16 +24,14 @@ static void onPickCard(lv_event_t* e) {
     uiCloseOverlay();
 }
 
-void uiOpenPicker(bool assignMode, int favSlot) {
-    s_assignMode = assignMode;
-    s_assignSlot = favSlot;
-    lv_obj_t* ov = uiOverlay(assignMode ? "WZORZEC DLA PRZYCISKU" : "WSZYSTKIE WZORCE", nullptr);
+void uiOpenPicker() {
+    lv_obj_t* ov = uiOverlay("WSZYSTKIE WZORCE", nullptr);
 
     for (int i = 0; i < NPAT; i++) {
         int col = i % 4, row = i / 4;
         int x = 8 + col * 196;
         int y = 62 + row * 104;
-        bool sel = (!assignMode && i == g_st.patternIdx);
+        bool sel = (i == g_st.patternIdx);
         bool custom = (i == PAT_CUSTOM_IDX);
         lv_obj_t* b = uiBtn(ov, "", x, y, 190, 98, sel ? C_BTN_SEL : C_BTN, onPickCard,
                             (void*)(intptr_t)i, FONT_L);
@@ -85,21 +72,23 @@ static void onMenuItem(lv_event_t* e) {
         case 4: uiOpenSettings();     break;
         case 5: uiOpenWifi();         break;
         case 6: uiOpenInfo();         break;
+        case 7: uiOpenPicker();       break;
     }
 }
 
 void uiOpenMenu() {
     lv_obj_t* ov = uiOverlay("MENU", nullptr);
-    static const char* names[7] = {
+    static const char* names[8] = {
         LV_SYMBOL_LIST "\nSTATYSTYKI",
         LV_SYMBOL_EDIT "\nWZOR WLASNY",
         LV_SYMBOL_REFRESH "\nKALIBRACJA",
         LV_SYMBOL_TINT "\nFARBA / ZBIORNIK",
         LV_SYMBOL_SETTINGS "\nUSTAWIENIA",
         LV_SYMBOL_WIFI "\nPOLACZENIE WiFi",
-        LV_SYMBOL_WARNING "\nINFORMACJE"
+        LV_SYMBOL_WARNING "\nINFORMACJE",
+        LV_SYMBOL_DIRECTORY "\nWSZYSTKIE WZORCE"
     };
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 8; i++) {
         int c = i % 3, r = i / 3;
         uiBtn(ov, names[i], 16 + c * 260, 76 + r * 132, 252, 120, C_BTN, onMenuItem,
               (void*)(intptr_t)i, FONT_M);
@@ -183,7 +172,7 @@ static lv_obj_t* s_infoLbl = nullptr;
 
 static void infoUpdate() {
     if (!s_infoLbl) return;
-    char buf[640];
+    char buf[960];
     const Status& s = g_st;
     snprintf(buf, sizeof(buf),
         "#8FA3CC Modul wyswietlacza:# v" DISPLAY_FW_VERSION "   wolny RAM %u KB   PSRAM %u KB\n"
@@ -192,7 +181,8 @@ static void infoUpdate() {
         "#8FA3CC GPS:# %s   satelity %d   HDOP %.1f   predkosc GPS %.1f km/h   trasa GPX: %s\n"
         "#8FA3CC Enkoder:# %s   %.1f imp/m\n"
         "#8FA3CC Progi predkosci:# min %.1f  max %.1f km/h\n"
-        "#8FA3CC Farba:# %.1f L (%d%%)",
+        "#8FA3CC Farba:# %.1f L (%d%%)\n"
+        "#8FA3CC Przyciski wzorcow:# %s   strona: %s",
         (unsigned)(heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024),
         (unsigned)(heap_caps_get_free_size(MALLOC_CAP_SPIRAM) / 1024),
         s.firmware, (unsigned long)s.uptime, s.clients,
@@ -200,7 +190,9 @@ static void infoUpdate() {
         s.gpsFix ? "fix" : "brak fix", s.gpsSat, s.gpsHdop, s.gpsSpeed, s.gpxRec ? "zapis" : "wylaczona",
         s.calibrated ? "skalibrowany" : "NIESKALIBROWANY", s.ppm,
         s.minSpeed, s.maxSpeed,
-        s.paintLevelL, s.paintLevelPct);
+        s.paintLevelL, s.paintLevelPct,
+        s.patBtnLayout == 1 ? "soft-key 10+GRUPA" : "klasyczne 15",
+        s.patGroup == 1 ? "KRAWEDZ" : "OS");
     lv_label_set_text(s_infoLbl, buf);
 }
 

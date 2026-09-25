@@ -16,8 +16,17 @@ public:
     bool isReady() const { return ready; }
     uint16_t getRawState() const { return lastRaw; }
 
+    // Układ przycisków (klasyczny 15 / soft-key 10 + GRUPA) i aktywna grupa (OŚ / KRAWĘDŹ)
+    uint8_t getLayout() const { return layout; }
+    void    setLayout(uint8_t l);          // zapis w NVS
+    uint8_t getGroup() const { return group; }
+    void    setGroup(uint8_t g) { group = (g == 1) ? 1 : 0; }
+
 private:
     bool ready = false;
+    volatile uint8_t layout = 0;           // PatternBtnLayout
+    volatile uint8_t group = 0;            // PatternGroup
+    int8_t lastPatSeen = -1;               // do automatycznego przełączania grupy za wzorcem
 
     // Stan przycisków (16 bitów: PortA[7:0] + PortB[7:0])
     uint16_t lastRaw = 0xFFFF;        // Poprzedni odczyt (pull-up = HIGH = 1)

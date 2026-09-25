@@ -112,6 +112,10 @@ bool parseStatus(const char* json, size_t len, Status& o) {
     o.semiLineComplete = doc["semiLineComplete"] | false;
     o.semiSegment      = doc["semiSegment"] | 0;
 
+    o.hasPatGroup    = doc["patGroup"].is<int>();
+    o.patGroup       = (doc["patGroup"] | 0) == 1 ? 1 : 0;
+    o.patBtnLayout   = (doc["patBtnLayout"] | 0) == 1 ? 1 : 0;
+
     o.smartSwitch    = doc["smartSwitch"] | true;
     o.patternPending = doc["patternPending"] | false;
     jstr(doc["pendingPattern"], o.pendingCode, sizeof(o.pendingCode));
@@ -204,6 +208,19 @@ float patternCycle(const Status& s) {
         if (c.mode == GM_DASH && c.line > 0) return c.line + c.gap;
     }
     return 0;
+}
+
+int softKeyPattern(int group, int key) {
+    if (key < 0 || key >= SOFTKEY_COUNT) return -1;
+    if (group == 0) return key;
+    static const int edge[SOFTKEY_COUNT] = {10, 11, 12, 13, 14, 15, -1, -1, -1, -1};
+    return edge[key];
+}
+
+int patternGroupOf(int patIdx, int currentGroup) {
+    if (patIdx >= 0 && patIdx <= 9) return 0;
+    if (patIdx >= 10 && patIdx <= 14) return 1;
+    return currentGroup;
 }
 
 const char* stateName(MState s) {

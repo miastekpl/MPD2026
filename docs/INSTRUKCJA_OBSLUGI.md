@@ -90,16 +90,17 @@ wysoki kontrast w słońcu.
 
 ### 3.1 Ekran roboczy
 
+Makieta graficzna ekranu: [schematy/ekran_roboczy.svg](schematy/ekran_roboczy.svg).
+
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ ⌂POŁĄCZONO  GPS 8 sat  [▓▓▓▓░ FARBA 72%]  MALOWANIE            [ MENU ]  │ ← pasek górny
+│ ⌂POŁĄCZONO  GPS 8 sat  [▓▓▓▓░ FARBA 72%]  [ OŚ ][KRAWĘDŹ]      [ MENU ]  │ ← pasek górny
 ├───────────┬────────────────────────────────────────────────────┬───────────┤
-│ ▌ P-1a    │  12.5 km/h                                   P-3a   │ P-2a      │
-│ ▌ P-1b    │  (duże cyfry 7-segmentowe)         AUTO  MALOWANIE  │ P-7a      │
-│ ▌ P-2a    │  DYST 1234.5 m   POW 148.1 m2   CZAS 12:34         │ P-7b      │
-│ ▌ P-3a  ◄─┼─ zaznaczony wzorzec (żółta ramka)                   │ WŁASNY    │
-│ ▌ P-3b    │ ┌───────────── widok drogi w perspektywie ───────┐ │ WSZYSTKIE │
-│           │ │  ░  ┃  ░     OCZEKUJE: P-2a   [ ODWRÓĆ ]       │ │           │
+│ S1 P-1a   │  12.5 km/h                                   P-3a   │ S6 P-2a   │
+│ S2 P-1b   │  (duże cyfry 7-segmentowe)         AUTO  MALOWANIE  │ S7 P-2b   │
+│ S3 P-1c   │  DYST 1234.5 m   POW 148.1 m2   CZAS 12:34         │ S8 P-3a ◄ │
+│ S4 P-1d   │ ┌───────────── widok drogi w perspektywie ───────┐ │ S9 P-3b   │
+│ S5 P-1e   │ │  ░  ┃  ░     OCZEKUJE: P-2a   [ ODWRÓĆ ]       │ │ S10 P-4   │
 │           │ │   ▮  ┃  ▮     kreski i przerwy jadą do maszyny  │ │           │
 │           │ │ ──────── linia bieżącej pozycji ────────────── │ │           │
 │           │ └────────────────────────────────────────────────┘ │           │
@@ -107,6 +108,7 @@ wysoki kontrast w słońcu.
 ├───────────┴────────────────────────────────────────────────────┴───────────┤
 │ [AUTO] [SEMI] [RĘCZNY]     [ ▶ START ]        [ ■ STOP ]   [START OD PRZERWY] │ ← pasek dolny
 └────────────────────────────────────────────────────────────────────────────┘
+   (strona „OŚ" — 10 wzorców w 10 przyciskach S1–S10; strona „KRAWĘDŹ" — patrz 3.2)
 ```
 
 **Pasek górny**
@@ -118,8 +120,11 @@ wysoki kontrast w słońcu.
 | BRAK HASŁA (czerwony) | nie wpisano hasła WiFi |
 | GPS *N* sat (zielony) / brak (pomarańczowy) | fix GPS i liczba satelitów |
 | Pasek FARBA % | poziom farby w zbiorniku; pomarańczowy poniżej 15 %, czerwony poniżej 5 % |
-| Stan maszyny | GOTOWY, MALOWANIE, PAUZA, ZATRZYMANY |
+| **OŚ / KRAWĘDŹ** | przełącznik strony wzorców ([3.2](#32-wybór-wzorca)); aktywna strona ma żółtą ramkę |
 | MENU | otwiera menu ([3.6](#36-menu)) |
+
+Stan maszyny (GOTOWY, MALOWANIE, PAUZA, ZATRZYMANY) jest wyświetlany w linii pod kodem wzorca: zielony = malowanie,
+pomarańczowy = pauza.
 
 **Środek**
 
@@ -138,13 +143,24 @@ wysoki kontrast w słońcu.
 
 ### 3.2 Wybór wzorca
 
-- **Kolumny boczne** — 9 „ulubionych" wzorców + przycisk **WSZYSTKIE**. Dotknięcie wybiera wzorzec.
-  Zaznaczony wzorzec ma żółtą ramkę.
-- **Przypisanie innego wzorca do przycisku:** **przytrzymaj przycisk ok. 1 sekundę** → otwiera się lista
-  wzorców → dotknij wzorzec, który ma zastąpić dotychczasowy. Ustawienie jest zapamiętane.
-  Ustawienia domyślne: P-1a, P-1b, P-2a, P-3a, P-3b, P-4, P-7a, P-7b, WŁASNY.
-- **WSZYSTKIE WZORCE** — siatka 4 × 4 wszystkich 16 wzorców z miniaturą i nazwą. Wzorzec **WŁASNY** jest
-  aktywny tylko po zapisaniu ([3.6](#36-menu), Wzór własny).
+Wzorce są podzielone na **dwie strony według rodzaju malowania**. Przełączasz je przyciskami **OŚ** i
+**KRAWĘDŹ** w górnym pasku. Boczne kolumny (5 + 5 przycisków, **S1–S10**) zawsze pokazują wzorce aktywnej strony:
+
+| Strona | S1–S5 (lewa kolumna) | S6–S10 (prawa kolumna) |
+|--------|----------------------|------------------------|
+| **OŚ jezdni** (pistolety P1–P4), 10 wzorców | P-1a, P-1b, P-1c, P-1d, P-1e | P-2a, P-2b, P-3a, P-3b, P-4 |
+| **KRAWĘDŹ** (pistolety P5–P6), 5 wzorców + własny | P-6, P-7a, P-7b, P-7c, P-7d | WŁASNY (S6); S7–S10 puste |
+
+W ten sposób **wszystkie 16 wzorców jest dostępnych** bez przycisku na każdy z nich.
+
+- **Dotknięcie przycisku S1–S10** wybiera wzorzec. Zaznaczony wzorzec ma żółtą ramkę. Przyciski puste (strona
+  KRAWĘDŹ) są nieaktywne.
+- **Strona podąża za wzorcem:** gdy wzorzec zostanie wybrany z innego miejsca (panel WWW, przyciski fizyczne),
+  strona przełącza się sama na tę, do której wzorzec należy (WŁASNY nie zmienia strony).
+- **MENU → WSZYSTKIE WZORCE** — siatka 4 × 4 wszystkich 16 wzorców z miniaturą i nazwą (dla wygody).
+  Wzorzec **WŁASNY** jest aktywny tylko po zapisaniu ([3.6](#36-menu), Wzór własny).
+- **Przyciski fizyczne:** w układzie **soft-key** te same przyciski S1–S10 oraz przycisk **GRUPA** (przełącznik
+  OŚ/KRAWĘDŹ) są fizycznymi przyciskami przy ekranie — patrz [4.1](#41-przyciski) i [sekcja 5.5](#55-podział-na-grupy-oś-i-krawędź).
 - **Zmiana podczas malowania** zależy od ustawienia **Smart/Instant** (MENU → USTAWIENIA):
   - **SMART** — bieżący cykl kreska+przerwa jest dokańczany, nowy wzorzec zaczyna się po nim. Na drodze widać
     żółty napis `OCZEKUJE: P-2a (po cyklu)`.
@@ -218,7 +234,8 @@ Polecenie STOP wysłane z modułu jest powtarzane kilkukrotnie; jeśli nie dotrz
 | **WZÓR WŁASNY** | Edytor 3 slotów. Wybierz **SLOT 1–3** (gwiazdka `*` = zapisany). Dla każdego pistoletu P1–P6 wybierz **WYŁ / CIĄGŁY / PRZERYW.**; dla przerywanego ustaw **KRESKĘ** i **PRZERWĘ** w metrach (przyciski − / +, krok 0,5 m, zakres 0,5–50 m). **ZAPISZ** zapisuje w sterowniku; **ZAPISZ I UŻYJ** dodatkowo wybiera wzorzec WŁASNY. Wymaga łączności. |
 | **KALIBRACJA** | Prowadzi przez procedurę 10 m ([sekcja 8](#8-kalibracja-enkodera)). Pokazuje status i impulsy/metr. |
 | **FARBA / ZBIORNIK** | Poziom w zbiorniku, zużycie w sesji, liczba tankowań. Pojemność zbiornika (− / + co 10 L). **Tankowanie:** +10, +25, +50, +100 L lub **DO PEŁNA**. |
-| **USTAWIENIA** | Maks. prędkość malowania (5–30 km/h, krok 1); min. prędkość (0–10 km/h, krok 0,5); **Smart / Instant**; **auto-wznowienie**; jasność ekranu. Wartości progów odczytywane są ze sterownika; błędne kombinacje (np. min ≥ max) sterownik odrzuca z komunikatem. |
+| **USTAWIENIA** | Maks. prędkość malowania (5–30 km/h, krok 1); min. prędkość (0–10 km/h, krok 0,5); **Smart / Instant**; **auto-wznowienie**; **przyciski wzorców (sterownik): KLASYCZNE 15 / SOFT-KEY 10 + GRUPA**; jasność ekranu. Wartości progów odczytywane są ze sterownika; błędne kombinacje (np. min ≥ max) sterownik odrzuca z komunikatem. |
+| **WSZYSTKIE WZORCE** | Siatka 4 × 4 wszystkich 16 wzorców — wybór dowolnego wzorca bez przełączania stron OŚ/KRAWĘDŹ. |
 | **POŁĄCZENIE WiFi** | Hasło sieci sterownika (min. 8 znaków), stan połączenia i siła sygnału. |
 | **INFORMACJE** | Wersje firmware, wolna pamięć, czas pracy sterownika, klienci WiFi, GPS (fix, satelity, HDOP, prędkość GPS, zapis trasy), enkoder, progi prędkości, poziom farby. |
 
@@ -240,11 +257,28 @@ Sterownik ma własny ekran 2,8" (320×240) i przyciski. Działa niezależnie od 
 | **STOP** (GPIO 39) | zatrzymanie malowania; w menu: poprzednia pozycja | HOME: menu serwisowe; w menu: powrót |
 | **SELEKTOR** (GPIO 40) | HOME/malowanie: odwróć P-3a/P-3b; w menu: następna pozycja | HOME: przełącz Smart/Instant; w menu: wejdź |
 | **GAP** (GPIO 7, przycisk enkodera) | HOME: start od przerwy | — |
-| **15 przycisków wzorców** (MCP23017) | natychmiastowy wybór wzorca P-1a … P-7d (potwierdza buzzer) | — |
+| **Przyciski wzorców** (MCP23017) | zależnie od układu: **klasyczny — 15 przycisków**, każdy wybiera jeden wzorzec P-1a … P-7d; **soft-key — 10 przycisków S1–S10 + GRUPA** (patrz niżej). Potwierdza buzzer. | — |
 | **START + STOP razem** (1,5 s) | menu serwisowe | |
+
+**Układ przycisków wzorców** (ustawienie w module 7": MENU → USTAWIENIA → *Przyciski wzorców*; panel WWW/API:
+`set_pattern_layout`; zapis trwały):
+
+| Układ | Przyciski | Działanie |
+|-------|-----------|-----------|
+| **KLASYCZNE 15** *(domyślny)* | 15 | jeden przycisk = jeden wzorzec (działa samodzielnie, bez modułu 7") |
+| **SOFT-KEY 10 + GRUPA** | 10 + 1 | S1–S10 wybierają wzorce **aktywnej grupy** (OŚ albo KRAWĘDŹ); przycisk **GRUPA** przełącza grupę (krótki ton 1,8 kHz, wyższy niż przy wyborze wzorca). **Etykiety wzorców są na ekranie modułu 7" obok przycisków**, więc ten układ wymaga modułu 7". |
+
+Podział na grupy i numeracja przycisków — [sekcja 5.5](#55-podział-na-grupy-oś-i-krawędź). Aktywna grupa podąża za wybranym
+wzorcem i jest wspólna dla przycisków fizycznych i ekranu 7".
 
 STOP dodatkowo uruchamia **sprzętowe przerwanie awaryjne** — pistolety są wyłączane natychmiast, bez
 oczekiwania na pętlę programu.
+
+**Elementy fizyczne na panelu** (układ soft-key, propozycja A z [WIZUALIZACJE.md](WIZUALIZACJE.md)):
+10 przycisków wzorców **S1–S10** przy ekranie (S1–S5 lewa kolumna, S6–S10 prawa, od góry), **GRUPA**, **START**,
+**STOP**, **SELEKTOR**, **GAP**, opcjonalnie joystick — razem 15 przycisków fizycznych (w układzie klasycznym było
+19). Dodatkowo pilot (J4) i pedał (J5) działają równolegle do START/STOP/SELEKTOR/GAP. Rysunki: [WIZUALIZACJE.md](WIZUALIZACJE.md);
+schemat elektryczny: [SCHEMAT_PODLACZEN.md](SCHEMAT_PODLACZEN.md), sekcja 8.
 
 ### 4.2 Joystick KY-023
 
@@ -334,6 +368,29 @@ Moduł 7": przycisk **ODWRÓĆ**. Sterownik: SELEKTOR (krótko). Panel WWW: przy
 Trzy sloty pamięci. Dla każdego pistoletu: wyłączony / ciągły / przerywany (z własną długością kreski i przerwy,
 0,5–50 m). Edycja: moduł 7" (MENU → WZÓR WŁASNY), sterownik (menu serwisowe, pozycja 6) lub panel WWW.
 Zapis trwały (NVS), przetrwa restart.
+
+### 5.5 Podział na grupy OŚ i KRAWĘDŹ
+
+Wzorce dzielą się według pistoletów, które malują — **oś jezdni** (P1–P4) i **krawędź** (P5–P6). Podział obowiązuje
+w module 7" oraz w układzie fizycznych przycisków soft-key. **Żaden wzorzec nie zostaje pominięty** (10 + 5 + WŁASNY = 16).
+
+| Nr przycisku | Grupa **OŚ** | Grupa **KRAWĘDŹ** |
+|--------------|--------------|-------------------|
+| S1 | P-1a | P-6 |
+| S2 | P-1b | P-7a |
+| S3 | P-1c | P-7b |
+| S4 | P-1d | P-7c |
+| S5 | P-1e | P-7d |
+| S6 | P-2a | WŁASNY |
+| S7 | P-2b | — |
+| S8 | P-3a | — |
+| S9 | P-3b | — |
+| S10 | P-4 | — |
+| **GRUPA** | przełącza OŚ ⇄ KRAWĘDŹ | |
+
+Fizyczne rozmieszczenie przy ekranie: **S1–S5 w lewej kolumnie** (od góry do dołu), **S6–S10 w prawej kolumnie**
+(od góry do dołu), przycisk **GRUPA** przy ekranie (np. narożnik). Na ekranie 7" etykiety wzorców widnieją
+dokładnie obok przycisków. Podłączenie do MCP23017: [SCHEMAT_PODLACZEN.md](SCHEMAT_PODLACZEN.md), sekcja 4.3.
 
 ---
 
@@ -543,7 +600,19 @@ Zapis dotyczy sterownika (pamięć NVS) — wzorzec jest dostępny także z pane
    zakończeniu cyklu (kreska+przerwa) maszyna przejdzie na P-2a.
 3. Aby zmieniać natychmiast: **MENU → USTAWIENIA → Zmiana wzorca: INSTANT** (dotknij, aż pokaże `INSTANT`).
 
-### Przykład 10 — Utrata łączności w trakcie pracy
+### Przykład 10 — Oś i krawędzie jezdni (przełączanie grup)
+
+**Cel:** namalować oś linią przerywaną P-1a, a potem prawą krawędź linią ciągłą szeroką P-7b.
+
+1. Strona **OŚ** (żółta ramka na OŚ). Dotknij **S1 = P-1a**, **START**, maluj oś, **STOP**.
+2. Dotknij **KRAWĘDŹ** — kolumny pokażą P-6, P-7a … P-7d i WŁASNY. Dotknij **S3 = P-7b**.
+3. **START** i maluj krawędź (pistolet P6, 24 cm). **STOP**.
+4. Wrócisz do osi dotknięciem **OŚ** albo wybierając dowolny wzorzec osi — strona zmieni się sama.
+
+Z fizycznymi przyciskami (układ soft-key): naciśnij **GRUPA** (krótki wyższy ton), potem **S3**. Na ekranie
+zobaczysz, że strona i wzorzec zmieniły się tak samo.
+
+### Przykład 11 — Utrata łączności w trakcie pracy
 
 1. Ekran pokrywa czerwony napis **BRAK ŁĄCZNOŚCI ZE STEROWNIKIEM**.
 2. Sterownik **maluje dalej** wg wzorca. Jeśli musisz zatrzymać maszynę — naciśnij **fizyczny STOP na sterowniku**
@@ -610,7 +679,7 @@ Zapis dotyczy sterownika (pamięć NVS) — wzorzec jest dostępny także z pane
 | WiFi | AP `TrassarV3`, kanał 6, max 4 klientów, hasło z MAC |
 | API | HTTP :80, WebSocket :81 (status co 500 ms) |
 | GPS | NEO-6M, UART2, 9600 baud |
-| Przyciski wzorców | 15 × MCP23017 (I2C 0x20) |
+| Przyciski wzorców | MCP23017 (I2C 0x20): układ klasyczny 15 przycisków albo soft-key 10 + GRUPA (11 przycisków) |
 | Zasilanie | 5 V DC, min. 3 A (sterownik + moduł 7" na osobnych odgałęzieniach) |
 | Watchdog | 5 s |
 | Keepalive pistoletów | 300 ms |

@@ -70,6 +70,10 @@ struct Status {
     bool     semiLineComplete = false;
     int      semiSegment = 0;
 
+    bool     hasPatGroup = false;       // sterownik zwraca patGroup (starsze wersje nie)
+    int      patGroup = 0;              // 0 = OS jezdni, 1 = KRAWEDZ
+    int      patBtnLayout = 0;          // 0 = klasyczne 15 przyciskow, 1 = soft-key 10 + GRUPA
+
     bool     smartSwitch = true;
     bool     patternPending = false;
     char     pendingCode[12] = "";
@@ -131,6 +135,13 @@ float patternCycle(const Status& s);
 
 // Konfiguracja pistoletu dla dowolnego wzorca (do podglądów w wyborze wzorca)
 GunCfg patternGun(int patIdx, bool reversed, int gun, const Status& s);
+
+// Strony wzorców (zgodne z src/pattern_layout.h sterownika):
+//   grupa 0 = OŚ jezdni (P1-P4): przyciski 0..9 = P-1a..P-4
+//   grupa 1 = KRAWĘDŹ (P5-P6): P-6, P-7a..P-7d, WŁASNY (przyciski 0..5)
+constexpr int SOFTKEY_COUNT = 10;
+int softKeyPattern(int group, int key);                 // -1 = przycisk nieaktywny
+int patternGroupOf(int patIdx, int currentGroup);       // WŁASNY zachowuje bieżącą grupę
 
 const char* stateName(MState s);
 const char* modeName(MMode m);

@@ -27,14 +27,14 @@ static const int ROAD_H      = 176;
 static const int PILL_Y      = 356;
 static const int BAR_Y       = 394;
 static const int BAR_H       = 80;
-static const int SLOT_ALL    = 9;                // indeks przycisku "WSZYSTKIE"
 
 // ---------- widgety ----------
 static lv_obj_t* s_lblLink;
 static lv_obj_t* s_lblGps;
 static lv_obj_t* s_barPaint;
 static lv_obj_t* s_lblPaint;
-static lv_obj_t* s_lblState;
+static lv_obj_t* s_tabAxis;
+static lv_obj_t* s_tabEdge;
 
 static lv_obj_t* s_slotBtn[10];
 static lv_obj_t* s_slotGlyph[10];
@@ -97,23 +97,39 @@ static bool needOnline() {
     return true;
 }
 
+// ---------- strony wzorców: OŚ / KRAWĘDŹ ----------
+static int      s_localGroup = 0;      // rezerwa dla sterownika bez pola patGroup
+static int      s_grpOverride = -1;    // wybór z ekranu do czasu potwierdzenia przez sterownik
+static uint32_t s_grpOverrideMs = 0;
+
+static int currentGroup(const Status& st) {
+    if (s_grpOverride >= 0 && millis() - s_grpOverrideMs < 1500) return s_grpOverride;
+    s_grpOverride = -1;
+    if (st.hasPatGroup) return st.patGroup;
+    s_localGroup = patternGroupOf(st.patternIdx, s_localGroup);
+    return s_localGroup;
+}
+
+static void onTab(lv_event_t* e) {
+    int g = (int)(intptr_t)lv_event_get_user_data(e);
+    if (!needOnline()) return;
+    s_grpOverride = g;
+    s_grpOverrideMs = millis();
+    s_localGroup = g;
+    uiSendAction("set_pattern_group", g);
+}
+
 // ---------- callbacki przycisków ----------
 static void onSlotClick(lv_event_t* e) {
     int s = (int)(intptr_t)lv_event_get_user_data(e);
-    if (s == SLOT_ALL) { uiOpenPicker(false, -1); return; }
+    int pat = softKeyPattern(currentGroup(g_st), s);
+    if (pat < 0) return;
     if (!needOnline()) return;
-    int pat = g_settings.fav[s];
     if (pat == PAT_CUSTOM_IDX && !g_st.customValid) {
         uiToast("wzorzec wlasny nie jest zapisany", true);
         return;
     }
     uiSendAction("set_pattern", pat);
-}
-
-static void onSlotLong(lv_event_t* e) {
-    int s = (int)(intptr_t)lv_event_get_user_data(e);
-    if (s == SLOT_ALL) return;
-    uiOpenPicker(true, s);
 }
 
 static void onMode(lv_event_t* e) {
@@ -153,18 +169,10 @@ static void onCoverWifi(lv_event_t*) { uiOpenWifi(); }
 static lv_obj_t* makeSlot(lv_obj_t* parent, int s, int x, int y) {
     lv_obj_t* b = uiBtn(parent, "", x, y, COL_W, SLOT_H, C_BTN, onSlotClick,
                         (void*)(intptr_t)s, FONT_L);
-    lv_obj_add_event_cb(b, onSlotLong, LV_EVENT_LONG_PRESSED, (void*)(intptr_t)s);
     lv_obj_t* lbl = lv_obj_get_child(b, 0);
     lv_obj_align(lbl, LV_ALIGN_RIGHT_MID, -6, 0);
     s_slotLbl[s] = lbl;
-    if (s == SLOT_ALL) {
-        lv_label_set_text(lbl, "WSZYSTKIE");
-        lv_obj_set_style_text_font(lbl, FONT_M, 0);
-        lv_obj_align(lbl, LV_ALIGN_CENTER, 0, 0);
-        s_slotGlyph[s] = nullptr;
-    } else {
-        s_slotGlyph[s] = uiGlyph(b, 6, 6, 40, 48);
-    }
+    s_slotGlyph[s] = uiGlyph(b, 6, 6, 40, 48);
     s_slotBtn[s] = b;
     return b;
 }
@@ -191,7 +199,8 @@ void uiBuildMain() {
     lv_obj_set_style_text_font(s_lblPaint, FONT_S, 0);
     lv_obj_set_style_text_color(s_lblPaint, C_TEXT, 0);
     lv_obj_center(s_lblPaint);
-    s_lblState = uiLabel(scr, "---", 476, 14, FONT_M, C_DIM);
+    s_tabAxis = uiBtn(scr, "OS", 470, 6, 78, 46, C_BTN, onTab, (void*)(intptr_t)0, FONT_M);
+    s_tabEdge = uiBtn(scr, "KRAWEDZ", 552, 6, 96, 46, C_BTN, onTab, (void*)(intptr_t)1, FONT_S);
     uiBtn(scr, LV_SYMBOL_LIST " MENU", 654, 6, 138, 46, C_BTN, onMenu, nullptr, FONT_M);
 
     // --- kolumny szybkich wzorców ---
@@ -336,39 +345,47 @@ static void updateTopBar(LinkState ls, const Status& st, bool have) {
             lv_obj_set_style_bg_color(s_barPaint, bc, LV_PART_INDICATOR);
         snprintf(buf, sizeof(buf), "FARBA %d%%", pct);
         setLbl(s_lblPaint, buf);
-
-        setLbl(s_lblState, stateName(st.state));
-        lv_color_t sc = st.state == MS_PAINTING ? C_GREENB :
-                        (st.state == MS_PAUSED ? C_ORANGE : C_TEXT);
-        setTxtColor(s_lblState, sc);
     } else {
         setLbl(s_lblGps, LV_SYMBOL_GPS " ---");
         setTxtColor(s_lblGps, C_DIM);
-        setLbl(s_lblState, "---");
-        setTxtColor(s_lblState, C_DIM);
     }
 }
 
+static void setTab(lv_obj_t* tab, bool sel) {
+    uiBtnSetColor(tab, sel ? C_BTN_SEL : C_BTN);
+    lv_obj_set_style_border_width(tab, sel ? 5 : 2, 0);
+    lv_obj_set_style_border_color(tab, sel ? C_YELLOW : lv_color_lighten(C_BTN, 90), 0);
+}
+
 static void updateSlots(const Status& st) {
+    int grp = currentGroup(st);
+    setTab(s_tabAxis, grp == 0);
+    setTab(s_tabEdge, grp == 1);
+
     for (int s = 0; s < 10; s++) {
-        if (s == SLOT_ALL) continue;
-        int pat = g_settings.fav[s];
-        if (pat < 0 || pat >= NPAT) pat = 0;
+        int pat = softKeyPattern(grp, s);
+        bool used = (pat >= 0);
+        lv_obj_t* btn = s_slotBtn[s];
+
+        if (!used) {
+            setLbl(s_slotLbl[s], "");
+            setVisible(s_slotGlyph[s], false);
+            uiBtnSetColor(btn, C_BTN_DIS);
+            lv_obj_set_style_border_width(btn, 2, 0);
+            s_slotSel[s] = false;
+            continue;
+        }
+        setVisible(s_slotGlyph[s], true);
         const char* code = (pat == PAT_CUSTOM_IDX) ? "WLASNY" : PATTERNS[pat].code;
         setLbl(s_slotLbl[s], code);
         lv_obj_set_style_text_font(s_slotLbl[s], pat == PAT_CUSTOM_IDX ? FONT_S : FONT_L, 0);
         uiGlyphSet(s_slotGlyph[s], pat, false, st);
 
         bool sel = (pat == st.patternIdx);
-        if (sel != s_slotSel[s]) {
-            s_slotSel[s] = sel;
-            lv_obj_set_style_border_width(s_slotBtn[s], sel ? 5 : 2, 0);
-            lv_obj_set_style_border_color(s_slotBtn[s], sel ? C_YELLOW : lv_color_lighten(C_BTN, 90), 0);
-            lv_obj_set_style_border_opa(s_slotBtn[s], sel ? LV_OPA_COVER : LV_OPA_60, 0);
-            uiBtnSetColor(s_slotBtn[s], sel ? C_BTN_SEL : C_BTN);
-            // uiBtnSetColor nadpisuje kolor ramki - przywróć zaznaczenie
-            lv_obj_set_style_border_color(s_slotBtn[s], sel ? C_YELLOW : lv_color_lighten(C_BTN, 90), 0);
-        }
+        s_slotSel[s] = sel;
+        uiBtnSetColor(btn, sel ? C_BTN_SEL : C_BTN);
+        lv_obj_set_style_border_width(btn, sel ? 5 : 2, 0);
+        lv_obj_set_style_border_color(btn, sel ? C_YELLOW : lv_color_lighten(C_BTN, 90), 0);
     }
 }
 
@@ -506,6 +523,7 @@ static void mainTick(lv_timer_t*) {
     else
         snprintf(buf, sizeof(buf), "%s  %s%s", modeName(st.mode), stateName(st.state), gapTxt);
     setLbl(s_lblMode, buf);
+    setTxtColor(s_lblMode, st.state == MS_PAINTING ? C_GREENB : (st.state == MS_PAUSED ? C_ORANGE : C_TEXT));
 
     // --- liczniki ---
     snprintf(buf, sizeof(buf), "#8FA3CC DYST# %.1f m", st.distance);

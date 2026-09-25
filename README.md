@@ -19,8 +19,10 @@ Wszystkie nowe prace prowadzone są w tym repozytorium.
   fizycznym START), DEMO (bez strzelania).
 - Mierzy dystans i prędkość (enkoder), pozycję (GPS) i zużycie farby; zapisuje raporty, trasy GPX/GeoJSON
   i kopię ustawień na karcie SD.
-- **Duży ekran 7"** w stylu kabinowym: prędkość 7-segmentowa, animowany widok drogi, szybkie wzorce po bokach,
+- **Duży ekran 7"** w stylu kabinowym: prędkość 7-segmentowa, animowany widok drogi, wzorce po bokach,
   START/STOP/tryby na dole — [opis](docs/MODUL_WYSWIETLACZA.md).
+- **Mniej przycisków fizycznych bez utraty wzorców:** układ **soft-key** — 10 przycisków przy ekranie + GRUPA
+  zamiast 15; wzorce podzielone na **OŚ** (10) i **KRAWĘDŹ** (5 + własny), etykiety na ekranie 7".
 - Wielowarstwowe zabezpieczenia: przerwanie awaryjnego STOP, gun keepalive 300 ms, limity prędkości, watchdog 5 s,
   shutdown handler, detekcja anomalii pistoletów.
 
@@ -67,8 +69,9 @@ Szczegóły: [Instrukcja obsługi](docs/INSTRUKCJA_OBSLUGI.md).
 
 | Dokument | Zawartość |
 |----------|-----------|
-| [Instrukcja obsługi](docs/INSTRUKCJA_OBSLUGI.md) | obsługa modułu 7" i panelu fizycznego, tryby, kalibracja, alarmy, 10 przykładów |
+| [Instrukcja obsługi](docs/INSTRUKCJA_OBSLUGI.md) | obsługa modułu 7" i panelu fizycznego, tryby, kalibracja, alarmy, 11 przykładów |
 | [Schemat połączeń](docs/SCHEMAT_PODLACZEN.md) | architektura, BOM, mapa GPIO, schematy wszystkich modułów, złącza J1–J5, zasilanie, diagnostyka |
+| [Wizualizacje panelu](docs/WIZUALIZACJE.md) | makieta ekranu i 4 propozycje wyglądu kontrolera (SVG), porównanie i rekomendacja |
 | [Moduł wyświetlacza 7"](docs/MODUL_WYSWIETLACZA.md) | architektura firmware modułu, komunikacja, UI, rozszerzanie |
 | [API sterownika](docs/API_WWW.md) | REST + WebSocket, wszystkie pola i polecenia |
 | [Historia zmian](CHANGELOG.md) | changelog |
@@ -93,7 +96,7 @@ MPD2026/
 
 ## Sprzęt
 
-- **Sterownik:** ESP32-S3 N16R8 DevKitC-1, TFT ILI9341 2,8" + SD, DS1307, MCP23017 (15 przycisków wzorców),
+- **Sterownik:** ESP32-S3 N16R8 DevKitC-1, TFT ILI9341 2,8" + SD, DS1307, MCP23017 (przyciski wzorców: 15 klasycznych albo 10 + GRUPA),
   3 przyciski + GAP, joystick KY-023, enkoder, GPS GY-NEO6MV2, moduł 6 przekaźników, buzzer, opcjonalnie DS18B20.
 - **Moduł 7":** Sunton ESP32-8048S070C (7" IPS 800×480, dotyk GT911, 8 MB PSRAM).
 - **Złącza maszynowe:** J1 zasilanie, J2 zawory, J3 enkoder, J4 pilot, J5 przycisk nożny.
