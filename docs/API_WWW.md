@@ -1,271 +1,168 @@
-# TrassarV3 - API serwera WWW v2.52.0
+# MPD2026 — API sterownika (HTTP + WebSocket)
 
-## Informacje ogólne
+**Firmware sterownika:** 2.52.0 (MPD2026). Z API korzystają: panel WWW, aplikacja Android, **moduł wyświetlacza 7"**
+oraz dowolny klient (curl, skrypty).
 
-- **Adres:** `http://192.168.4.1`
-- **Port:** 80
-- **Tryb WiFi:** Access Point
-- **SSID:** TrassarV3
-- **Hasło:** 12345678
-- **Max klientów:** 4
+## 1. Informacje ogólne
 
-## Endpointy
+| Parametr | Wartość |
+|----------|---------|
+| Tryb sieci | WiFi Access Point sterownika |
+| SSID | `TrassarV3` |
+| Hasło | **8 znaków HEX = ostatnie 4 bajty adresu MAC ESP32** (unikalne dla urządzenia; widoczne na ekranie startowym sterownika w kodzie QR i tekście) |
+| Adres IP | `192.168.4.1` |
+| HTTP | port 80 |
+| WebSocket | port 81 (`ws://192.168.4.1:81`), broadcast statusu co 500 ms |
+| Kanał WiFi | 6 |
+| Maks. klientów | 4 (moduł 7" zajmuje jednego) |
+| Format danych | JSON (ArduinoJson v7) |
+| Uwierzytelnianie | brak (dostęp chroniony hasłem WiFi) |
 
-### GET /
+> Poprzednie wersje dokumentacji podawały hasło `12345678` — jest nieaktualne. Hasło jest generowane z MAC
+> w `web_server.cpp` (`generatePassword()`).
 
-Zwraca stronę HTML panelu sterowania.
+## 2. Endpointy
 
-**Odpowiedź:** `text/html` - pełna strona z interfejsem graficznym
+| Metoda | Ścieżka | Opis |
+|--------|---------|------|
+| GET | `/` | Panel WWW (HTML) |
+| GET | `/api/status` | Pełny status maszyny (JSON) — ten sam co broadcast WebSocket |
+| GET | `/api/stats` | Statystyki sesji i lifetime, pistolety, farba |
+| GET | `/api/reports` | Lista raportów CSV z karty SD (cache 15 s) |
+| GET | `/api/reports/download?file=` | Pobranie raportu CSV |
+| GET | `/api/reports/geojson` | Eksport raportów jako GeoJSON |
+| GET | `/api/tracks` | Lista tras GPS (GPX / GeoJSON) |
+| GET | `/api/tracks/download?file=` | Pobranie trasy |
+| GET | `/api/html_reports` | Lista raportów HTML sesji |
+| GET | `/api/html_reports/download?file=` | Pobranie raportu HTML |
+| POST | `/api/control` | Polecenia sterujące (form-urlencoded) |
 
-Panel zawiera:
-- Status maszyny z animowanym wskaźnikiem
-- Informacje: wzorzec, prędkość, dystans, powierzchnia, czas
-- Przyciski START / PAUZA / STOP / **START OD PRZERWY**
-- **Selektor trybu pracy** — 3 przyciski: AUTO / SEMI / RĘCZNY
-- 16 przycisków wzorców pogrupowanych: P-1x, P-2x, P-3x, P-4/P-6, P-7x, WŁASNY
-- **Edytor wzorca własnego** — konfiguracja 6 pistoletów, kreska/przerwa, 3 sloty pamięci, zapis do NVS
-- **Podgląd wzorca** — Canvas wizualizacja kreska/przerwa w skali
-- Przycisk odwracania (dla P-3a/P-3b)
-- Wskaźniki 6 pistoletów (P1-P6)
-- **Przycisk "Kolejna linia"** — widoczny w trybie SEMI gdy kreska zakończona
-- Sekcja kalibracji enkodera
-- Sekcja alarmu prędkości (suwak konfiguracji progu max.)
-- **Sekcja GPS** — fix/satelity, HDOP, pozycja, prędkość GPS
-- Informacje systemowe
-- **Menu serwisowe** z zakładkami:
-  - **Statystyki** — dystans/powierzchnia/czas lifetime, status SD, dystans per pistolet, licznik strzałów
-  - **Raporty SD** — tabela plików CSV z nazwą, rozmiarem i linkiem pobierania
-- **Banner anomalii pistoletów** — pulsujący alert gdy wykryto anomalię
-- Wskaźniki anomalii na kółkach pistoletów (migająca czerwona ramka)
+Nazwy plików w parametrze `file` mogą zawierać wyłącznie litery, cyfry, `.`, `_`, `-` (inaczej HTTP 400).
 
----
+## 3. GET /api/status
 
-### GET /api/status
-
-Zwraca aktualny stan systemu w formacie JSON.
-
-**Odpowiedź:** `application/json`
+Wszystkie wartości liczbowe (`speed`, `distance`, `area`, `ppm`, `gpsLat`, …) są zwracane jako **liczby JSON**
+(formatowane z ustaloną liczbą miejsc po przecinku). Klient powinien tolerować także zapis tekstowy.
 
 ```json
 {
-    "state": "idle",
-    "pattern": "P-1a",
-    "patternName": "Przerywana dluga",
-    "reversed": false,
-    "gapStart": false,
-    "speed": "0.0",
-    "distance": "0.0",
-    "area": "0.00",
-    "elapsed": 0,
-    "firmware": "2.5.0",
-    "freeHeap": 245760,
-    "minFreeHeap": 210000,
-    "uptime": 3600,
-    "clients": 1,
-    "webStackHWM": 2048,
-    "calibrated": true,
-    "ppm": "100.0",
-    "calibrating": false,
-    "calPulses": "0",
-    "maxSpeed": "15.0",
-    "overspeed": false,
-    "lowSpeed": false,
-    "guns": [false, false, false, false, false, false],
-    "patternPending": false,
-    "pendingPattern": "P-1b",
-    "gunAnomalyDetected": false,
-    "gunAnomaly": [false, false, false, false, false, false],
-    "mode": "auto",
-    "semiLineComplete": false,
-    "patternIdx": 0,
-    "customValid": false,
-    "activeSlot": 0,
-    "slotsValid": [true, false, false],
-    "smartSwitch": true,
-    "gpsFix": true,
-    "gpsLat": "52.229676",
-    "gpsLng": "21.012229",
-    "gpsSat": 8,
-    "gpsSpeed": "12.5",
-    "gpsHdop": "1.2"
+  "state": "painting",
+  "screen": 1, "menuIndex": 0,
+  "mode": "auto", "semiLineComplete": false,
+  "pattern": "P-3a", "patternName": "Przekraczalna dluga", "patternIdx": 7,
+  "reversed": false, "gapStart": false,
+  "customValid": true, "activeSlot": 0, "slotsValid": [true, false, false],
+  "customGuns": [["P2", 12, 3.0, 2.0], ["P5", 12, 0, 0]],
+  "speed": 6.4, "distance": 152.3, "area": 18.28, "elapsed": 96,
+  "patDist": 152.3,
+  "firmware": "2.52.0", "freeHeap": 245760, "minFreeHeap": 210000,
+  "uptime": 3600, "clients": 2, "webStackHWM": 2048, "littleFs": true,
+  "calibrated": true, "ppm": 100.0, "calibrating": false, "calPulses": 0,
+  "maxSpeed": 15.0, "minSpeed": 3.0, "overspeed": false, "lowSpeed": false,
+  "guns": [true, false, true, false, false, false],
+  "autoPaused": false, "autoResumeEnabled": true, "semiSegment": 1,
+  "smartSwitch": true, "patternPending": false, "pendingPattern": "P-2a",
+  "gpsFix": true, "gpsLat": 52.229676, "gpsLng": 21.012229, "gpsSat": 8,
+  "gpsSpeed": 6.2, "gpsHdop": 1.2, "gpxRec": true, "gpxPts": 20,
+  "paintLevelL": 172.5, "paintLevelPct": 86,
+  "gunAnomalyDetected": false, "gunAnomaly": [false, false, false, false, false, false]
 }
 ```
 
-**Pola:**
-
 | Pole | Typ | Opis |
 |------|-----|------|
-| `state` | string | Stan maszyny: `idle`, `painting`, `paused`, `stopped` |
-| `pattern` | string | Kod aktualnego wzorca (np. "P-1a") |
-| `patternName` | string | Nazwa wzorca |
-| `reversed` | bool | Czy wzorzec jest odwrócony |
-| `speed` | string | Prędkość [km/h] |
-| `distance` | string | Dystans sesji [m] |
-| `area` | string | Powierzchnia sesji [m²] |
-| `elapsed` | int | Czas malowania sesji [sekundy] |
-| `firmware` | string | Wersja firmware |
-| `freeHeap` | int | Wolna pamięć RAM [bajty] |
-| `minFreeHeap` | int | Minimalna wolna pamięć od startu [bajty] |
-| `uptime` | int | Czas pracy od uruchomienia [sekundy] |
-| `webStackHWM` | int | Stack high-water mark tasku WWW [bajty] |
-| `clients` | int | Liczba podłączonych klientów WiFi |
-| `calibrated` | bool | Czy enkoder jest skalibrowany |
-| `ppm` | string | Impulsy na metr |
-| `calibrating` | bool | Czy trwa kalibracja |
-| `calPulses` | string | Impulsy zebrane podczas kalibracji |
-| `maxSpeed` | string | Próg alarmu przekroczenia prędkości [km/h] |
-| `overspeed` | bool | Czy prędkość przekracza próg maks. |
-| `lowSpeed` | bool | Czy prędkość jest poniżej 3 km/h podczas malowania |
-| `guns` | array[6] | Stan pistoletów P1-P6 (true = ON) |
-| `gapStart` | bool | Czy aktywny jest tryb "start od przerwy" |
-| `patternPending` | bool | Czy oczekuje zmiana wzorca (smart switch) |
-| `pendingPattern` | string | Kod oczekującego wzorca (obecne tylko gdy `patternPending=true`) |
-| `gunAnomalyDetected` | bool | Czy wykryto anomalię pistoletów |
-| `gunAnomaly` | array[6] | Flagi anomalii per pistolet (true = brak aktywności mimo konfiguracji) |
-| `mode` | string | Aktualny tryb pracy: `auto`, `semi`, `manual` |
-| `semiLineComplete` | bool | Czy kreska w trybie SEMI jest zakończona (czeka na START) |
-| `patternIdx` | int | Indeks aktualnego wzorca (0–15) |
-| `customValid` | bool | Czy wzorzec własny jest skonfigurowany i gotowy do użycia |
-| `activeSlot` | int | Aktywny slot wzorca własnego (0-2) |
-| `slotsValid` | array[3] | Flagi zapisanych slotów (true = slot zawiera wzorzec) |
-| `smartSwitch` | bool | Tryb przełączania wzorców: true=Smart (czekaj na cykl), false=Instant (natychmiast) |
-| `patDist` | number | Dystans od startu wzorca [m] (0 poza malowaniem) — używany przez moduł wyświetlacza 7" do synchronizacji animacji kreska/przerwa |
-| `gpsFix` | bool | Czy GPS ma fix (lokalizacja ważna, age < 3 s) |
-| `gpsLat` | string | Szerokość geograficzna (6 miejsc po przecinku) |
-| `gpsLng` | string | Długość geograficzna (6 miejsc po przecinku) |
-| `gpsSat` | int | Liczba widocznych satelitów |
-| `gpsSpeed` | string | Prędkość z GPS [km/h] |
-| `gpsHdop` | string | HDOP — dokładność pozycji (niższa = lepsza, <2.0 = dobra) |
+| `state` | string | `idle`, `painting`, `paused`, `stopped` |
+| `screen` | int | aktualny ekran TFT sterownika (enum `ScreenID`) |
+| `menuIndex` | int | pozycja kursora w menu |
+| `mode` | string | `auto`, `semi`, `manual`, `demo` |
+| `semiLineComplete` | bool | SEMI: kreska zakończona, czeka na START |
+| `semiSegment` | int | SEMI: numer segmentu (linii) w etapie |
+| `pattern`, `patternName` | string | kod i nazwa aktualnego wzorca |
+| `patternIdx` | int | indeks 0–15 (15 = WŁASNY) |
+| `reversed` | bool | wzorzec odwrócony (P-3a/P-3b) |
+| `gapStart` | bool | aktywny start od przerwy |
+| `customValid` | bool | wzorzec własny zapisany i gotowy |
+| `activeSlot` | int | aktywny slot wzorca własnego (0–2) |
+| `slotsValid` | bool[3] | które sloty są zapisane |
+| `customGuns` | array | konfiguracja wzorca własnego: `[nazwa, szer.cm, kreska_m, przerwa_m]`; kreska = 0 → pistolet ciągły; tylko pistolety aktywne (obecne, gdy `customValid`) |
+| `speed` | number | prędkość [km/h] |
+| `distance`, `area`, `elapsed` | number | dystans [m], powierzchnia [m²], czas [s] bieżącego etapu |
+| **`patDist`** | number | **dystans od startu wzorca [m]** (0 poza malowaniem/pauzą). Pistolet przerywany strzela, gdy `fmod(patDist, kreska+przerwa) < kreska`. Używany przez moduł 7" do synchronizacji animacji drogi |
+| `firmware`, `freeHeap`, `minFreeHeap`, `uptime`, `clients`, `webStackHWM`, `littleFs` | — | diagnostyka |
+| `calibrated`, `ppm`, `calibrating`, `calPulses` | — | kalibracja enkodera |
+| `maxSpeed`, `minSpeed` | number | progi prędkości [km/h] |
+| `overspeed`, `lowSpeed` | bool | alarmy prędkości |
+| `guns` | bool[6] | stan pistoletów P1–P6 (true = strzela) |
+| `autoPaused`, `autoResumeEnabled` | bool | auto-pauza aktywna / auto-wznowienie włączone |
+| `smartSwitch` | bool | true = Smart (dokończ cykl), false = Instant |
+| `patternPending`, `pendingPattern` | bool, string | oczekująca zmiana wzorca i jego kod |
+| `gpsFix`, `gpsLat`, `gpsLng`, `gpsSat`, `gpsSpeed`, `gpsHdop` | — | GPS |
+| `gpxRec`, `gpxPts` | bool, int | zapis trasy GPS |
+| `paintLevelL`, `paintLevelPct` | number, int | poziom farby w zbiorniku |
+| `gunAnomalyDetected`, `gunAnomaly` | bool, bool[6] | detekcja anomalii pistoletów |
 
----
+`patDist` jest dodane w MPD2026; starsze sterowniki go nie zwracają (klient powinien przyjąć rezerwę).
 
-### GET /api/stats
-
-Zwraca statystyki lifetime i bieżącej sesji.
-
-**Odpowiedź:** `application/json`
+## 4. GET /api/stats
 
 ```json
 {
-    "lifetimeDistanceM": "12500.5",
-    "lifetimeAreaM2": "3200.75",
-    "lifetimePaintTimeSec": 86400,
-    "sessionDistanceM": "250.3",
-    "sessionAreaM2": "30.04",
-    "sessionTimeSec": 180,
-    "gunDistances": ["250.3", "0.0", "250.3", "0.0", "0.0", "0.0"],
-    "gunShotCounts": [1250, 0, 1248, 0, 0, 0],
-    "sdReady": true,
-    "reportCount": 12
+  "lifetimeDistanceM": 12500.5, "lifetimeAreaM2": 3200.75, "lifetimePaintTimeSec": 86400,
+  "sessionDistanceM": 250.3, "sessionAreaM2": 30.04, "sessionTimeSec": 180,
+  "gunDistances": [250.3, 0.0, 250.3, 0.0, 0.0, 0.0],
+  "gunShotCounts": [1250, 0, 1248, 0, 0, 0],
+  "sdReady": true, "reportCount": 12,
+  "paintUsedL": 18.0, "paintRemainingL": 182.0, "paintTankL": 200,
+  "paintUsedPct": 9, "paintCurrentLevelL": 182.0,
+  "refuelCount": 2, "totalRefueledL": 150.0
 }
 ```
 
-**Pola:**
+## 5. POST /api/control
 
-| Pole | Typ | Opis |
-|------|-----|------|
-| `lifetimeDistanceM` | string | Łączny dystans malowania od początku [m] |
-| `lifetimeAreaM2` | string | Łączna powierzchnia od początku [m²] |
-| `lifetimePaintTimeSec` | int | Łączny czas malowania [sekundy] |
-| `sessionDistanceM` | string | Dystans bieżącej sesji [m] |
-| `sessionAreaM2` | string | Powierzchnia bieżącej sesji [m²] |
-| `sessionTimeSec` | int | Czas bieżącej sesji [sekundy] |
-| `gunDistances` | array[6] | Dystans per pistolet w sesji [m] |
-| `gunShotCounts` | array[6] | Licznik strzałów per pistolet (lifetime, tranzycje OFF→ON) |
-| `sdReady` | bool | Czy karta SD jest dostępna |
-| `reportCount` | int | Liczba plików raportów na karcie SD |
+Parametry: `action` (wymagany) oraz `value` lub parametry szczegółowe. Odpowiedź: `{"result":"ok"}` albo
+`{"result":"<komunikat błędu>"}` (HTTP 200); HTTP 503 `{"error":"serwer zajety — sprobuj ponownie"}` gdy stan
+jest chwilowo zablokowany (klient powinien ponowić); HTTP 400 przy braku `action`.
 
----
+| Akcja | Wartość | Opis / walidacja |
+|-------|---------|------------------|
+| `start` | — | START z GOTOWY/ZATRZYMANY; wznowienie z PAUZA; zamknięcie ekranu QR startowego |
+| `start_from_gap` | — | start od przerwy (tylko GOTOWY/ZATRZYMANY) |
+| `pause` | — | pauza |
+| `stop` | — | zatrzymanie (`requestStop()`: pistolety OFF natychmiast, zapis danych w pętli Core 1) |
+| `set_pattern` | 0–15 | wybór wzorca (15 = WŁASNY, wymaga `customValid`). W trakcie malowania: Smart kolejkuje do końca cyklu, Instant zmienia od razu |
+| `toggle_reverse` | — | odwróć P-3a/P-3b |
+| `set_mode` | 0–3 | 0 AUTO, 1 SEMI, 2 RĘCZNY, 3 DEMO. **Tylko gdy stan GOTOWY/ZATRZYMANY**; zapis NVS |
+| `semi_next_line` | — | SEMI: następna kreska (tylko gdy `semiLineComplete`) |
+| `cal_start` / `cal_finish` | — | początek / koniec kalibracji enkodera (10 m) |
+| `set_max_speed` | 5–30 | próg maksymalnej prędkości [km/h]; musi być > `minSpeed`; zapis NVS |
+| `set_min_speed` | 0–10 | próg minimalnej prędkości [km/h]; musi być < `maxSpeed`; zapis NVS |
+| `set_switch_mode` | 0 / 1 | 0 = Smart, 1 = Instant; zapis NVS |
+| `set_auto_resume` | 0 / 1 | auto-wznowienie po auto-pauzie; zapis NVS |
+| `set_tank_capacity` | 1–1000 | pojemność zbiornika [L]; zapis NVS |
+| `set_paint_rate` | 0.1–5.0 | współczynnik zużycia [l/m²]; zapis NVS |
+| `refuel` | 1–1000 | dolanie farby [L] (dodaje do bieżącego poziomu) |
+| `save_custom_pattern` | patrz niżej | zapis wzorca własnego do slotu i aktywacja slotu |
+| `activate_slot` | 0–2 | aktywuj zapisany slot |
+| `get_slot_config` | `slot`=0–2 | zwraca `{"guns":[{"mode":0..2,"ln":..,"gp":..}, ...],"valid":bool}` (odpowiedź JSON, nie `result`) |
+| `send_event` | 1–7 | wirtualny przycisk fizyczny (kolejka do Core 1): 1 START krótko, 2 START długo, 3 STOP krótko, 4 STOP długo, 5 SELEKTOR krótko, 6 SELEKTOR długo, 7 GAP |
+| `set_screen` | 0–`SCREEN_STATS_EXPORT` | przejście do ekranu TFT sterownika |
 
-### GET /api/reports
+### save_custom_pattern
 
-Zwraca listę plików raportów z karty SD (z cache, odświeżany co 15 s).
+| Parametr | Zakres | Opis |
+|----------|--------|------|
+| `g0`…`g5` | 0 / 1 / 2 | tryb pistoletu P1–P6: 0 wyłączony, 1 ciągły, 2 przerywany |
+| `ln0`…`ln5` | 0.1–50.0 | długość kreski [m] (przerywany) |
+| `gp0`…`gp5` | 0.1–50.0 | długość przerwy [m] (przerywany) |
+| `slot` | 0–2 | slot (domyślnie 0) |
 
-**Odpowiedź:** `application/json`
+Po zapisie slot jest aktywowany (wzorzec własny staje się ważny); aby go użyć, wyślij `set_pattern` z wartością 15.
 
-```json
-[
-    {"file": "20260216.csv", "size": 1234},
-    {"file": "20260215.csv", "size": 890}
-]
-```
+### Indeksy wzorców
 
-**Pola elementu tablicy:**
-
-| Pole | Typ | Opis |
-|------|-----|------|
-| `file` | string | Nazwa pliku raportu (format RRRRMMDD.csv) |
-| `size` | int | Rozmiar pliku [bajty] |
-
-> **Uwaga:** Lista sortowana malejąco (najnowsze pierwsze). Cache odświeżany co 15 s na Core 1 (bezpieczny dostęp SPI/SD).
-
----
-
-### GET /api/reports/download
-
-Pobiera plik raportu CSV z karty SD (strumieniowo, 512 B chunki).
-
-**Parametry (query string):**
-
-| Parametr | Wymagany | Opis |
-|----------|----------|------|
-| `file` | Tak | Nazwa pliku do pobrania (np. `20260219.csv`) |
-
-**Odpowiedź:** `text/csv` z nagłówkiem `Content-Disposition: attachment`
-
-**Walidacja:** Nazwa pliku może zawierać tylko litery, cyfry, `.`, `_`, `-`. Pozostałe znaki są odrzucane (HTTP 400).
-
-**Kody odpowiedzi:**
-
-| Kod | Opis |
-|-----|------|
-| 200 | Plik pobrany pomyślnie |
-| 400 | Brak parametru `file` lub nieprawidłowa nazwa |
-| 404 | Plik nie istnieje na karcie SD |
-| 500 | Błąd otwarcia pliku |
-
-**Przykład:**
-```bash
-# Pobierz raport z 19 lutego 2026
-curl -O http://192.168.4.1/api/reports/download?file=20260219.csv
-```
-
----
-
-### POST /api/control
-
-Wysyła komendę sterującą do systemu.
-
-**Parametry (form-urlencoded):**
-
-| Parametr | Wymagany | Opis |
-|----------|----------|------|
-| `action` | Tak | Komenda do wykonania |
-| `value` | Zależy od akcji | Wartość parametru |
-
-**Dostępne akcje:**
-
-| Akcja | Wartość | Opis |
-|-------|---------|------|
-| `start` | - | Rozpocznij malowanie lub wznów po pauzie |
-| `pause` | - | Zapauzuj malowanie |
-| `stop` | - | Zatrzymaj malowanie |
-| `start_from_gap` | - | **Rozpocznij malowanie od przerwy** (przesuwa punkt startowy o długość kreski) |
-| `set_pattern` | 0-15 | Ustaw wzorzec (indeks PatternID, 15 = WŁASNY). **Podczas malowania** zależy od trybu: **Smart** — zmiana kolejkowana do końca cyklu; **Instant** — natychmiastowa zmiana (ucięcie bieżącego wzorca). |
-| `toggle_reverse` | - | Odwróć wzorzec (P-3a/P-3b) |
-| `set_mode` | 0-2 | Ustaw tryb pracy: 0=AUTO, 1=SEMI, 2=RĘCZNY (zapis do NVS) |
-| `semi_next_line` | - | Wyzwól kolejną kreskę w trybie SEMI (działa tylko gdy `semiLineComplete=true`) |
-| `save_custom_pattern` | *patrz niżej* | Zapisz wzorzec własny do wybranego slotu NVS |
-| `activate_slot` | 0-2 | Przełącz aktywny slot wzorca własnego (slot musi być zapisany) |
-| `set_switch_mode` | 0-1 | Tryb przełączania wzorców: 0=Smart (dokończ cykl), 1=Instant (natychmiast). Zapis do NVS |
-| `cal_start` | - | Rozpocznij kalibrację enkodera |
-| `cal_finish` | - | Zakończ kalibrację enkodera |
-| `set_max_speed` | 5.0–30.0 | Ustaw próg alarmu prędkości [km/h] (zapis do NVS) |
-
-**Mapowanie indeksów wzorców:**
-
-| Indeks | Wzorzec | Indeks | Wzorzec |
-|--------|---------|--------|---------|
+| # | Wzorzec | # | Wzorzec |
+|---|---------|---|---------|
 | 0 | P-1a | 8 | P-3b |
 | 1 | P-1b | 9 | P-4 |
 | 2 | P-1c | 10 | P-6 |
@@ -275,221 +172,35 @@ Wysyła komendę sterującą do systemu.
 | 6 | P-2b | 14 | P-7d |
 | 7 | P-3a | 15 | WŁASNY |
 
-**Odpowiedź:** `application/json`
-
-```json
-{
-    "result": "ok"
-}
-```
-
-**Parametry akcji `save_custom_pattern`:**
-
-| Parametr | Wymagany | Opis |
-|----------|----------|------|
-| `g0`–`g5` | Tak | Tryb pistoletu P1–P6: 0=wyłączony, 1=ciągły, 2=przerywany |
-| `ln0`–`ln5` | Tak | Długość kreski per pistolet [m] (0.1–50.0) |
-| `gp0`–`gp5` | Tak | Długość przerwy per pistolet [m] (0.1–50.0) |
-| `slot` | Nie | Numer slotu do zapisu (0-2, domyślnie 0) |
-
-Każdy pistolet ustawiony jako "przerywany" (2) ma własne, niezależne parametry kreski i przerwy. Pistolety ciągłe i wyłączone ignorują te wartości.
-
-Po zapisie wzorzec jest automatycznie aplikowany i zaznaczany jako aktywny w wybranym slocie.
-
-**Przykłady użycia (curl):**
+### Przykłady (curl)
 
 ```bash
-# Sprawdź status
 curl http://192.168.4.1/api/status
-
-# Statystyki lifetime i sesji
-curl http://192.168.4.1/api/stats
-
-# Lista raportów SD
-curl http://192.168.4.1/api/reports
-
-# Rozpocznij malowanie
-curl -X POST -d "action=start" http://192.168.4.1/api/control
-
-# Rozpocznij malowanie od przerwy
-curl -X POST -d "action=start_from_gap" http://192.168.4.1/api/control
-
-# Zapauzuj
-curl -X POST -d "action=pause" http://192.168.4.1/api/control
-
-# Zatrzymaj
-curl -X POST -d "action=stop" http://192.168.4.1/api/control
-
-# Ustaw wzorzec P-3a (indeks 7)
-curl -X POST -d "action=set_pattern&value=7" http://192.168.4.1/api/control
-
-# Odwróć wzorzec (P-3a/P-3b)
-curl -X POST -d "action=toggle_reverse" http://192.168.4.1/api/control
-
-# Rozpocznij kalibrację enkodera
-curl -X POST -d "action=cal_start" http://192.168.4.1/api/control
-
-# Zakończ kalibrację (po przejechaniu 10m)
-curl -X POST -d "action=cal_finish" http://192.168.4.1/api/control
-
-# Ustaw próg alarmu prędkości na 12 km/h
+curl -X POST -d "action=set_pattern&value=7"    http://192.168.4.1/api/control   # P-3a
+curl -X POST -d "action=set_mode&value=1"       http://192.168.4.1/api/control   # SEMI
+curl -X POST -d "action=start"                  http://192.168.4.1/api/control
+curl -X POST -d "action=stop"                   http://192.168.4.1/api/control
 curl -X POST -d "action=set_max_speed&value=12" http://192.168.4.1/api/control
-
-# Ustaw tryb pracy na SEMI (1)
-curl -X POST -d "action=set_mode&value=1" http://192.168.4.1/api/control
-
-# Wyzwól kolejną kreskę w trybie SEMI
-curl -X POST -d "action=semi_next_line" http://192.168.4.1/api/control
-
-# Zapisz wzorzec własny (P2 przerywany 3m/2m, P5 przerywany 1m/1m, reszta wyłączona)
-curl -X POST -d "action=save_custom_pattern&g0=0&g1=2&g2=0&g3=0&g4=2&g5=0&ln0=4&gp0=8&ln1=3.0&gp1=2.0&ln2=4&gp2=8&ln3=4&gp3=8&ln4=1.0&gp4=1.0&ln5=4&gp5=8" http://192.168.4.1/api/control
-
-# Użyj wzorca własnego (indeks 15)
-curl -X POST -d "action=set_pattern&value=15" http://192.168.4.1/api/control
-
-# Aktywuj slot 2 wzorca własnego
-curl -X POST -d "action=activate_slot&value=1" http://192.168.4.1/api/control
-
-# Zapisz wzorzec własny do slotu 3
-curl -X POST -d "action=save_custom_pattern&slot=2&g0=0&g1=1&g2=0&g3=0&g4=0&g5=0&ln0=4&gp0=8&ln1=4&gp1=8&ln2=4&gp2=8&ln3=4&gp3=8&ln4=4&gp4=8&ln5=4&gp5=8" http://192.168.4.1/api/control
-
-# Ustaw tryb przelaczania wzorcow na Instant (natychmiastowy)
-curl -X POST -d "action=set_switch_mode&value=1" http://192.168.4.1/api/control
-
-# Ustaw tryb przelaczania wzorcow na Smart (dokoncz cykl)
-curl -X POST -d "action=set_switch_mode&value=0" http://192.168.4.1/api/control
-
-# Pobierz raport CSV
-curl -O http://192.168.4.1/api/reports/download?file=20260219.csv
+curl -X POST -d "action=refuel&value=50"        http://192.168.4.1/api/control
+# wzorzec własny: P1 ciągły, P5 przerywany 3 m / 2 m, slot 1 (indeks 0)
+curl -X POST -d "action=save_custom_pattern&slot=0&g0=1&g1=0&g2=0&g3=0&g4=2&g5=0&ln4=3.0&gp4=2.0&ln0=4&gp0=8&ln1=4&gp1=8&ln2=4&gp2=8&ln3=4&gp3=8&ln5=4&gp5=8" http://192.168.4.1/api/control
+curl -X POST -d "action=set_pattern&value=15"   http://192.168.4.1/api/control
 ```
 
-## Kody odpowiedzi HTTP
+## 6. WebSocket (port 81)
 
-| Kod | Opis |
-|-----|------|
-| 200 | Sukces |
-| 400 | Brak wymaganego parametru `action` |
-| 404 | Nieznany endpoint |
+- Adres: `ws://192.168.4.1:81`. Serwer wysyła co 500 ms ramkę tekstową o **identycznej treści jak `GET /api/status`**.
+- Przy krytycznie niskiej pamięci (< 32 KB) broadcast jest wyłączany; zdarza się też ramka `{}` (pominięty
+  cykl przy zajętym stanie) — klient powinien ją ignorować.
+- Klient nie wysyła ramek do serwera (polecenia idą przez HTTP).
+- Zalecany fallback: jeśli przez ponad 1,5 s brak ramek, odpytywać `GET /api/status` co ok. 700 ms
+  (tak robi moduł 7").
 
-## Autorefresh panelu WWW
+## 7. Uwagi implementacyjne
 
-Panel HTML automatycznie odpytuje `/api/status` co 1 sekundę za pomocą JavaScript `fetch()`. Dane są aktualizowane w interfejsie bez przeładowania strony.
-
-Przycisk **START OD PRZERWY** jest aktywny tylko gdy maszyna jest w stanie `idle` lub `stopped`. W trakcie malowania przycisk jest wyszarzony.
-
-## Uwagi techniczne
-
-- Serwer obsługuje do 4 jednoczesnych klientów WiFi
-- JSON generowany przez ArduinoJson v7
-- Wartości liczbowe (`speed`, `distance`, `area`, `ppm`, `calPulses`) przesyłane jako stringi dla zachowania precyzji formatowania
-- Stan pistoletów (`guns`) to tablica 6 wartości boolean odpowiadających P1-P6
-- Pole `gapStart` informuje panel WWW o trybie startu od przerwy (wyświetla znacznik przy statusie)
-
----
-
-## WebSocket (port 81) — v2.52.0
-
-Oprócz HTTP polling system oferuje kanał WebSocket na porcie **81**. Panel WWW automatycznie łączy się i otrzymuje broadcast statusu co 500 ms.
-
-**Adres:** `ws://192.168.4.1:81`
-
-**Format broadcastu:** Identyczny JSON jak `GET /api/status`
-
-**Zalety:**
-- Push zamiast pull — niższe opóźnienie
-- Mniejsze obciążenie sieci
-- Automatyczny fallback na HTTP polling jeśli WebSocket niedostępny
-
----
-
-## Nowe endpointy v2.52.0
-
-### GET /api/tracks
-
-Zwraca listę plików tras GPS z karty SD.
-
-**Odpowiedź:** `application/json`
-
-```json
-[
-    {"file": "trasa_20260308_091500.gpx", "size": 45678},
-    {"file": "trasa_20260308_091500.geojson", "size": 23456}
-]
-```
-
----
-
-### GET /api/tracks/download
-
-Pobiera plik trasy GPS z karty SD (strumieniowo).
-
-**Parametry (query string):**
-
-| Parametr | Wymagany | Opis |
-|----------|----------|------|
-| `file` | Tak | Nazwa pliku do pobrania (np. `trasa_20260308_091500.gpx`) |
-
----
-
-### GET /api/html_reports
-
-Zwraca listę raportów HTML sesji z karty SD.
-
-**Odpowiedź:** `application/json`
-
-```json
-[
-    {"file": "raport_20260308_091500.html", "size": 12345}
-]
-```
-
----
-
-### GET /api/html_reports/download
-
-Pobiera raport HTML sesji z karty SD.
-
-**Parametry (query string):**
-
-| Parametr | Wymagany | Opis |
-|----------|----------|------|
-| `file` | Tak | Nazwa pliku do pobrania |
-
----
-
-### GET /api/reports/geojson
-
-Eksport danych raportów w formacie GeoJSON.
-
----
-
-## Nowe akcje POST /api/control — v2.52.0
-
-| Akcja | Wartość | Opis |
-|-------|---------|------|
-| `set_min_speed` | 0.0–50.0 | Ustaw minimalny próg prędkości malowania [km/h] (zapis NVS) |
-| `set_tank_capacity` | 1–9999 | Pojemność zbiornika farby [litry] (zapis NVS) |
-| `set_paint_rate` | 0.01–99.0 | Współczynnik zużycia farby [l/m²] (zapis NVS) |
-| `set_auto_resume` | 0–1 | Auto-wznowienie po auto-pauzie: 0=wyłącz, 1=włącz (zapis NVS) |
-
-**Przykłady (curl):**
-
-```bash
-# Ustaw pojemność zbiornika na 150 litrów
-curl -X POST -d "action=set_tank_capacity&value=150" http://192.168.4.1/api/control
-
-# Ustaw współczynnik zużycia farby na 0.8 l/m²
-curl -X POST -d "action=set_paint_rate&value=0.8" http://192.168.4.1/api/control
-
-# Włącz auto-wznowienie
-curl -X POST -d "action=set_auto_resume&value=1" http://192.168.4.1/api/control
-
-# Ustaw minimalną prędkość na 2 km/h
-curl -X POST -d "action=set_min_speed&value=2" http://192.168.4.1/api/control
-
-# Pobierz trasę GPS (GPX)
-curl -O http://192.168.4.1/api/tracks/download?file=trasa_20260308_091500.gpx
-
-# Pobierz raport HTML sesji
-curl -O http://192.168.4.1/api/html_reports/download?file=raport_20260308_091500.html
-```
+- Serwer działa na Core 0 (zadanie FreeRTOS), logika pistoletów na Core 1; dostęp do stanu przez spinlock. Dlatego
+  `POST /api/control` może zwrócić HTTP 503 przy zajętym stanie — należy ponowić po kilkuset ms.
+- `stop` nie wykonuje zapisu NVS/SD na Core 0: wyłącza pistolety natychmiast i deleguje zapis do Core 1.
+- Zmiana trybu (`set_mode`) jest odrzucana w trakcie malowania i pauzy (komunikat w polu `result`).
+- Klient nie powinien wysyłać poleceń częściej niż kilka na sekundę.
+- Zawieszenie serwera WWW (Core 0) nie przerywa malowania — zadanie jest restartowane po 10 s.

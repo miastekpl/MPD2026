@@ -1,136 +1,198 @@
-# TrassarV3 - Dokumentacja techniczna i schemat podłączeń v2.52.0-prod
+# MPD2026 — Schemat połączeń i dokumentacja sprzętowa
+
+**Dotyczy:** sterownik Trassar (firmware 2.52.0) + moduł wyświetlacza 7" (display-module 0.1.0)
+**Źródło prawdy dla pinów:** `src/config.h`, `platformio.ini`, `src/temp_sensor.h`, `display-module/src/lgfx_sunton7.h`
+
+> Diagramy oznaczone `mermaid` renderują się automatycznie na GitHub (w VS Code wymagają rozszerzenia
+> *Markdown Preview Mermaid Support*). Schematy pinów w blokach kodu są czytelne wszędzie.
 
 ## Spis treści
 
-1. [Specyfikacja sprzętowa](#1-specyfikacja-sprzętowa)
-   - 1.5 [Fizyczny pinout ESP32-S3 DevKitC-1](#15-fizyczny-pinout-esp32-s3-n16r8-devkitc-1)
-2. [Tabela podłączeń pinów ESP32-S3 N16R8](#2-tabela-podłączeń-pinów-esp32-s3-n16r8)
-3. [Kompletna mapa GPIO](#3-kompletna-mapa-gpio)
-4. [Mapowanie funkcji na piny](#4-mapowanie-funkcji-na-piny)
-5. [Schemat blokowy systemu](#5-schemat-blokowy-systemu)
-6. [Schematy podłączeń poszczególnych modułów](#6-schematy-podłączeń-poszczególnych-modułów)
-   - 6.7 [MCP23017 — pełny pinout DIP-28 + mapowanie przycisków](#67-podłączenie-ekspandera-mcp23017-15-przycisków-wzorców)
-   - 6.8 [ILI9341 — pinout złącza 14-pin + tabela SPI CS](#68-podłączenie-wyświetlacza-ili9341-i-karty-sd-wspólna-magistrala-spi)
-   - 6.10 [Diagram magistrali I2C (DS1307 + MCP23017)](#610-diagram-magistrali-i2c-2-urządzenia-na-wspólnej-szynie)
-6A. [Kompletna lista połączeń — checklist montażowy (83 przewody)](#6a-kompletna-lista-połączeń--checklist-montażowy)
-7. [Zasilanie + bilans energetyczny](#7-zasilanie)
-8. [Architektura oprogramowania](#8-architektura-oprogramowania)
-9. [Parametry konfiguracyjne](#9-parametry-konfiguracyjne)
-10. [Uwagi montażowe](#10-uwagi-montażowe)
-19. [**Złącza maszynowe — schemat wyprowadzeń**](#19-złącza-maszynowe--schemat-wyprowadzeń-na-maszynę)
-    - 19.3 [J1 — Zasilanie 5V (TS13CP03)](#193-j1--zasilanie-5v-ts13cp03-13a250v-3-piny)
-    - 19.4 [J2 — Pistolety (TS17CP10)](#194-j2--wyjścia-przekaźników-pistoletów-ts17cp10-5a400v-10-pinów)
-    - 19.5 [J3 — Enkoder (TS13CP05)](#195-j3--enkoder-obrotowy-ts13cp05-5a180v-5-pinów)
-    - 19.6 [J4 — Pilot zdalny (TS13PS06)](#196-j4--pilot-zdalny-ts13ps06-5a125v-6-pinów)
-    - 19.7 [J5 — Przycisk nożny (TS21CP04)](#197-j5--przycisk-nożny-ts21cp04-30a500v-4-piny)
-20. [**Ocena gotowości produkcyjnej**](#20-ocena-gotowości-produkcyjnej--v2520)
+1. [Architektura systemu](#1-architektura-systemu)
+2. [Lista materiałów (BOM)](#2-lista-materiałów-bom)
+3. [Sterownik: mapa GPIO](#3-sterownik-mapa-gpio)
+4. [Sterownik: schematy modułów](#4-sterownik-schematy-modułów)
+5. [Moduł wyświetlacza 7"](#5-moduł-wyświetlacza-7)
+6. [Zasilanie](#6-zasilanie)
+7. [Złącza maszynowe J1–J5](#7-złącza-maszynowe-j1j5)
+8. [Kompletny diagram okablowania](#8-kompletny-diagram-okablowania)
+9. [Przewody, złącza, zabezpieczenia](#9-przewody-złącza-zabezpieczenia)
+10. [Checklist montażowy i diagnostyka](#10-checklist-montażowy-i-diagnostyka)
+11. [Bezpieczeństwo sprzętowe](#11-bezpieczeństwo-sprzętowe)
 
 ---
 
-## 1. Specyfikacja sprzętowa
+## 1. Architektura systemu
 
-### 1.1 Mikrokontroler
+System składa się z **dwóch urządzeń** połączonych bezprzewodowo. Sterownik jest jedynym urządzeniem
+sterującym pistoletami; moduł 7" jest panelem operatora (nie ma żadnego przewodowego połączenia sygnałowego
+ze sterownikiem — tylko zasilanie).
 
-| Parametr | Wartość |
-|----------|---------|
-| Moduł | ESP32-S3 N16R8 (DevKitC-1) |
-| Procesor | Xtensa LX7 dual-core, do 240 MHz |
-| Flash | 16 MB (Quad SPI) |
-| PSRAM | 8 MB (Octal SPI) — **GPIO 26–37 zajęte!** |
-| WiFi | 802.11 b/g/n, 2.4 GHz |
-| Zasilanie | USB-C 5V |
-| Framework | Arduino (ESP-IDF) + PlatformIO |
+```mermaid
+flowchart LR
+    subgraph MASZYNA["Maszyna malowarki"]
+        AKU["Akumulator / instalacja<br/>12 V lub 24 V DC"]
+        DCDC["Przetwornica DC-DC<br/>5 V, min. 3 A"]
+        ZAW["6 zaworów pistoletów<br/>P1 ... P6 (12/24 V)"]
+        ENC["Enkoder na kole<br/>pomiarowym"]
+        PIL["Pilot przewodowy<br/>(START/SEL/STOP/GAP)"]
+        NOZ["Przycisk nożny<br/>(START + STOP)"]
+        GPSANT["Antena GPS<br/>(NEO-6M)"]
+    end
 
-### 1.2 Peryferia — dokładne modele komponentów
+    subgraph STER["Sterownik Trassar (ESP32-S3 N16R8)"]
+        MCU["ESP32-S3<br/>Core 1: logika, pistolety<br/>Core 0: WiFi AP, HTTP, WebSocket"]
+        TFT["TFT ILI9341 2.8 in<br/>+ karta SD"]
+        BTN["Przyciski: START, STOP,<br/>SELEKTOR, GAP + joystick"]
+        MCP["MCP23017 + 15 przycisków<br/>wzorców"]
+        RTC["RTC DS1307"]
+        REL["Moduł przekaźników<br/>6 kanałów, opto"]
+        BUZ["Buzzer pasywny"]
+    end
 
-| # | Komponent | Model / Part Number | Interfejs | Opis |
-|---|-----------|---------------------|-----------|------|
-| 1 | Wyświetlacz LCD | **ILI9341 2.8" TFT SPI** (moduł 240×320 z Touch + SD) | SPI (HSPI/SPI3), 27 MHz | Sterownik ILI9341, rozdzielczość 320×240 px, tryb landscape |
-| 2 | Karta SD | **MicroSD** (slot zintegrowany w module ILI9341) | SPI (HSPI/SPI3) | FAT32, współdzieli magistralę SPI z TFT |
-| 3 | Zegar RTC | **DS1307 AT24C32** (moduł z EEPROM + slot baterii) | I2C (adres 0x68) | Bateria CR2032, dokładność ±2 ppm |
-| 4 | Enkoder | **Enkoder obrotowy inkrementalny** (typ KY-040 lub HW-040) | Digital + ISR (CHANGE) | 20 impulsów/obrót, z przyciskiem SW |
-| 5 | Przyciski | **BS-33B** monostabilne NO × 3 szt. | Digital (INPUT_PULLUP) | START, STOP, SELEKTOR — montaż panelowy |
-| 6 | Moduł przekaźników | **SRD-05VDC-SL-C 6-kanałowy** (moduł z optoisolacją) | Digital (HIGH = ON) | 6× przekaźnik 5V/10A, opto-izolacja, diody flyback |
-| 7 | Buzzer | **Buzzer pasywny 5V** (np. TMB12A05 lub odpowiednik) | LEDC PWM (kanał 1) | Pasywny — wymaga sygnału PWM, zakres 100 Hz – 5 kHz |
-| 8 | GPS | **GY-NEO6MV2** (chip u-blox NEO-6M + antena ceramiczna) | UART2 (9600 baud) | Antena 25×25 mm, 50 kanałów, NMEA 0183, cold start <35 s |
-| 9 | Joystick | **KY-023** (moduł joysticka analogowego 2-osiowego) | ADC2 (GPIO 19/20) + Digital (GPIO 46) | 2 potencjometry 10kΩ + przycisk tact |
-| 10 | Bateria RTC | **CR2032** 3V litowa | — | Podtrzymanie zegara DS1307 po odłączeniu zasilania |
-| 11 | Ekspander I/O | **MCP23017** (ekspander I2C 16-bit) | I2C (adres 0x20, wspólna magistrala z DS1307) | 15 wejść przyciskowych, wewn. pull-up, DIP-28 |
-| 12 | Przyciski wzorców | **Monostabilne NO** × 15 szt. | Digital (via MCP23017 GPA0–GPB6) | Montaż panelowy, po jednym na wzorzec P-1a…P-7d |
+    subgraph DISP["Moduł wyświetlacza 7 in (ESP32-S3)"]
+        LCD["Panel 800x480<br/>+ dotyk GT911"]
+        LVGL["LVGL UI<br/>klient WiFi"]
+    end
 
-### 1.3 Firmware
+    AKU --> DCDC
+    DCDC -->|"5 V"| MCU
+    DCDC -->|"5 V (osobna linia)"| LCD
+    AKU -->|"zasilanie zaworów"| REL
+    REL --> ZAW
+    MCU --- TFT
+    MCU --- BTN
+    MCU --- MCP
+    MCU --- RTC
+    MCU --> REL
+    MCU --> BUZ
+    ENC -->|"CLK, DT, SW"| MCU
+    PIL -->|"równolegle do panelu"| BTN
+    NOZ -->|"równolegle do panelu"| BTN
+    GPSANT --> MCU
+    MCU <-->|"WiFi AP 'TrassarV3'<br/>WebSocket :81 + HTTP :80"| LVGL
+    LVGL --- LCD
+```
 
-| Parametr | Wartość |
-|----------|---------|
-| Wersja | 2.52.0 |
-| Platforma | ESP32-S3 (PlatformIO) |
-| Biblioteki | TFT_eSPI v2.5.43, ArduinoJson v7.0.4, RTClib v2.1.4, TinyGPSPlus v1.0.3, WebSockets v2.4.1, SD, Wire, WiFi, esp_task_wdt |
-| Orientacja ekranu | Landscape (setRotation 1) |
-| Anti-flicker | setTextPadding() zamiast clear() na HOME/PAINTING |
+### Kanały komunikacji
 
-### 1.4 Lista materiałów (BOM)
+| Kanał | Medium | Protokół | Kierunek |
+|-------|--------|----------|----------|
+| Status na żywo | WiFi (AP sterownika) | WebSocket `ws://192.168.4.1:81`, JSON co 500 ms | sterownik → moduł 7" / telefon |
+| Polecenia | WiFi | HTTP `POST /api/control` (form-urlencoded) | moduł 7" / telefon → sterownik |
+| Statystyki, konfiguracja | WiFi | HTTP `GET /api/stats`, `POST get_slot_config` | dwukierunkowo |
+| Raporty, trasy GPS | WiFi | HTTP (pobieranie plików z karty SD) | sterownik → telefon/PC |
 
-| # | Komponent | Ilość | Uwagi zakupowe |
-|---|-----------|-------|----------------|
-| 1 | ESP32-S3 N16R8 DevKitC-1 | 1 | Espressif, 16 MB Flash, 8 MB PSRAM, USB-C |
-| 2 | Moduł ILI9341 2.8" TFT z SD i Touch | 1 | Moduł 14-pin (SPI), zintegrowany slot MicroSD |
-| 3 | Moduł RTC DS1307 AT24C32 | 1 | Z gniazdem na CR2032 |
-| 4 | Bateria CR2032 | 1 | Litowa 3V, do modułu DS1307 |
-| 5 | Enkoder obrotowy KY-040 | 1 | 5-pin: CLK, DT, SW, VCC, GND |
-| 6 | Przycisk BS-33B (NO, monostabilny) | 3 | START, STOP, SELEKTOR |
-| 7 | Moduł przekaźników 6-kanałowy 5V | 1 | Z opto-izolacją, wejścia aktywne HIGH |
-| 8 | Moduł GPS GY-NEO6MV2 NEO-6M | 1 | Z anteną ceramiczną na kablu |
-| 9 | Joystick analogowy KY-023 | 1 | 5-pin: VRx, VRy, SW, +5V, GND |
-| 10 | Buzzer pasywny 5V | 1 | 2-pin (+/−), montaż panelowy |
-| 11 | Karta MicroSD | 1 | FAT32, min. 1 GB, klasa 4+ |
-| 12 | Ekspander MCP23017 DIP-28 | 1 | I2C adres 0x20 (A0=A1=A2=GND), zasilanie 3.3V |
-| 13 | Przycisk monostabilny NO (wzorce) | 15 | Montaż panelowy, podłączenie: pin MCP → GND |
-| 14 | Przewody połączeniowe Dupont | ~65 | Żeńsko-żeński i żeńsko-męski |
-| 15 | Zasilacz USB-C 5V/2A | 1 | Minimum 1.5A przy pełnym obciążeniu |
-| 14 | Koło pomiarowe + uchwyt enkodera | 1 | Obwód dopasowany do kalibracji |
-| 15 | Zawory elektromagnetyczne pistoletów | 6 | Podłączenie do wyjść NO przekaźników |
+Szczegóły API: [API_WWW.md](API_WWW.md). Moduł 7": [MODUL_WYSWIETLACZA.md](MODUL_WYSWIETLACZA.md).
 
 ---
 
-## 1.5 Fizyczny pinout ESP32-S3 N16R8 DevKitC-1
+## 2. Lista materiałów (BOM)
 
-Poniższy diagram pokazuje fizyczne rozmieszczenie pinów na płytce DevKitC-1 (widok z góry, USB-C na dole). Piny oznaczone **[✓]** są wykorzystywane w projekcie TrassarV3.
+### 2.1 Sterownik
+
+| # | Komponent | Model | Ilość | Uwagi |
+|---|-----------|-------|-------|-------|
+| 1 | Mikrokontroler | ESP32-S3 N16R8 DevKitC-1 | 1 | 16 MB Flash, 8 MB Octal PSRAM, USB-C |
+| 2 | Wyświetlacz | ILI9341 2.8" TFT SPI 240×320 (z SD i Touch) | 1 | Slot MicroSD na module |
+| 3 | Karta pamięci | MicroSD FAT32, min. 1 GB, klasa 4+ | 1 | Raporty, trasy, backup NVS |
+| 4 | Zegar RTC | DS1307 AT24C32 (moduł z gniazdem CR2032) | 1 | I2C 0x68, zasilanie 5 V |
+| 5 | Bateria RTC | CR2032 | 1 | |
+| 6 | Enkoder | KY-040 / HW-040 (inkrementalny + przycisk SW) | 1 | 5-pin, na kole pomiarowym |
+| 7 | Przyciski sterujące | BS-33B monostabilne NO | 3 | START, STOP, SELEKTOR (panel) |
+| 8 | Ekspander I/O | MCP23017 DIP-28 | 1 | I2C 0x20, zasilanie 3,3 V |
+| 9 | Przyciski wzorców | Monostabilne NO, montaż panelowy | 15 | Po jednym na wzorzec P-1a … P-7d |
+| 10 | Moduł przekaźników | 6-kanałowy 5 V, opto-izolowany, SRD-05VDC-SL-C | 1 | Wejścia aktywne stanem HIGH |
+| 11 | GPS | GY-NEO6MV2 (u-blox NEO-6M + antena) | 1 | UART2, 9600 baud |
+| 12 | Joystick | KY-023 analogowy 2-osiowy + przycisk | 1 | 3,3 V |
+| 13 | Buzzer | Pasywny 5 V (np. TMB12A05) | 1 | Sterowany PWM |
+| 14 | Czujnik temperatury (opcja) | DS18B20 + rezystor 4,7 kΩ | 0–1 | GPIO 15 |
+| 15 | Przetwornica DC-DC | 12/24 V → 5 V, min. 3 A | 1 | Na maszynie |
+| 16 | Zawory pistoletów | Elektromagnetyczne 12/24 V DC | 6 | Zasilane z instalacji maszyny |
+| 17 | Złącza maszynowe | J1 TS13CP03, J2 TS17CP10, J3 TS13CP05, J4 TS13PS06, J5 TS21CP04 | po 1 | Patrz [sekcja 7](#7-złącza-maszynowe-j1j5) |
+| 18 | Kondensatory | 100 nF ceramiczne | 2+ | Filtr CLK/DT enkodera |
+| 19 | Bezpiecznik | PTC 1,5 A (linia 5 V) + dioda TVS 5,5 V | 1+1 | Zalecane |
+
+### 2.2 Moduł wyświetlacza 7"
+
+| # | Komponent | Model | Ilość | Uwagi |
+|---|-----------|-------|-------|-------|
+| 1 | Płytka z wyświetlaczem | **Sunton ESP32-8048S070C** (ESP32-S3, 7" IPS 800×480 RGB, dotyk pojemnościowy GT911, 8 MB PSRAM OPI, 16 MB Flash) | 1 | Wariant „C" = dotyk; „N" = bez dotyku |
+| 2 | Zasilanie | 5 V DC (USB-C lub gniazdo zasilania płytki), osobne odgałęzienie ≥ 1 A | 1 | Patrz [sekcja 6](#6-zasilanie) |
+| 3 | Obudowa | Do wykonania (druk 3D na prototyp, potem aluminium) | 1 | Osobny etap projektu |
+
+---
+
+## 3. Sterownik: mapa GPIO
+
+> **UWAGA:** GPIO 26–37 są zajęte przez Flash i Octal PSRAM w wariancie N16R8 — **nie podłączać niczego**.
+> GPIO 46 (joystick SW) jest pinem strapping — **nie wciskać joysticka przy włączaniu zasilania**.
+
+| GPIO | Funkcja | Typ | Uwagi |
+|------|---------|-----|-------|
+| 1 | Przekaźnik P3 (oś prawy, 12 cm) | OUTPUT | HIGH = pistolet ON |
+| 2 | Przekaźnik P4 (oś szeroki, 24 cm) | OUTPUT | |
+| 3 | Przekaźnik P5 (krawędź wąska, 12 cm) | OUTPUT | |
+| 4 | Przekaźnik P6 (krawędź szeroka, 24 cm) | OUTPUT | |
+| 5 | Enkoder CLK (A) | INPUT_PULLUP | ISR na CHANGE |
+| 6 | Enkoder DT (B) | INPUT_PULLUP | ISR na CHANGE |
+| 7 | Przycisk GAP (SW enkodera) | INPUT_PULLUP | Start od przerwy |
+| 8 | Buzzer | PWM (LEDC kanał 1) | |
+| 9 | TFT DC | OUTPUT | |
+| 10 | TFT CS | OUTPUT | |
+| 11 | SPI MOSI | OUTPUT | Wspólny: TFT, SD, Touch |
+| 12 | SPI SCK | OUTPUT | Wspólny: TFT, SD, Touch |
+| 13 | SPI MISO | INPUT | Wspólny: TFT, SD, Touch |
+| 14 | TFT RST | OUTPUT | |
+| 15 | Touch CS / czujnik DS18B20 | OUTPUT / 1-Wire | Współdzielony (dotyk TFT nieużywany w UI) |
+| 16 | SD CS | OUTPUT | Ustawiany na HIGH przed inicjalizacją TFT |
+| 17 | I2C SDA | I/O | RTC DS1307 + MCP23017 |
+| 18 | I2C SCL | OUTPUT | RTC DS1307 + MCP23017 |
+| 19 | Joystick VRx | ADC2 | Oś pozioma |
+| 20 | Joystick VRy | ADC2 | Oś pionowa |
+| 21 | TFT podświetlenie | PWM (LEDC kanał 0) | 5 kHz, 8 bit |
+| 26–37 | **ZAJĘTE (Flash + Octal PSRAM)** | — | **Nie używać** |
+| 38 | Przycisk START | INPUT_PULLUP | |
+| 39 | Przycisk STOP | INPUT_PULLUP | Dodatkowo ISR awaryjnego stopu (FALLING) |
+| 40 | Przycisk SELEKTOR | INPUT_PULLUP | |
+| 41 | Przekaźnik P1 (oś lewy, 12 cm) | OUTPUT | |
+| 42 | Przekaźnik P2 (oś środek, 12 cm) | OUTPUT | |
+| 43 / 44 | UART0 TX / RX (USB-serial) | — | Monitor szeregowy |
+| 46 | Joystick SW | INPUT_PULLUP | **Strap pin** |
+| 47 | GPS RX (ESP32 RX ← GPS TX) | UART2 | 9600 baud |
+| 48 | GPS TX (ESP32 TX → GPS RX) | UART2 | |
+| 0, 45 | Wolne | — | Strap piny — unikać |
+
+### 3.1 Fizyczny pinout ESP32-S3 DevKitC-1 (widok z góry, USB-C na dole)
 
 ```
                         ┌──────────────┐
                         │   ESP32-S3   │
-                        │  N16R8       │
+                        │    N16R8     │
                         │  DevKitC-1   │
-                        │              │
-             Lewy       │  ┌────────┐  │      Prawy
-             header     │  │ CHIP   │  │      header
-                        │  │ ESP32  │  │
-                        │  │  -S3   │  │
-                        │  └────────┘  │
-                        │              │
    ─────────────────────┤              ├─────────────────────
    Pin# │ Funkcja       │              │ Funkcja       │ Pin#
    ─────┤───────────────┤              ├───────────────┤─────
     1   │ 3V3           │              │ GND           │  1
     2   │ 3V3           │              │ TX (GPIO 43)  │  2
     3   │ RST           │              │ RX (GPIO 44)  │  3
-    4   │ GPIO 4  [✓]P6 │              │ GPIO 1  [✓]P3 │  4
-    5   │ GPIO 5  [✓]CLK│              │ GPIO 2  [✓]P4 │  5
-    6   │ GPIO 6  [✓]DT │              │ GPIO 42 [✓]P2 │  6
-    7   │ GPIO 7  [✓]GAP│              │ GPIO 41 [✓]P1 │  7
-    8   │ GPIO 15 [✓]T_CS              │ GPIO 40 [✓]SEL│  8
-    9   │ GPIO 16 [✓]SDCS              │ GPIO 39 [✓]STP│  9
-   10   │ GPIO 17 [✓]SDA│              │ GPIO 38 [✓]STR│ 10
-   11   │ GPIO 18 [✓]SCL│              │ GPIO 37 ──PSRAM│ 11
-   12   │ GPIO 8  [✓]BUZ│              │ GPIO 36 ──PSRAM│ 12
-   13   │ GPIO 3  [✓]P5 │              │ GPIO 35 ──PSRAM│ 13
-   14   │ GPIO 46 [✓]JSW│              │ GPIO 0        │ 14
-   15   │ GPIO 9  [✓]DC │              │ GPIO 45       │ 15
-   16   │ GPIO 10 [✓]CS │              │ GPIO 48 [✓]GTX│ 16
-   17   │ GPIO 11 [✓]MOS│              │ GPIO 47 [✓]GRX│ 17
-   18   │ GPIO 12 [✓]SCK│              │ GPIO 21 [✓]LED│ 18
-   19   │ GPIO 13 [✓]MIS│              │ GPIO 20 [✓]VRy│ 19
-   20   │ GPIO 14 [✓]RST│              │ GPIO 19 [✓]VRx│ 20
+    4   │ GPIO 4  [P6]  │              │ GPIO 1  [P3]  │  4
+    5   │ GPIO 5  [CLK] │              │ GPIO 2  [P4]  │  5
+    6   │ GPIO 6  [DT]  │              │ GPIO 42 [P2]  │  6
+    7   │ GPIO 7  [GAP] │              │ GPIO 41 [P1]  │  7
+    8   │ GPIO 15 [T_CS]│              │ GPIO 40 [SEL] │  8
+    9   │ GPIO 16 [SDCS]│              │ GPIO 39 [STOP]│  9
+   10   │ GPIO 17 [SDA] │              │ GPIO 38 [START]│ 10
+   11   │ GPIO 18 [SCL] │              │ GPIO 37  PSRAM│ 11
+   12   │ GPIO 8  [BUZ] │              │ GPIO 36  PSRAM│ 12
+   13   │ GPIO 3  [P5]  │              │ GPIO 35  PSRAM│ 13
+   14   │ GPIO 46 [JSW] │              │ GPIO 0        │ 14
+   15   │ GPIO 9  [DC]  │              │ GPIO 45       │ 15
+   16   │ GPIO 10 [CS]  │              │ GPIO 48 [GPS TX]│16
+   17   │ GPIO 11 [MOSI]│              │ GPIO 47 [GPS RX]│17
+   18   │ GPIO 12 [SCK] │              │ GPIO 21 [BL]  │ 18
+   19   │ GPIO 13 [MISO]│              │ GPIO 20 [VRy] │ 19
+   20   │ GPIO 14 [RST] │              │ GPIO 19 [VRx] │ 20
    21   │ 5V (VBUS)     │              │ GND           │ 21
    22   │ GND           │              │ GND           │ 22
    ─────┤───────────────┤              ├───────────────┤─────
@@ -138,2340 +200,493 @@ Poniższy diagram pokazuje fizyczne rozmieszczenie pinów na płytce DevKitC-1 (
                         │  │ USB-C  │  │
                         │  └────────┘  │
                         └──────────────┘
-
-    Legenda pinów [✓] użytych w projekcie:
-    ─────────────────────────────────────
-    P1–P6   = Przekaźniki pistoletów
-    CLK/DT  = Enkoder obrotowy
-    GAP     = Przycisk "start od przerwy"
-    T_CS    = Touch Chip Select
-    SDCS    = SD Card Chip Select
-    SDA/SCL = Magistrala I2C (RTC + MCP23017)
-    BUZ     = Buzzer pasywny (PWM)
-    JSW     = Joystick przycisk (strap!)
-    DC/CS   = TFT Data/Command, Chip Select
-    MOS/SCK/MIS = SPI MOSI/SCK/MISO
-    RST     = TFT Reset
-    GTX/GRX = GPS UART2 TX/RX
-    LED     = TFT podświetlenie (PWM)
-    VRx/VRy = Joystick osie analogowe
-    STR/STP/SEL = Przyciski START/STOP/SELECT
-    PSRAM   = Zajęte przez Octal PSRAM — NIE UŻYWAĆ!
-```
-
-> **WAŻNE:** GPIO 26–37 (w tym 33–37 widoczne na prawym headerze) są zajęte przez Octal PSRAM w wariancie N16R8. Podłączenie czegokolwiek do tych pinów spowoduje crash systemu!
-
----
-
-## 2. Tabela podłączeń pinów ESP32-S3 N16R8
-
-### 2.1 Wyświetlacz ILI9341 2.8" (SPI — HSPI)
-
-| Pin ILI9341 | Pin ESP32-S3 | GPIO | Kierunek | Opis |
-|-------------|-------------|------|----------|------|
-| VCC | 3V3 | — | — | Zasilanie 3.3V |
-| GND | GND | — | — | Masa |
-| CS | GPIO 10 | 10 | OUTPUT | Chip Select wyświetlacza |
-| RESET | GPIO 14 | 14 | OUTPUT | Reset wyświetlacza |
-| DC/RS | GPIO 9 | 9 | OUTPUT | Data / Command |
-| SDI (MOSI) | GPIO 11 | 11 | OUTPUT | SPI Master Out Slave In |
-| SCK | GPIO 12 | 12 | OUTPUT | SPI Clock |
-| LED | GPIO 21 | 21 | PWM | Podświetlenie (LEDC PWM, kanał 0, 5 kHz) |
-| SDO (MISO) | GPIO 13 | 13 | INPUT | SPI Master In Slave Out |
-| T_CLK | GPIO 12 | 12 | — | Touch SPI Clock (wspólny z SCK) |
-| T_CS | GPIO 15 | 15 | OUTPUT | Touch Chip Select |
-| T_DIN | GPIO 11 | 11 | — | Touch MOSI (wspólny z SDI) |
-| T_DO | GPIO 13 | 13 | — | Touch MISO (wspólny z SDO) |
-| T_IRQ | — | — | — | Nie podłączony (opcjonalny) |
-
-> **Uwaga:** TFT używa portu HSPI (SPI3) — odizolowanego od Octal PSRAM. Częstotliwość SPI: 27 MHz. Podświetlenie sterowane PWM przez LEDC (kanał 0, 5 kHz, rozdzielczość 8 bitów, wartość domyślna 200/255).
-
-### 2.2 Czytnik kart SD (zintegrowany w module wyświetlacza)
-
-| Pin SD | Pin ESP32-S3 | GPIO | Kierunek | Opis |
-|--------|-------------|------|----------|------|
-| SD_CS | GPIO 16 | 16 | OUTPUT | Chip Select karty SD |
-| SD_MOSI | GPIO 11 | 11 | OUTPUT | SPI MOSI (wspólny z TFT) |
-| SD_MISO | GPIO 13 | 13 | INPUT | SPI MISO (wspólny z TFT) |
-| SD_SCK | GPIO 12 | 12 | OUTPUT | SPI Clock (wspólny z TFT) |
-
-> **Uwaga:** Karta SD współdzieli magistralę SPI (HSPI) z wyświetlaczem. Każde urządzenie ma osobny pin CS — TFT na GPIO 10, SD na GPIO 16. **Przed inicjalizacją TFT** pin SD_CS (GPIO 16) jest ustawiany na HIGH, aby karta SD nie odpowiadała na ruch SPI przeznaczony dla wyświetlacza.
-
-### 2.3 Zegar RTC DS1307 (I2C)
-
-| Pin DS1307 | Pin ESP32-S3 | GPIO | Kierunek | Opis |
-|------------|-------------|------|----------|------|
-| VCC | 5V | — | — | Zasilanie 5V |
-| GND | GND | — | — | Masa |
-| SDA | GPIO 17 | 17 | I/O | I2C Data |
-| SCL | GPIO 18 | 18 | OUTPUT | I2C Clock |
-
-> **Uwaga:** Moduł DS1307 wymaga zasilania 5V. Linie I2C mają wbudowane rezystory pull-up na module. Bateria CR2032 podtrzymuje czas po odłączeniu zasilania.
-
-### 2.4 Ekspander MCP23017 (I2C — 15 przycisków wzorców)
-
-| Pin MCP23017 | Pin ESP32-S3 | GPIO | Kierunek | Opis |
-|-------------|-------------|------|----------|------|
-| VDD | 3V3 | — | — | Zasilanie 3.3V |
-| VSS | GND | — | — | Masa |
-| SDA | GPIO 17 | 17 | I/O | I2C Data (wspólna z DS1307) |
-| SCL | GPIO 18 | 18 | OUTPUT | I2C Clock (wspólna z DS1307) |
-| A0 | GND | — | — | Bit adresu 0 (LOW → 0x20) |
-| A1 | GND | — | — | Bit adresu 1 (LOW → 0x20) |
-| A2 | GND | — | — | Bit adresu 2 (LOW → 0x20) |
-| RESET | 3V3 | — | — | Reset nieaktywny (HIGH) |
-| GPA0–GPA7 | — | — | INPUT (pull-up) | 8 przycisków wzorców (P-1a…P-3a) |
-| GPB0–GPB6 | — | — | INPUT (pull-up) | 7 przycisków wzorców (P-3b…P-7d) |
-| GPB7 | — | — | — | Nieużywany |
-
-> **Uwaga:** MCP23017 na wspólnej magistrali I2C z DS1307 (SDA=17, SCL=18). Adres I2C: 0x20. Wewnętrzne pull-up aktywowane programowo. Każdy przycisk podłączony: pin MCP → GND. Skanowanie co 20 ms z debounce.
-
-### 2.5 Enkoder obrotowy (pomiar dystansu i prędkości)
-
-| Pin enkodera | Pin ESP32-S3 | GPIO | Kierunek | Opis |
-|-------------|-------------|------|----------|------|
-| GND | GND | — | — | Masa |
-| CLK (A) | GPIO 5 | 5 | INPUT_PULLUP | Sygnał A (przerwanie ISR CHANGE) |
-| DT (B) | GPIO 6 | 6 | INPUT_PULLUP | Sygnał B |
-| SW | GPIO 7 | 7 | INPUT_PULLUP | Przycisk "Start od przerwy" |
-| + (VCC) | 3V3 | — | — | Zasilanie (opcjonalne) |
-
-> **Uwaga:** Piny CLK i DT mają włączone wewnętrzne rezystory pull-up ESP32-S3. Enkoder służy wyłącznie do pomiaru dystansu i prędkości (ISR na CLK/CHANGE). Debouncing ISR: 200 μs (ENC_ISR_DEBOUNCE_US). Obliczanie prędkości: co 250 ms z filtrem wykładniczym (alpha = 0.3).
-
-### 2.6 Joystick analogowy KY-023
-
-| Pin KY-023 | Pin ESP32-S3 | GPIO | Kierunek | Opis |
-|------------|-------------|------|----------|------|
-| GND | GND | — | — | Masa |
-| +5V | 3V3 | — | — | Zasilanie 3.3V |
-| VRx | GPIO 19 | 19 | ANALOG (ADC2) | Oś pozioma (lewo/prawo) |
-| VRy | GPIO 20 | 20 | ANALOG (ADC2) | Oś pionowa (góra/dół) |
-| SW | GPIO 46 | 46 | INPUT_PULLUP | Przycisk wciskany (aktywny LOW) |
-
-> **Uwaga:** GPIO 46 jest pinem strapping (ROM boot select). Z wewnętrznym pull-up jest HIGH podczas startu (normalny boot z Flash). **Nie wciskać joysticka podczas włączania urządzenia** — może spowodować wejście w tryb download.
-
-### 2.7 Przyciski sterujące (BS-33B monostabilne)
-
-| Przycisk | Pin ESP32-S3 | GPIO | Kierunek | Funkcja |
-|----------|-------------|------|----------|---------|
-| START | GPIO 38 | 38 | INPUT_PULLUP | Start / Pauza / Wznów / Wybór trybu (1 s, HOME) |
-| STOP | GPIO 39 | 39 | INPUT_PULLUP | Stop / Menu (1 s) / Cofnij |
-| SELEKTOR | GPIO 40 | 40 | INPUT_PULLUP | Odwróć P-3a/P-3b (HOME/PAINTING), nawigacja + wejście w opcję (menu serwis.) |
-| GAP (od przerwy) | GPIO 7 | 7 | INPUT_PULLUP | Start od przerwy (HOME) |
-
-> **UWAGA:** GPIO 26–37 są zajęte przez Octal PSRAM modułu N16R8! NIE wolno ich używać!
->
-> **Parametry przycisków:** Debounce: 50 ms, Długie naciśnięcie: 1000 ms. Podłączenie: jeden styk do GPIO, drugi do GND. Wewnętrzne pull-up aktywowane programowo.
-
-### 2.8 Przekaźniki pistoletów (6 szt.)
-
-| Pistolet | Pin ESP32-S3 | GPIO | Szerokość | Zastosowanie | Logika |
-|----------|-------------|------|-----------|-------------|--------|
-| P1 | GPIO 41 | 41 | 12 cm | Oś jezdni — lewy | HIGH = ON |
-| P2 | GPIO 42 | 42 | 12 cm | Oś jezdni — środek | HIGH = ON |
-| P3 | GPIO 1 | 1 | 12 cm | Oś jezdni — prawy | HIGH = ON |
-| P4 | GPIO 2 | 2 | 24 cm | Oś jezdni — szeroki | HIGH = ON |
-| P5 | GPIO 3 | 3 | 12 cm | Krawędź — wąska | HIGH = ON |
-| P6 | GPIO 4 | 4 | 24 cm | Krawędź — szeroka | HIGH = ON |
-
-> **Podłączenie:** GPIO → IN modułu przekaźnikowego 5V. Wyjścia NO (Normally Open) przekaźników podłączone do zaworów pistoletów natryskowych.
-
----
-
-## 3. Kompletna mapa GPIO
-
-| GPIO | Funkcja | Typ | Uwagi |
-|------|---------|-----|-------|
-| **1** | Przekaźnik P3 | OUTPUT | Pistolet oś R, 12 cm |
-| **2** | Przekaźnik P4 | OUTPUT | Pistolet oś, 24 cm |
-| **3** | Przekaźnik P5 | OUTPUT | Pistolet krawędź, 12 cm |
-| **4** | Przekaźnik P6 | OUTPUT | Pistolet krawędź, 24 cm |
-| **5** | Enkoder CLK | INPUT_PULLUP | ISR CHANGE, debounce 50 μs |
-| **6** | Enkoder DT | INPUT_PULLUP | Sygnał kierunku |
-| **7** | Przycisk GAP (SW enkodera) | INPUT_PULLUP | "Start od przerwy" |
-| **8** | Buzzer | PWM (LEDC ch1) | Sygnalizacja dźwiękowa (pasywny) |
-| **9** | TFT DC | OUTPUT | Data/Command |
-| **10** | TFT CS | OUTPUT | Chip Select wyświetlacza |
-| **11** | SPI MOSI | OUTPUT | Wspólny TFT + SD |
-| **12** | SPI SCK | OUTPUT | Wspólny TFT + SD + Touch |
-| **13** | SPI MISO | INPUT | Wspólny TFT + SD + Touch |
-| **14** | TFT RST | OUTPUT | Reset wyświetlacza |
-| **15** | Touch CS | OUTPUT | Touch Chip Select |
-| **16** | SD Card CS | OUTPUT | Chip Select karty SD |
-| **17** | RTC SDA | I/O | I2C Data (DS1307) |
-| **18** | RTC SCL | OUTPUT | I2C Clock (DS1307) |
-| **19** | Joystick VRx | ADC2_CH8 | KY-023 oś pozioma (lewo/prawo) |
-| **20** | Joystick VRy | ADC2_CH9 | KY-023 oś pionowa (góra/dół) |
-| **21** | TFT LED | PWM | Podświetlenie LEDC kanał 0 |
-| **26–37** | **ZAJĘTE** | — | **Flash + Octal PSRAM — nie podłączać!** |
-| **38** | Przycisk START | INPUT_PULLUP | Start / Pauza / Wznów |
-| **39** | Przycisk STOP | INPUT_PULLUP | Stop / Menu (1 s) |
-| **40** | Przycisk SELECT | INPUT_PULLUP | Odwróć (P-3a/P-3b) / Menu nawigacja |
-| **41** | Przekaźnik P1 | OUTPUT | Pistolet oś L, 12 cm |
-| **42** | Przekaźnik P2 | OUTPUT | Pistolet oś C, 12 cm |
-| **46** | Joystick SW | INPUT_PULLUP | KY-023 przycisk (strap pin) |
-| **47** | GPS RX (UART2) | INPUT | ESP32 RX ← GPS TX |
-| **48** | GPS TX (UART2) | OUTPUT | ESP32 TX → GPS RX |
-
----
-
-## 4. Mapowanie funkcji na piny
-
-### 4.1 Funkcje przycisków w kontekście ekranów
-
-| Funkcja | Element | GPIO | Ekran | Uwagi |
-|---------|---------|------|-------|-------|
-| Start malowania | START | 38 | HOME | Krótkie naciśnięcie |
-| Ekran przygotowania (SETUP) | START | 38 | HOME | Długie naciśnięcie (1 s) |
-| Start od przerwy | GAP | **7** | HOME | Krótkie naciśnięcie |
-| Pauza / Wznowienie | START | 38 | PAINTING | Krótkie naciśnięcie (AUTO) |
-| Kolejna linia (SEMI) | START | 38 | PAINTING | Krótkie naciśnięcie (SEMI, po kreski) |
-| Pistolety ON (RĘCZNY) | START | 38 | PAINTING | Trzymanie (tryb RĘCZNY) |
-| Kursor dalej (SETUP) | SELEKTOR | 40 | SETUP | Krótkie naciśnięcie |
-| Zmień opcję (SETUP) | SELEKTOR | 40 | SETUP | Długie naciśnięcie (1 s) |
-| Maluj z ustawieniami | START | 38 | SETUP | Krótkie naciśnięcie |
-| Zatrzymanie | STOP | 39 | PAINTING | Krótkie naciśnięcie |
-| Odwrócenie wzorca | SELEKTOR | 40 | HOME / PAINTING | Krótkie naciśnięcie, **tylko P-3a/P-3b** |
-| Smart/Instant toggle | SELEKTOR | 40 | SETUP | Zmiana opcji "Przełączanie" |
-| Menu serwisowe | STOP | 39 | HOME | Długie naciśnięcie (1 s) |
-| Nawigacja → dalej | SELEKTOR | 40 | MENU SERWIS. | Krótkie naciśnięcie |
-| Nawigacja → cofnij | STOP | 39 | MENU SERWIS. | Krótkie naciśnięcie |
-| Wejście w opcję | SELEKTOR | 40 | MENU SERWIS. | Długie naciśnięcie (1 s) |
-| Powrót | STOP | 39 | MENU / EKRANY | Długie naciśnięcie (1 s) |
-| Kalibracja start/stop | START | 38 | KALIBRACJA | Krótkie naciśnięcie |
-| Pomiar dystansu | START | 38 | POMIAR | Krótkie naciśnięcie |
-| Reset pomiaru | STOP | 39 | POMIAR | Krótkie naciśnięcie |
-| Czyszczenie dysz | START | 38 | CZYSZCZ. DYSZ | **Trzymaj** — pistolety ON |
-| Zmiana wzorca (czyszcz.) | SELEKTOR | 40 | CZYSZCZ. DYSZ | Krótko = dalej, długo = cofnij |
-| Pomiar dystansu/prędkości | Enkoder CLK/DT | 5, 6 | Dowolny | ISR, brak funkcji UI |
-
-### 4.2 Zmiana wzorca malowania
-
-Zmiana wzorca jest możliwa przez:
-- **15 fizycznych przycisków wzorców** (MCP23017) — dedykowany przycisk per wzorzec predefiniowany (P-1a…P-7d)
-- **Panel WWW** — 16 przycisków wzorców (http://192.168.4.1), w tym WŁASNY
-- **API REST** — `POST /api/control` z `action=set_pattern&value=0..15` (15 = WŁASNY)
-
-Na fizycznym panelu sterowania (ekran HOME i PAINTING) przycisk SELEKTOR **nie zmienia** wzorca (służy do odwracania P-3a/P-3b). Wzorzec WŁASNY dostępny wyłącznie z panelu WWW/API.
-
----
-
-## 5. Schemat blokowy systemu
-
-```
-                          ┌──────────────────────────────────┐
-                          │         ESP32-S3 N16R8            │
-                          │     (16MB Flash, 8MB PSRAM)       │
-                          │                                   │
-    ┌───────────┐  SPI    │  GPIO 10 ← CS  (TFT)             │
-    │  ILI9341  │◄────────│  GPIO  9 ← DC                    │
-    │  2.8" TFT │ (HSPI)  │  GPIO 14 ← RST                   │
-    │  320×240  │         │  GPIO 11 ← MOSI ──────┐          │
-    │  landscape│         │  GPIO 13 → MISO ──────┤ Wspólne  │
-    │           │         │  GPIO 12 ← SCK  ──────┤ SPI      │
-    │           │         │  GPIO 21 ← LED (PWM)  │          │
-    │  Touch    │         │  GPIO 15 ← T_CS       │          │
-    │           │         │                        │          │
-    │  SD Card  │         │  GPIO 16 ← SD_CS ─────┘          │
-    └───────────┘         │                                   │
-                          │                                   │
-    ┌───────────┐  I2C    │  GPIO 17 ↔ SDA ──┐ Wspólna        │
-    │  DS1307   │◄────────│  GPIO 18 ← SCL ──┤ magistrala     │
-    │  RTC      │         │                   │ I2C            │
-    │  CR2032   │         │                   │                │
-    └───────────┘         │                   │                │
-                          │                   │                │
-    ┌───────────┐  I2C    │                   │                │
-    │ MCP23017  │◄────────│  SDA ─────────────┘                │
-    │ expander  │         │  SCL ─────────────┘                │
-    │ (0x20)    │         │                                   │
-    │ 15 przycis│         │  GPA0..GPA7 + GPB0..GPB6           │
-    │ wzorców   │         │  = 15 przycisków P-1a...P-7d       │
-    └───────────┘         │                                   │
-                          │                                   │
-    ┌───────────┐ Digital │  GPIO  5 → CLK (ISR CHANGE)       │
-    │  Enkoder  │─────────│  GPIO  6 → DT                     │
-    │  obrotowy │         │  GPIO  7 → SW (przycisk GAP)      │
-    │  (koło    │         │                                   │
-    │  pomiar.) │         │                                   │
-    └───────────┘         │                                   │
-                          │                                   │
-    ┌───────────┐         │  --- PRZYCISKI (pull-up) ---      │
-    │  BS-33B   │         │                                   │
-    │ przyciski │         │                                   │
-    │           │         │                                   │
-    │ [START]───│── GND ──│── GPIO 38                         │
-    │ [STOP]────│── GND ──│── GPIO 39                         │
-    │ [SELECT]──│── GND ──│── GPIO 40                         │
-    └───────────┘         │                                   │
-                          │  --- JOYSTICK ---                │
-    ┌───────────┐         │                                   │
-    │  KY-023   │         │                                   │
-    │ joystick  │         │                                   │
-    │           │         │                                   │
-    │  VRx ─────├─────────│── GPIO 19  (ADC2)                │
-    │  VRy ─────├─────────│── GPIO 20  (ADC2)                │
-    │  SW  ─────├─────────│── GPIO 46  (INPUT_PULLUP)        │
-    └───────────┘         │                                   │
-                          │  --- BUZZER ---                   │
-    ┌───────────┐         │                                   │
-    │  Buzzer   │         │                                   │
-    │  pasywny  ├─────────│── GPIO  8  (PWM LEDC ch1)        │
-    │           ├── GND ──│── GND                             │
-    └───────────┘         │                                   │
-                          │  --- PRZEKAŹNIKI ---              │
-    ┌───────────┐         │                                   │
-    │ Moduł     │         │                                   │
-    │ 6-kanał.  │         │                                   │
-    │ przekaźn. │         │                                   │
-    │           │         │                                   │
-    │ P1(12cm)◄─│─────────│── GPIO 41                         │
-    │ P2(12cm)◄─│─────────│── GPIO 42                         │
-    │ P3(12cm)◄─│─────────│── GPIO  1                         │
-    │ P4(24cm)◄─│─────────│── GPIO  2                         │
-    │ P5(12cm)◄─│─────────│── GPIO  3                         │
-    │ P6(24cm)◄─│─────────│── GPIO  4                         │
-    └───────────┘         │                                   │
-                          │                                   │
-    ┌───────────┐  UART2  │  GPIO 47 → RX (← GPS TX)          │
-    │  GPS      │─────────│  GPIO 48 ← TX (→ GPS RX)          │
-    │ NEO-6M    │         │  9600 baud                         │
-    │ + antena  │         │                                   │
-    └───────────┘         │                                   │
-                          │  WiFi AP: TrassarV3 (12345678)    │
-                          │  HTTP: http://192.168.4.1:80      │
-                          │  Max klientów: 4                  │
-                          └──────────────────────────────────┘
 ```
 
 ---
 
-## 6. Schematy podłączeń poszczególnych modułów
+## 4. Sterownik: schematy modułów
 
-### 6.1 Podłączenie przycisków BS-33B
-
-```
-    3.3V (wewnętrzny pull-up ESP32-S3)
-     │
-     ├───────── GPIO 38  [START/PAUZA]
-     │            │
-     │      ┌─────┴─────┐
-     │      │  BS-33B   │
-     │      │  przycisk │
-     │      └─────┬─────┘
-     │            │
-     └──── GND ───┘
-
-    Identycznie dla:
-     GPIO 39  [STOP]
-     GPIO 40  [SELEKTOR]
-```
-
-### 6.2 Podłączenie enkodera obrotowego
+### 4.1 Wyświetlacz ILI9341 + karta SD (wspólna magistrala SPI)
 
 ```
-           3V3 (opcjonalnie)
-            │
-    ┌───────┤
-    │  VCC  │
-    │       │
-    │  CLK  ├──── GPIO 5  (INPUT_PULLUP, ISR CHANGE, debounce 50μs)
-    │       │
-    │  DT   ├──── GPIO 6  (INPUT_PULLUP)
-    │       │
-    │  SW   ├──── GPIO 7  (INPUT_PULLUP) ← "START OD PRZERWY"
-    │       │
-    │  GND  ├──── GND
-    └───────┘
+   ESP32-S3                        Moduł ILI9341 2.8" (14-pin)
+   ─────────                       ───────────────────────────
+   3V3  ───────────────────────────  VCC
+   GND  ───────────────────────────  GND
+   GPIO 10 ────────────────────────  CS
+   GPIO 14 ────────────────────────  RESET
+   GPIO  9 ────────────────────────  DC / RS
+   GPIO 11 ────────────────────────  SDI (MOSI)  ─┬─ T_DIN, SD_MOSI (wspólne)
+   GPIO 12 ────────────────────────  SCK         ─┼─ T_CLK, SD_SCK  (wspólne)
+   GPIO 13 ────────────────────────  SDO (MISO)  ─┴─ T_DO,  SD_MISO (wspólne)
+   GPIO 21 ────────────────────────  LED (podświetlenie, PWM)
+   GPIO 15 ────────────────────────  T_CS (Touch CS)
+   GPIO 16 ────────────────────────  SD_CS (karta SD)
+                                     T_IRQ — niepodłączony
 ```
 
-> Pin SW enkodera (GPIO 7) pełni rolę dedykowanego przycisku "Start od przerwy". Obroty enkodera (CLK/DT) służą wyłącznie do pomiaru dystansu i prędkości.
+Częstotliwość SPI: 27 MHz (zapis), 16 MHz (odczyt). Każde urządzenie ma osobny CS; przed inicjalizacją TFT
+firmware ustawia `SD_CS = HIGH`, aby karta nie reagowała na ruch przeznaczony dla wyświetlacza.
+Przewody SPI: ekranowane, max 15–20 cm.
 
-### 6.3 Podłączenie buzzera pasywnego
-
-```
-    ESP32-S3               Buzzer pasywny
-    ┌──────────┐           ┌───────────┐
-    │          │           │           │
-    │ GPIO  8  ├───────────┤ +  (sygnał)│
-    │          │           │           │
-    │    GND   ├───────────┤ -  (masa)  │
-    └──────────┘           └───────────┘
-```
-
-> **Uwaga:** Buzzer musi być **pasywny** (bez wbudowanego generatora). Sygnał generowany jest przez LEDC PWM (kanał 1, oddzielny od podświetlenia TFT na kanale 0). Częstotliwość tonów: 600 Hz – 3 kHz.
-
-### 6.4 Podłączenie przekaźników
+### 4.2 Magistrala I2C: DS1307 + MCP23017
 
 ```
-    ESP32-S3                       Moduł przekaźnikowy 5V
-    ┌──────────┐                   ┌────────────────────────┐
-    │          │                   │                        │
-    │ GPIO 41  ├───────────────────┤ IN1  [P1 — oś L 12cm] │──── Zawór P1
-    │ GPIO 42  ├───────────────────┤ IN2  [P2 — oś C 12cm] │──── Zawór P2
-    │ GPIO  1  ├───────────────────┤ IN3  [P3 — oś R 12cm] │──── Zawór P3
-    │ GPIO  2  ├───────────────────┤ IN4  [P4 — oś   24cm] │──── Zawór P4
-    │ GPIO  3  ├───────────────────┤ IN5  [P5 — kraw  12cm]│──── Zawór P5
-    │ GPIO  4  ├───────────────────┤ IN6  [P6 — kraw  24cm]│──── Zawór P6
-    │          │                   │                        │
-    │    5V    ├───────────────────┤ VCC                    │
-    │    GND   ├───────────────────┤ GND                    │
-    └──────────┘                   └────────────────────────┘
-
-    Wyjścia NO (Normally Open) → zawory elektromagnetyczne pistoletów
-    Logika: HIGH na GPIO = przekaźnik włączony = pistolet maluje
+                     ┌──────────────────────────────────────────────┐
+   ESP32-S3          │           Wspólna magistrala I2C             │
+   GPIO 17 (SDA) ────┴──────┬───────────────────────┬───────────────┘
+   GPIO 18 (SCL) ────┬──────┼───────────┬───────────┘
+                     │      │           │
+                ┌────┴──────┴───┐  ┌────┴───────────┐
+                │ DS1307 (0x68) │  │ MCP23017 (0x20)│
+                │ VCC = 5 V     │  │ VDD = 3,3 V    │
+                │ + bateria     │  │ A0=A1=A2=GND   │
+                │   CR2032      │  │ RESET = 3,3 V  │
+                └───────────────┘  └────────────────┘
+   Pull-up 4,7 kΩ na SDA/SCL są na module DS1307.
 ```
 
-### 6.5 Podłączenie joysticka KY-023
+### 4.3 MCP23017 — 15 przycisków wzorców
+
+Każdy przycisk: jeden styk do pinu MCP23017, drugi do GND. Pull-up włączane programowo (bez rezystorów
+zewnętrznych). Skan co 20 ms z debounce (dwa zgodne odczyty).
 
 ```
-    ESP32-S3               Joystick KY-023
-    ┌──────────┐           ┌───────────────┐
-    │          │           │               │
-    │ GPIO 19  ├───────────┤ VRx (oś X)    │
-    │ (ADC2)   │           │               │
-    │          │           │               │
-    │ GPIO 20  ├───────────┤ VRy (oś Y)    │
-    │ (ADC2)   │           │               │
-    │          │           │               │
-    │ GPIO 46  ├───────────┤ SW (przycisk)  │
-    │ (pullup) │           │               │
-    │          │           │               │
-    │    3V3   ├───────────┤ +5V           │
-    │    GND   ├───────────┤ GND           │
-    └──────────┘           └───────────────┘
+   MCP23017 DIP-28 (widok z góry)
+              ┌─────∪─────┐
+   P-3b GPB0 ─┤1        28├─ GPA7  P-3a
+   P-4  GPB1 ─┤2        27├─ GPA6  P-2b
+   P-6  GPB2 ─┤3        26├─ GPA5  P-2a
+   P-7a GPB3 ─┤4        25├─ GPA4  P-1e
+   P-7b GPB4 ─┤5        24├─ GPA3  P-1d
+   P-7c GPB5 ─┤6        23├─ GPA2  P-1c
+   P-7d GPB6 ─┤7        22├─ GPA1  P-1b
+   (wolny)GPB7┤8        21├─ GPA0  P-1a
+        3,3 V ┤9  VDD   20├─ INTA  (nieużywany)
+          GND ┤10 VSS   19├─ INTB  (nieużywany)
+              ┤11 NC    18├─ RESET ──── 3,3 V
+  GPIO 18 SCL ┤12       17├─ A2 ──── GND
+  GPIO 17 SDA ┤13       16├─ A1 ──── GND
+              ┤14 NC    15├─ A0 ──── GND
+              └───────────┘
+   Adres I2C: 0x20
 ```
 
-> **Uwaga:** KY-023 zasilany z 3.3V (zakres ADC 0–3.3V). Centrum joysticka = ~1.65V (ADC ~2048). GPIO 46 jest pinem strapping — z pullup HIGH podczas bootu (poprawne). **Nie wciskać SW podczas włączania ESP32!**
+| Pin MCP | Wzorzec | Pin MCP | Wzorzec |
+|---------|---------|---------|---------|
+| GPA0 (21) | P-1a | GPB0 (1) | P-3b |
+| GPA1 (22) | P-1b | GPB1 (2) | P-4 |
+| GPA2 (23) | P-1c | GPB2 (3) | P-6 |
+| GPA3 (24) | P-1d | GPB3 (4) | P-7a |
+| GPA4 (25) | P-1e | GPB4 (5) | P-7b |
+| GPA5 (26) | P-2a | GPB5 (6) | P-7c |
+| GPA6 (27) | P-2b | GPB6 (7) | P-7d |
+| GPA7 (28) | P-3a | GPB7 (8) | nieużywany |
 
-### 6.6 Podłączenie modułu GPS GY-NEO6MV2
-
-```
-    ESP32-S3               Moduł GPS GY-NEO6MV2
-    ┌──────────┐           ┌──────────────────┐
-    │          │           │                  │
-    │ GPIO 47  ├───────────┤ TX  (dane NMEA)  │
-    │ (UART2 RX)           │                  │
-    │          │           │                  │
-    │ GPIO 48  ├───────────┤ RX               │
-    │ (UART2 TX)           │                  │
-    │          │           │                  │
-    │    3V3   ├───────────┤ VCC              │
-    │    GND   ├───────────┤ GND              │
-    └──────────┘           │   [Antena GPS]   │
-                           └──────────────────┘
-```
-
-> **Uwaga:** Moduł NEO-6M komunikuje się na 9600 baud (domyślnie). Antena ceramiczna musi mieć widoczność nieba. Pin TX modułu GPS podłączamy do GPIO 47 (UART2 RX), pin RX do GPIO 48 (UART2 TX).
-
-### 6.7 Podłączenie ekspandera MCP23017 (15 przycisków wzorców)
-
-#### 6.7.1 Pinout MCP23017 DIP-28 (widok z góry)
+### 4.4 Przyciski sterujące i enkoder
 
 ```
-                       MCP23017 DIP-28
-                      ┌────────U────────┐
-  [P-3b] ── GND ── 1 │ GPB0       GPA7 │ 28 ── [P-3a] ── GND
-  [P-4 ] ── GND ── 2 │ GPB1       GPA6 │ 27 ── [P-2b] ── GND
-  [P-6 ] ── GND ── 3 │ GPB2       GPA5 │ 26 ── [P-2a] ── GND
-  [P-7a] ── GND ── 4 │ GPB3       GPA4 │ 25 ── [P-1e] ── GND
-  [P-7b] ── GND ── 5 │ GPB4       GPA3 │ 24 ── [P-1d] ── GND
-  [P-7c] ── GND ── 6 │ GPB5       GPA2 │ 23 ── [P-1c] ── GND
-  [P-7d] ── GND ── 7 │ GPB6       GPA1 │ 22 ── [P-1b] ── GND
-     (n/c)          8 │ GPB7       GPA0 │ 21 ── [P-1a] ── GND
-        3V3  ────── 9 │ VDD        INTA │ 20 ── (n/c)
-        GND  ─────10 │ VSS        INTB │ 19 ── (n/c)
-     (n/c)         11 │ NC       RESETN │ 18 ── 3V3 (pull HIGH)
-  GPIO 18 (SCL) ──12 │ SCL          A2 │ 17 ── GND (adres=0)
-  GPIO 17 (SDA) ──13 │ SDA          A1 │ 16 ── GND (adres=0)
-     (n/c)         14 │ NC           A0 │ 15 ── GND (adres=0)
-                      └─────────────────┘
+   ESP32-S3                         Element
+   ─────────                        ───────
+   GPIO 38 ──┬── BS-33B START ───── GND
+             ├── J4 pin 1 (pilot) ─ GND
+             └── J5 pin 1 (nożny) ─ GND
+   GPIO 39 ──┬── BS-33B STOP ────── GND
+             ├── J4 pin 3 (pilot) ─ GND
+             └── J5 pin 2 (nożny) ─ GND
+   GPIO 40 ──┬── BS-33B SELEKTOR ── GND
+             └── J4 pin 2 (pilot) ─ GND
+   GPIO  7 ──┬── Enkoder SW ─────── GND
+             └── J4 pin 4 (pilot) ─ GND
 
-    n/c = nie podłączony
-    U   = wcięcie (notch) na obudowie DIP — orientacja układu
+   GPIO  5 ─────── Enkoder CLK (A) ──[100 nF]── GND   (skrętka CLK+DT)
+   GPIO  6 ─────── Enkoder DT  (B) ──[100 nF]── GND
+   3V3     ─────── Enkoder VCC (opcjonalnie)
+   GND     ─────── Enkoder GND
 ```
 
-#### 6.7.2 Schemat połączeń ESP32-S3 ↔ MCP23017
+Wszystkie wejścia używają wewnętrznych rezystorów pull-up (aktywny stan niski). Pilot i przycisk nożny są
+podłączone **równolegle** do przycisków panelowych i nie wymagają zmian w firmware. Debounce 50 ms,
+długie naciśnięcie 1,5 s.
+
+### 4.5 Joystick KY-023
 
 ```
-    ESP32-S3                        MCP23017 (DIP-28)
-    ┌──────────┐                    ┌─────────────────────────────────────┐
-    │          │                    │                                     │
-    │ GPIO 17  ├────────────────────┤ SDA (pin 13)                        │
-    │ (I2C SDA)│   ┌──(wspólna      │                                     │
-    │          │   │  magistrala    │                                     │
-    │ GPIO 18  ├───┘────────────────┤ SCL (pin 12)                        │
-    │ (I2C SCL)│     z DS1307)      │                                     │
-    │          │                    │ A0 (pin 15) ── GND ┐                │
-    │          │                    │ A1 (pin 16) ── GND ├ adres = 0x20   │
-    │          │                    │ A2 (pin 17) ── GND ┘                │
-    │          │                    │ RESETN (pin 18) ── 3V3 (pull HIGH)  │
-    │          │                    │                                     │
-    │    3V3   ├────────────────────┤ VDD (pin 9)  = zasilanie 3.3V       │
-    │    GND   ├────────────────────┤ VSS (pin 10) = masa                 │
-    │          │                    │                                     │
-    └──────────┘                    │ INTA (pin 20) ── (nie podłączony)   │
-                                    │ INTB (pin 19) ── (nie podłączony)   │
-                                    │                                     │
-                                    │  --- PORT A (8 przycisków) ---       │
-                                    │ GPA0 (pin 21) ── [P-1a] ── GND      │
-                                    │ GPA1 (pin 22) ── [P-1b] ── GND      │
-                                    │ GPA2 (pin 23) ── [P-1c] ── GND      │
-                                    │ GPA3 (pin 24) ── [P-1d] ── GND      │
-                                    │ GPA4 (pin 25) ── [P-1e] ── GND      │
-                                    │ GPA5 (pin 26) ── [P-2a] ── GND      │
-                                    │ GPA6 (pin 27) ── [P-2b] ── GND      │
-                                    │ GPA7 (pin 28) ── [P-3a] ── GND      │
-                                    │                                     │
-                                    │  --- PORT B (7 przycisków) ---       │
-                                    │ GPB0 (pin 1)  ── [P-3b] ── GND      │
-                                    │ GPB1 (pin 2)  ── [P-4 ] ── GND      │
-                                    │ GPB2 (pin 3)  ── [P-6 ] ── GND      │
-                                    │ GPB3 (pin 4)  ── [P-7a] ── GND      │
-                                    │ GPB4 (pin 5)  ── [P-7b] ── GND      │
-                                    │ GPB5 (pin 6)  ── [P-7c] ── GND      │
-                                    │ GPB6 (pin 7)  ── [P-7d] ── GND      │
-                                    │ GPB7 (pin 8)  ── (nieużywany)        │
-                                    └─────────────────────────────────────┘
+   KY-023        ESP32-S3
+   ──────        ────────
+   GND    ────── GND
+   +5V    ────── 3V3        (zasilanie 3,3 V — bezpieczny zakres ADC)
+   VRx    ────── GPIO 19    (ADC2, oś pozioma)
+   VRy    ────── GPIO 20    (ADC2, oś pionowa)
+   SW     ────── GPIO 46    (INPUT_PULLUP; STRAP PIN — nie wciskać przy starcie!)
 ```
+Kabel ekranowany, max 50 cm. Strefa martwa ±500, histereza 150 (ADC 12-bit).
 
-#### 6.7.3 Mapowanie przycisk → pin MCP → bit → wzorzec
-
-| # | Przycisk | Port MCP | Pin DIP | Bit w rejestrze | Maska | PatternID |
-|---|----------|----------|---------|-----------------|-------|-----------|
-| 0 | P-1a | GPA0 | 21 | bit 0 | 0x0001 | PAT_P1A |
-| 1 | P-1b | GPA1 | 22 | bit 1 | 0x0002 | PAT_P1B |
-| 2 | P-1c | GPA2 | 23 | bit 2 | 0x0004 | PAT_P1C |
-| 3 | P-1d | GPA3 | 24 | bit 3 | 0x0008 | PAT_P1D |
-| 4 | P-1e | GPA4 | 25 | bit 4 | 0x0010 | PAT_P1E |
-| 5 | P-2a | GPA5 | 26 | bit 5 | 0x0020 | PAT_P2A |
-| 6 | P-2b | GPA6 | 27 | bit 6 | 0x0040 | PAT_P2B |
-| 7 | P-3a | GPA7 | 28 | bit 7 | 0x0080 | PAT_P3A |
-| 8 | P-3b | GPB0 | 1 | bit 8 | 0x0100 | PAT_P3B |
-| 9 | P-4 | GPB1 | 2 | bit 9 | 0x0200 | PAT_P4 |
-| 10 | P-6 | GPB2 | 3 | bit 10 | 0x0400 | PAT_P6 |
-| 11 | P-7a | GPB3 | 4 | bit 11 | 0x0800 | PAT_P7A |
-| 12 | P-7b | GPB4 | 5 | bit 12 | 0x1000 | PAT_P7B |
-| 13 | P-7c | GPB5 | 6 | bit 13 | 0x2000 | PAT_P7C |
-| 14 | P-7d | GPB6 | 7 | bit 14 | 0x4000 | PAT_P7D |
-
-#### 6.7.4 Schemat podłączenia pojedynczego przycisku wzorca
+### 4.6 GPS GY-NEO6MV2
 
 ```
-    MCP23017                      Przycisk monostabilny NO
-    ┌─────────┐                   ┌─────────────┐
-    │         │                   │    ┌───┐    │
-    │  GPAx/  ├───────────────────┤────┤   ├────┤──── GND
-    │  GPBx   │                   │    └───┘    │
-    │ (pullup)│                   │  normalnie  │
-    └─────────┘                   │  otwarty    │
-                                  └─────────────┘
-
-    Stan spoczynkowy: GPAx/GPBx = HIGH (pull-up wewnętrzny MCP)
-    Stan wciśnięty:   GPAx/GPBx = LOW  (zwarcie do GND)
-    Debounce: programowy, skanowanie co 20 ms
+   GY-NEO6MV2     ESP32-S3
+   ──────────     ────────
+   VCC     ────── 3V3
+   GND     ────── GND
+   TX      ────── GPIO 47 (RX)
+   RX      ────── GPIO 48 (TX)
+   Antena ceramiczna na kablu — nie skracać, wynieść na zewnątrz kabiny.
 ```
+UART2, 9600 baud. Zimny start do ok. 35 s (do kilku minut w budynku).
 
-> **Uwaga:** MCP23017 dzieli magistralę I2C z DS1307 RTC (SDA=GPIO 17, SCL=GPIO 18). Adres I2C: **0x20** (A0=A1=A2 podłączone do GND). Zasilanie z **3.3V**. Pin RESET podłączony do VCC (brak aktywnego resetu). Wewnętrzne pull-up aktywowane programowo (rejestr GPPU) — **nie potrzeba zewnętrznych rezystorów**. Przerwania (INTA/INTB) nie są używane — skanowanie polling co 20 ms. Maska aktywnych bitów: `0x7FFF` (bity 0–14, GPB7 nieużywany).
-
-### 6.8 Podłączenie wyświetlacza ILI9341 i karty SD (wspólna magistrala SPI)
-
-#### 6.8.1 Fizyczny pinout modułu ILI9341 2.8" (złącze 14-pin)
+### 4.7 Moduł przekaźników i zawory pistoletów
 
 ```
-    Moduł ILI9341 2.8" TFT (widok z przodu, złącze na dole)
-    ┌─────────────────────────────────────────┐
-    │                                         │
-    │              ╔═══════════╗               │
-    │              ║  Ekran    ║               │
-    │              ║  TFT LCD  ║               │
-    │              ║  240×320  ║               │
-    │              ║  (ILI9341)║               │
-    │              ╚═══════════╝               │
-    │                                         │
-    │   ┌─────────────────┐  Slot MicroSD     │
-    │   │ ▓▓▓▓▓▓▓▓▓▓▓▓▓  │  (z tyłu)        │
-    │   └─────────────────┘                   │
-    │                                         │
-    └──┤1 ┤2 ┤3 ┤4 ┤5 ┤6 ┤7 ┤8 ┤9 ┤10┤11┤12┤13┤14┤
-       │  │  │  │  │  │  │  │  │  │  │  │  │  │
-       VCC GND CS RST DC MOSI SCK LED MISO T_CLK T_CS T_DIN T_DO T_IRQ
+   ESP32-S3                  Moduł przekaźników 6 kanałów (5 V, opto)
+   ────────                  ─────────────────────────────────────────
+   GPIO 41 ─────────────────  IN1  ──►  Przekaźnik 1 (P1, 12 cm, oś lewy)
+   GPIO 42 ─────────────────  IN2  ──►  Przekaźnik 2 (P2, 12 cm, oś środek)
+   GPIO  1 ─────────────────  IN3  ──►  Przekaźnik 3 (P3, 12 cm, oś prawy)
+   GPIO  2 ─────────────────  IN4  ──►  Przekaźnik 4 (P4, 24 cm, oś szeroki)
+   GPIO  3 ─────────────────  IN5  ──►  Przekaźnik 5 (P5, 12 cm, krawędź)
+   GPIO  4 ─────────────────  IN6  ──►  Przekaźnik 6 (P6, 24 cm, krawędź)
+   5 V (VBUS) ──────────────  VCC
+   GND ─────────────────────  GND
+
+   Strona mocy (galwanicznie oddzielona od ESP32):
+
+   +12/24 V z instalacji maszyny ──► COM przekaźników (J2 pin 7 i 8)
+   NO przekaźnika n ────────────────► Zawór Pn ──► GND instalacji maszyny
+   (masa zaworów NIE jest łączona z GND ESP32)
 ```
 
-#### 6.8.2 Tabela połączeń pin-po-pinie
+Wejścia aktywne stanem HIGH. Moduł ma wbudowane diody flyback i opto-izolację. Przy sześciu jednocześnie
+aktywnych przekaźnikach cewki pobierają ok. 0,5 A — patrz [sekcja 6](#6-zasilanie).
 
-| # złącza | Oznaczenie modułu | → GPIO ESP32 | Kolor sugerowany | Opis / Funkcja |
-|----------|-------------------|--------------|------------------|----------------|
-| 1 | VCC | 3V3 | **czerwony** | Zasilanie 3.3V |
-| 2 | GND | GND | **czarny** | Masa |
-| 3 | CS | GPIO 10 | żółty | TFT Chip Select (aktywny LOW) |
-| 4 | RST | GPIO 14 | biały | Reset wyświetlacza (aktywny LOW) |
-| 5 | DC/RS | GPIO 9 | zielony | Data (HIGH) / Command (LOW) |
-| 6 | SDI (MOSI) | GPIO 11 | niebieski | SPI dane — **współdzielony z SD i Touch** |
-| 7 | SCK | GPIO 12 | fioletowy | SPI zegar — **współdzielony z SD i Touch** |
-| 8 | LED | GPIO 21 | pomarańczowy | Podświetlenie (PWM LEDC ch0, 5 kHz) |
-| 9 | SDO (MISO) | GPIO 13 | szary | SPI odczyt — **współdzielony z SD i Touch** |
-| 10 | T_CLK | GPIO 12 | — | Touch Clock = wspólny z SCK (pin 7) |
-| 11 | T_CS | GPIO 15 | brązowy | Touch Chip Select (nieaktywnie używany) |
-| 12 | T_DIN | GPIO 11 | — | Touch MOSI = wspólny z SDI (pin 6) |
-| 13 | T_DO | GPIO 13 | — | Touch MISO = wspólny z SDO (pin 9) |
-| 14 | T_IRQ | — | — | Touch IRQ — **niepodłączony** |
-
-> **Piny 10, 12, 13** nie wymagają osobnych przewodów — łączą się wewnętrznie z pinami 7, 6, 9 na PCB modułu.
-
-#### 6.8.3 Dodatkowy pin karty SD
-
-| Funkcja | → GPIO ESP32 | Opis |
-|---------|--------------|------|
-| SD_CS | GPIO 16 | Chip Select karty SD (osobny pin na PCB, z tyłu modułu) |
-
-SD_MOSI, SD_MISO, SD_SCK — współdzielone z TFT (GPIO 11, 13, 12).
-
-#### 6.8.4 Schemat połączeń z ESP32-S3
+### 4.8 Buzzer pasywny
 
 ```
-    ESP32-S3                    Moduł ILI9341 2.8" (14-pin)
-    ┌──────────┐                ┌──────────────────────────────────┐
-    │          │    HSPI/SPI3   │                                  │
-    │ GPIO 11  ├────────────────┤ pin 6: SDI/MOSI ─┐              │
-    │ GPIO 12  ├────────────────┤ pin 7: SCK  ─────┼── Magistrala │
-    │ GPIO 13  ├────────────────┤ pin 9: SDO/MISO ─┘  SPI 27 MHz │
-    │          │                │                                  │
-    │ GPIO 10  ├────── CS ──────┤ pin 3: CS  (TFT select)         │
-    │ GPIO  9  ├────── DC ──────┤ pin 5: DC  (Data/Command)       │
-    │ GPIO 14  ├────── RST ─────┤ pin 4: RST (Reset)              │
-    │ GPIO 21  ├────── PWM ─────┤ pin 8: LED (podświetlenie)      │
-    │          │                │                                  │
-    │ GPIO 15  ├────── CS ──────┤ pin 11: T_CS (Touch - nieaktywny)│
-    │          │                │                                  │
-    │ GPIO 16  ├────── CS ──────┤ SD_CS (z tyłu modułu)           │
-    │          │                │                                  │
-    │    3V3   ├────────────────┤ pin 1: VCC                      │
-    │    GND   ├────────────────┤ pin 2: GND                      │
-    └──────────┘                └──────────────────────────────────┘
-
-    Przełączanie urządzeń SPI przez Chip Select:
-    ┌──────────────┬──────────┬──────────┬──────────┐
-    │ Urządzenie   │ TFT (CS) │ SD (CS)  │ Touch(CS)│
-    │              │ GPIO 10  │ GPIO 16  │ GPIO 15  │
-    ├──────────────┼──────────┼──────────┼──────────┤
-    │ TFT aktywny  │   LOW    │   HIGH   │   HIGH   │
-    │ SD aktywna   │   HIGH   │   LOW    │   HIGH   │
-    │ Touch aktywny│   HIGH   │   HIGH   │   LOW    │
-    │ Wszystko OFF │   HIGH   │   HIGH   │   HIGH   │
-    └──────────────┴──────────┴──────────┴──────────┘
+   GPIO 8 ──────── Buzzer (+)      Buzzer (−) ──────── GND
+   LEDC PWM kanał 1, wypełnienie 50 %, zakres 100 Hz – 5 kHz
 ```
 
-### 6.9 Podłączenie zegara RTC DS1307
+### 4.9 Czujnik temperatury DS18B20 (opcjonalny)
 
 ```
-    ESP32-S3               Moduł DS1307 AT24C32
-    ┌──────────┐           ┌──────────────────────┐
-    │          │           │                      │
-    │ GPIO 17  ├───────────┤ SDA  ──┐ Wspólna     │
-    │ (I2C SDA)│           │        │ magistrala  │
-    │ GPIO 18  ├───────────┤ SCL  ──┘ I2C         │
-    │ (I2C SCL)│           │   (z MCP23017)       │
-    │          │           │                      │
-    │    5V    ├───────────┤ VCC  (wymaga 5V!)    │
-    │   (VBUS) │           │                      │
-    │    GND   ├───────────┤ GND                  │
-    │          │           │                      │
-    └──────────┘           │  ┌──────┐            │
-                           │  │CR2032│ 3V backup  │
-                           │  └──────┘            │
-                           │  Pull-up 4.7kΩ na    │
-                           │  SDA i SCL (wbudowane)│
-                           │  Adres I2C: 0x68     │
-                           └──────────────────────┘
+   DS18B20            ESP32-S3
+   ───────            ────────
+   VDD  ───────────── 3V3
+   GND  ───────────── GND
+   DQ   ──┬────────── GPIO 15
+          └─[4,7 kΩ]─ 3V3
 ```
-
-> **WAŻNE:** DS1307 wymaga zasilania **5V** (pin VBUS na ESP32-S3). Moduł AT24C32 ma wbudowane rezystory pull-up 4.7kΩ na liniach SDA/SCL, które wystarczają dla obu urządzeń na magistrali I2C.
-
-### 6.10 Diagram magistrali I2C (2 urządzenia na wspólnej szynie)
-
-```
-    ESP32-S3 GPIO 17 (SDA) ───────┬──────────────────┬──── 3.3V
-                                   │                  │    (pull-up
-                                   │                  │     4.7kΩ
-                                   │                  │     na module
-    ┌──────────────┐               │                  │     DS1307)
-    │  DS1307 RTC  │               │                  │
-    │  adres: 0x68 ├── SDA ────────┤                  │
-    │  zasilanie 5V├── SCL ────────┤──────────┐       │
-    └──────────────┘               │          │       │
-                                   │          │       │
-    ┌──────────────┐               │          │       │
-    │  MCP23017    │               │          │       │
-    │  adres: 0x20 ├── SDA ────────┘          │       │
-    │ zasilanie 3.3V── SCL ──────────────────┘       │
-    └──────────────┘                                  │
-                                                      │
-    ESP32-S3 GPIO 18 (SCL) ──────────────────────────┘
-
-    Prędkość I2C: domyślna 100 kHz (Wire.begin)
-    Adresy na magistrali:
-      0x20 = MCP23017 (ekspander I/O, 15 przycisków)
-      0x68 = DS1307 (zegar RTC)
-    Pull-up: wbudowane 4.7kΩ na module DS1307 (wystarczające)
-```
+Progi ostrzeżeń: < 5 °C (farba za zimna), > 35 °C (za ciepła). GPIO 15 jest współdzielony z Touch CS
+(dotyk TFT nie jest używany).
 
 ---
 
-## 6A. Kompletna lista połączeń — checklist montażowy
+## 5. Moduł wyświetlacza 7"
 
-Poniżej lista **wszystkich 44 przewodów** do podłączenia, pogrupowana modułami. Kolumna "Kolor" to sugerowany schemat kolorów przewodów Dupont.
+### 5.1 Połączenia zewnętrzne
 
-### Magistrala zasilania (wspólna)
-
-| # | Z (ESP32-S3) | Do (moduł) | Kolor | Uwagi |
-|---|-------------|-----------|-------|-------|
-| 1 | **3V3** (lewy pin 1) | ILI9341 pin 1 (VCC) | czerwony | 3.3V |
-| 2 | **3V3** (lewy pin 1) | GPS VCC | czerwony | 3.3V |
-| 3 | **3V3** (lewy pin 1) | MCP23017 pin 9 (VDD) | czerwony | 3.3V |
-| 4 | **3V3** (lewy pin 1) | MCP23017 pin 18 (RESETN) | czerwony | Pull-HIGH |
-| 5 | **3V3** (lewy pin 1) | Joystick KY-023 (+5V) | czerwony | Zasilanie 3.3V (nie 5V!) |
-| 6 | **3V3** (lewy pin 1) | Enkoder VCC (opcjonalnie) | czerwony | Opcjonalny |
-| 7 | **5V** (lewy pin 21) | DS1307 VCC | czerwony+biały | **5V!** |
-| 8 | **5V** (lewy pin 21) | Moduł przekaźnikowy VCC | czerwony+biały | **5V!** |
-| 9 | **GND** (prawy pin 1) | ILI9341 pin 2 (GND) | czarny | Masa |
-| 10 | **GND** | GPS GND | czarny | Masa |
-| 11 | **GND** | DS1307 GND | czarny | Masa |
-| 12 | **GND** | MCP23017 pin 10 (VSS) | czarny | Masa |
-| 13 | **GND** | MCP23017 pin 15 (A0) | czarny | Adres=0 |
-| 14 | **GND** | MCP23017 pin 16 (A1) | czarny | Adres=0 |
-| 15 | **GND** | MCP23017 pin 17 (A2) | czarny | Adres=0 |
-| 16 | **GND** | Moduł przekaźnikowy GND | czarny | Masa |
-| 17 | **GND** | Joystick KY-023 GND | czarny | Masa |
-| 18 | **GND** | Enkoder GND | czarny | Masa |
-| 19 | **GND** | Buzzer (−) | czarny | Masa |
-
-### Magistrala SPI (wyświetlacz + SD)
-
-| # | GPIO ESP32 | Do (ILI9341) | Kolor | Uwagi |
-|---|-----------|-------------|-------|-------|
-| 20 | GPIO 11 | pin 6: SDI/MOSI | niebieski | Współdzielony TFT+SD+Touch |
-| 21 | GPIO 12 | pin 7: SCK | fioletowy | Współdzielony TFT+SD+Touch |
-| 22 | GPIO 13 | pin 9: SDO/MISO | szary | Współdzielony TFT+SD+Touch |
-| 23 | GPIO 10 | pin 3: CS | żółty | TFT Chip Select |
-| 24 | GPIO 9 | pin 5: DC/RS | zielony | Data/Command |
-| 25 | GPIO 14 | pin 4: RST | biały | TFT Reset |
-| 26 | GPIO 21 | pin 8: LED | pomarańczowy | Podświetlenie PWM |
-| 27 | GPIO 15 | pin 11: T_CS | brązowy | Touch CS (nieużywany aktywnie) |
-| 28 | GPIO 16 | SD_CS (z tyłu) | żółty+czarny | SD Chip Select |
-
-### Magistrala I2C (RTC + MCP23017)
-
-| # | GPIO ESP32 | Do (moduł) | Kolor | Uwagi |
-|---|-----------|-----------|-------|-------|
-| 29 | GPIO 17 | DS1307 SDA | zielony+biały | I2C Data |
-| 30 | GPIO 18 | DS1307 SCL | niebieski+biały | I2C Clock |
-| 31 | GPIO 17 | MCP23017 pin 13 (SDA) | zielony+biały | Równolegle z DS1307! |
-| 32 | GPIO 18 | MCP23017 pin 12 (SCL) | niebieski+biały | Równolegle z DS1307! |
-
-> Piny 29+31 i 30+32 to ta sama linia — użyj splitterów Y lub lutuj na jednym przewodzie.
-
-### Przekaźniki pistoletów (6 przewodów sygnałowych)
-
-| # | GPIO ESP32 | Do (moduł przekaźn.) | Pistolet | Kolor | Szerokość |
-|---|-----------|---------------------|----------|-------|-----------|
-| 33 | GPIO 41 | IN1 | P1 — oś L | pomarańczowy | 12 cm |
-| 34 | GPIO 42 | IN2 | P2 — oś C | pomarańczowy | 12 cm |
-| 35 | GPIO 1 | IN3 | P3 — oś R | pomarańczowy | 12 cm |
-| 36 | GPIO 2 | IN4 | P4 — oś W | pomarańczowy | 24 cm |
-| 37 | GPIO 3 | IN5 | P5 — kraw. | pomarańczowy | 12 cm |
-| 38 | GPIO 4 | IN6 | P6 — kraw. | pomarańczowy | 24 cm |
-
-### Pozostałe moduły
-
-| # | GPIO ESP32 | Do (moduł) | Kolor | Uwagi |
-|---|-----------|-----------|-------|-------|
-| 39 | GPIO 5 | Enkoder CLK | niebieski | ISR CHANGE |
-| 40 | GPIO 6 | Enkoder DT | zielony | Kierunek |
-| 41 | GPIO 7 | Enkoder SW | żółty | Przycisk GAP |
-| 42 | GPIO 8 | Buzzer (+) | pomarańczowy | PWM LEDC ch1 |
-| 43 | GPIO 47 | GPS TX→ESP RX | zielony | UART2 RX |
-| 44 | GPIO 48 | GPS RX←ESP TX | żółty | UART2 TX |
-| 45 | GPIO 19 | Joystick VRx | niebieski | ADC2 oś X |
-| 46 | GPIO 20 | Joystick VRy | zielony | ADC2 oś Y |
-| 47 | GPIO 46 | Joystick SW | żółty | Strap pin! |
-
-### Przyciski sterujące (3 przewody sygnałowe + 3× GND)
-
-| # | GPIO ESP32 | Do | Kolor | Uwagi |
-|---|-----------|---|-------|-------|
-| 48 | GPIO 38 | START — styk 1 | czerwony | Pull-up wewnętrzny |
-| 49 | GND | START — styk 2 | czarny | Masa |
-| 50 | GPIO 39 | STOP — styk 1 | żółty | Pull-up wewnętrzny |
-| 51 | GND | STOP — styk 2 | czarny | Masa |
-| 52 | GPIO 40 | SELECT — styk 1 | zielony | Pull-up wewnętrzny |
-| 53 | GND | SELECT — styk 2 | czarny | Masa |
-
-### Przyciski wzorców MCP23017 (15 przycisków × 2 przewody)
-
-| # | Pin MCP23017 | Przycisk → GND | Wzorzec |
-|---|-------------|----------------|---------|
-| 54–55 | GPA0 (pin 21) | [P-1a] → GND | Przerywana długa |
-| 56–57 | GPA1 (pin 22) | [P-1b] → GND | Przerywana krótka |
-| 58–59 | GPA2 (pin 23) | [P-1c] → GND | Wydzielająca |
-| 60–61 | GPA3 (pin 24) | [P-1d] → GND | Prowadząca wąska |
-| 62–63 | GPA4 (pin 25) | [P-1e] → GND | Prowadząca szeroka |
-| 64–65 | GPA5 (pin 26) | [P-2a] → GND | Ciągła wąska |
-| 66–67 | GPA6 (pin 27) | [P-2b] → GND | Ciągła szeroka |
-| 68–69 | GPA7 (pin 28) | [P-3a] → GND | Przekraczalna długa |
-| 70–71 | GPB0 (pin 1) | [P-3b] → GND | Przekraczalna krótka |
-| 72–73 | GPB1 (pin 2) | [P-4] → GND | Podwójna ciągła |
-| 74–75 | GPB2 (pin 3) | [P-6] → GND | Ostrzegawcza |
-| 76–77 | GPB3 (pin 4) | [P-7a] → GND | Krawędziowa przeryw. szer. |
-| 78–79 | GPB4 (pin 5) | [P-7b] → GND | Krawędziowa ciągła szer. |
-| 80–81 | GPB5 (pin 6) | [P-7c] → GND | Krawędziowa przeryw. wąska |
-| 82–83 | GPB6 (pin 7) | [P-7d] → GND | Krawędziowa ciągła wąska |
-
-> Każdy przycisk wymaga 2 przewodów: pin MCP → styk 1 przycisku, GND → styk 2 przycisku. Masę (GND) przycisków wzorców można łączyć łańcuchowo z jednego źródła GND na MCP23017 (pin 10/VSS) lub z ESP32.
-
-**Łączna liczba przewodów: ~83** (w tym ~30 przewodów GND, które można łączyć łańcuchowo)
-
----
-
-## 7. Zasilanie
-
-### 7.1 Źródła zasilania
-
-| Źródło | Napięcie | Odbiorcy |
-|--------|----------|----------|
-| USB-C ESP32-S3 | 5V (VBUS) | ESP32-S3, DS1307, moduł przekaźnikowy |
-| Regulator ESP32-S3 | 3.3V | ILI9341, enkoder, karta SD, GPS GY-NEO6MV2 |
-
-### 7.2 Schemat zasilania
+Moduł nie ma połączeń sygnałowych ze sterownikiem. Wymaga wyłącznie **zasilania 5 V** i łączy się z siecią
+WiFi sterownika (SSID `TrassarV3`, hasło = ostatnie 4 bajty MAC sterownika, 8 znaków HEX — wyświetlane na
+ekranie startowym sterownika).
 
 ```
-    USB-C 5V
-      │
-      ├──── ESP32-S3 (5V VBUS)
-      │       │
-      │       └──── Regulator 3.3V
-      │               │
-      │               ├──── ILI9341 TFT (VCC)
-      │               ├──── Karta SD (VCC)
-      │               ├──── Enkoder (VCC, opcjonalnie)
-      │               └──── GPS GY-NEO6MV2 (VCC 3.3V)
-      │
-      ├──── DS1307 RTC (VCC = 5V)
-      │
-      └──── Moduł przekaźnikowy (VCC = 5V)
-```
-
-### 7.3 Bilans energetyczny — szczegółowy pobór prądu
-
-#### Linia 3.3V (z regulatora ESP32-S3, max ~500 mA)
-
-| Moduł | Pobór typowy | Pobór max | Uwagi |
-|-------|-------------|----------|-------|
-| ESP32-S3 (CPU + WiFi AP) | ~120 mA | ~240 mA | WiFi TX: do 240 mA (peaki) |
-| ILI9341 TFT (z podświetleniem) | ~40 mA | ~80 mA | LED PWM 200/255 ≈ 40 mA |
-| Karta MicroSD (zapis) | ~30 mA | ~100 mA | Peaki przy zapisie CSV |
-| GPS GY-NEO6MV2 | ~35 mA | ~50 mA | Tracking mode ~35 mA |
-| MCP23017 | ~1 mA | ~1 mA | Statyczny, skan I2C |
-| Enkoder (VCC opcjonalny) | ~5 mA | ~5 mA | Dioda LED enkodera |
-| Joystick KY-023 | ~1 mA | ~1 mA | 2× potencjometr 10kΩ |
-| **RAZEM linia 3.3V** | **~232 mA** | **~477 mA** | Blisko limitu! |
-
-#### Linia 5V (VBUS USB-C)
-
-| Moduł | Pobór typowy | Pobór max | Uwagi |
-|-------|-------------|----------|-------|
-| Moduł przekaźnikowy (cewki) | ~70 mA/kanał | ~420 mA | 6 kanałów × 70 mA |
-| Moduł przekaźnikowy (optocoupler) | ~10 mA/kanał | ~60 mA | 6 kanałów × 10 mA |
-| DS1307 RTC | ~1.5 mA | ~3 mA | Znikomy pobór |
-| Regulator 3.3V (obciążenie jw.) | ~232 mA | ~477 mA | Przeliczone z linii 3.3V |
-| **RAZEM linia 5V** | **~384 mA** | **~960 mA** | |
-
-#### Podsumowanie zasilania
-
-```
-    Scenariusz                                    Pobór 5V (VBUS)
-    ─────────────────────────────────────────────────────────────
-    Spoczynek (IDLE, WiFi, TFT, GPS)              ~250 mA
-    Malowanie 1 pistolet (AUTO, 1 relay)          ~350 mA
-    Malowanie 3 pistolety (typowe P-4)            ~500 mA
-    Malowanie 6 pistoletów + zapis SD + WiFi      ~960 mA ← MAX
-    ─────────────────────────────────────────────────────────────
-    Wymagany zasilacz USB-C:  MINIMUM 5V / 1.5A
-    Zalecany zasilacz USB-C:  5V / 2A – 3A
-```
-
-> **OSTRZEŻENIE:** Standardowy port USB 2.0 dostarcza max 500 mA — **niewystarczające** przy 3+ aktywnych przekaźnikach! Wymagany jest zasilacz USB-C lub USB 3.0 z wyższym limitem prądowym.
-
-### 7.4 Uwagi o zasilaniu
-
-- Wyświetlacz ILI9341 zasilany z pinu 3V3 płytki ESP32-S3
-- Moduł DS1307 wymaga 5V — podłączyć do pinu 5V (VBUS)
-- Moduły przekaźnikowe wymagają 5V — podłączyć do pinu 5V (VBUS)
-- **Ważne:** Przy 6 przekaźnikach aktywnych jednocześnie pobór prądu jest znaczny (~420 mA + ~60 mA opto = ~480 mA). Przy większych obciążeniach rozważ zewnętrzne zasilanie 5V dla modułu przekaźnikowego
-- Bateria CR2032 w module DS1307 podtrzymuje czas po odłączeniu zasilania głównego
-- **Rozwiązanie dla dużego poboru:** Oddzielny zasilacz 5V dla modułu przekaźnikowego (osobne GND+VCC), masa wspólna z ESP32
-
----
-
-## 8. Architektura oprogramowania
-
-### 8.1 Moduły systemu
-
-| Moduł | Plik | Opis |
-|-------|------|------|
-| **main** | main.cpp | Pętla główna, inicjalizacja, timery |
-| **config** | config.h | Konfiguracja pinów, stałe, struktury danych |
-| **display_manager** | display_manager.cpp/h | Sterowanie wyświetlaczem ILI9341 |
-| **menu** | menu.cpp/h | System menu, obsługa zdarzeń przycisków |
-| **patterns** | patterns.cpp/h | Definicje 16 wzorców malowania (15 + własny) |
-| **painting_engine** | painting_engine.cpp/h | Silnik malowania — 3 tryby sterowania pistoletami |
-| **button_handler** | button_handler.cpp/h | Obsługa przycisków z debounce i long-press |
-| **encoder_distance** | encoder_distance.cpp/h | Pomiar dystansu i prędkości z enkodera |
-| **guns** | guns.cpp/h | Sterowanie 6 przekaźnikami pistoletów |
-| **statistics** | statistics.cpp/h | Statystyki sesji (dystans, powierzchnia, czas) |
-| **storage** | storage.cpp/h | Pamięć NVS (kalibracja, wzorzec, tryb, wzorzec własny) |
-| **rtc_handler** | rtc_handler.cpp/h | Obsługa zegara RTC DS1307 |
-| **report_logger** | report_logger.cpp/h | Zapis raportów CSV na kartę SD |
-| **buzzer** | buzzer.cpp/h | Sygnalizacja dźwiękowa (LEDC PWM, non-blocking) |
-| **gps_handler** | gps_handler.cpp/h | Obsługa GPS NEO-6M (UART2, TinyGPS++) |
-| **joystick** | joystick.cpp/h | Joystick analogowy KY-023 (ADC + przycisk, nawigacja menu) |
-| **pattern_buttons** | pattern_buttons.cpp/h | 15 przycisków wzorców via MCP23017 I2C (skan, debounce) |
-| **web_server** | web_server.cpp/h | WiFi AP + serwer HTTP + API REST + WebSocket |
-| **gps_track** | gps_track.cpp/h | Zapis trasy GPS (GPX + GeoJSON, bufor PSRAM) |
-| **event_log** | event_log.cpp/h | Log zdarzeń systemowych na kartę SD |
-| **nvs_backup** | nvs_backup.cpp/h | Backup/restore NVS na kartę SD (JSON) |
-| **paint_consumption** | paint_consumption.cpp/h | Predykcja zużycia farby |
-| **session_report** | session_report.cpp/h | Generowanie raportów HTML sesji |
-| **temp_sensor** | temp_sensor.cpp/h | Czujnik temperatury DS18B20 (opcjonalny) |
-| **hal** | hal.h | Warstwa abstrakcji sprzętowej (testy native) |
-
-### 8.2 Architektura dual-core (v2.6.0)
-
-```
-╔══════════════════════════════════╗  ╔══════════════════════════════╗
-║         CORE 1 (loop)           ║  ║      CORE 0 (FreeRTOS)      ║
-║                                  ║  ║                              ║
-║  0. esp_task_wdt_reset()         ║  ║  webTaskFunc() {             ║
-║  1. buttons.update()             ║  ║      for(;;) {               ║
-║  1b. joystick.update()           ║  ║          server.handleClient()║
-║  2. menu.handleEvent()           ║  ║
-║  3. encoderDist.update()         ║  ║          vTaskDelay(2ms)     ║
-║  4. rtcModule.update()           ║  ║      }                       ║
-║  5. paintEngine.update()         ║  ║  }                           ║
-║  5b. checkGunKeepAlive()         ║  ║                              ║
-║  5c. buzzer.update()             ║  ║  Stack: 12288 B              ║
-║  6. display refresh (500ms)      ║  ║  Priorytet: 1                ║
-║  7. menu.update() (100ms)        ║  ╚══════════════════════════════╝
-║  8. lifetime save (60s)          ║
-║  9. diagnostyka (30s)            ║
-║  10. anomalia pistoletów (10s)   ║
-║  11. cache raportów SD (15s)     ║
-║  delay(1)                        ║
-╚══════════════════════════════════╝
-```
-
-### 8.3 Timery i interwały
-
-| Timer | Interwał | Funkcja |
-|-------|----------|---------|
-| DISPLAY_REFRESH_MS | 100 ms | Minimalna częstotliwość renderowania ekranu |
-| DYNAMIC_UPDATE_MS | 500 ms | Dynamiczne odświeżanie ekranów (HOME, PAINTING, itp.) |
-| SPEED_CALC_INTERVAL_MS | 250 ms | Przeliczanie prędkości z impulsów enkodera |
-| ENC_ISR_DEBOUNCE_US | 200 μs | Debouncing przerwania enkodera |
-| BTN_DEBOUNCE_MS | 50 ms | Debouncing przycisków |
-| BTN_LONG_PRESS_MS | 1000 ms | Próg długiego naciśnięcia |
-| Auto-refresh WWW | 1000 ms | Odpytywanie /api/status przez JavaScript |
-| WDT_TIMEOUT_SEC | 3000 ms | Watchdog timer — auto-reset ESP32 |
-| GUN_KEEPALIVE_TIMEOUT_MS | 300 ms | Awaryjne wyłączenie pistoletów |
-| LIFETIME_SAVE_MS | 60000 ms | Okresowy zapis statystyk do NVS |
-| DIAG_PRINT_MS | 30000 ms | Diagnostyka systemowa (Serial) |
-| GUN_ANOMALY_CHECK_MS | 10000 ms | Sprawdzanie anomalii pistoletów |
-| REPORT_CACHE_MS | 15000 ms | Odświeżanie cache raportów SD |
-| WS_BROADCAST_MS | 500 ms | Broadcast WebSocket do klientów |
-| GPX_RECORD_INTERVAL_MS | 5000 ms | Interwał zapisu punktu GPS na trasie |
-| MTH_SAVE_INTERVAL_MS | 300000 ms | Zapis motogodzin do NVS |
-| NVS_BACKUP_INTERVAL_MS | 1800000 ms | Backup NVS na kartę SD (30 min) |
-| AUTO_PAUSE_DELAY_MS | 1500 ms | Opóźnienie auto-pauzy |
-
-### 8.4 Maszyna stanów
-
-```
-                  ┌─────────┐
-       ┌──────────│  IDLE   │◄──────────┐
-       │          └────┬────┘           │
-       │               │                │
-       │    START      │  GAP           │  STOP
-       │               ▼                │
-       │          ┌─────────┐           │
-       │    ┌─────│PAINTING │──────┐    │
-       │    │     └─────────┘      │    │
-       │    │    (4 tryby pracy:   │    │
-       │    │ AUTO/SEMI/MANUAL/DEMO)│   │
-       │    │                      │    │
-       │    │ START (pauza/AUTO)   │ STOP
-       │    ▼                      │    │
-       │ ┌──────┐                  │    ▼
-       │ │PAUSED│──────────────┐ ┌──────────┐
-       │ └──┬───┘              │ │ SUMMARY  │
-       │    │                  │ │ dystans,  │
-       │    │ START (wznów)    │ │ czas, GPS │
-       │    └──► PAINTING ─────┘ └───┬──┬───┘
-       │                  START=kontynuuj│ │
-       │                  (→PAINTING)    │ │
-       │        STOP=nowy etap (reset)───┘ │
-       │        STOP(1s)=HOME──────────────┘
-       │
-       │    STOP (1s na HOME)       START (1s na HOME)
-       ▼                              ▼
-  ┌──────────┐                ┌──────────────┐
-  │ SERVICE  │                │    SETUP     │
-  │  MENU    │                │ Tryb/Smart/  │
-  └─────┬────┘                │ Start        │
-   → Kalibracja/Pomiar/       └──────┬───────┘
-     Raporty/Czyszczenie/       START = maluj
-     Reset etapu                 → PAINTING
+   Przetwornica 5 V (maszyna)
         │
-        ▼
-  ┌──────────────┐
-  │SESSION RESET │  START=TAK → zeruj liczniki → HOME
-  │ (potwierdź)  │  STOP=NIE → powrót do MENU
-  └──────────────┘
+        ├── J1 → sterownik (5 V VBUS, GND)
+        └── osobne odgałęzienie [bezpiecznik/PTC ≥ 1 A] ──► Moduł 7" (5 V, GND)
+
+   Moduł 7"  ~~~ WiFi 2,4 GHz ~~~  Sterownik (AP TrassarV3, kanał 6)
 ```
-
-### 8.5 Logika sterowania pistoletami (3 tryby)
-
-```
-paintEngine.update():
-    1. Oblicz dystans od startu wzorca
-    2. Sprawdź prędkość >= 3 km/h (MIN_PAINT_SPEED_KMH)
-    3. Zależnie od trybu (g_state.machineMode):
-
-       TRYB AUTO:
-         Dla każdego pistoletu (P1–P6):
-           a. Pobierz konfigurację z wzorca (z uwzgl. odwrócenia)
-           b. GUN_OFF → wyłączony
-           c. GUN_CONTINUOUS → włączony (jeśli speedOK)
-           d. GUN_DASHED → fmod(dist, kreska+przerwa) < kreska ? ON : OFF
-         Inteligentne przełączanie wzorców (Smart Switch)
-
-       TRYB SEMI:
-         semiLineDist += deltaDist
-         GUN_CONTINUOUS → włączony (jeśli speedOK)
-         GUN_DASHED → ON jeśli semiLineDist < lineLen && speedOK
-                       Po osiągnięciu lineLen → semiLineComplete=true, buzzer
-                       Operator naciska START → semiNextLine() → reset
-
-       TRYB RĘCZNY:
-         fire = speedOK && buttons.isStartHeld() && (mode != GUN_OFF)
-         Pistolety ON tylko gdy operator trzyma przycisk START
-
-       TRYB DEMO (v2.52.0):
-         Logika identyczna jak AUTO, ale:
-         guns.setGun(i, false)    // Fizycznie zawsze OFF
-         gunStates[i] = wouldFire // Wizualizacja na ekranie i WWW
-
-    4. Zaktualizuj statystyki (dystans, powierzchnia)
-    5. Auto-pauza: jeśli prędkość < 0.5 km/h przez 1.5s → automatyczna pauza
-    6. Auto-wznowienie: jeśli prędkość >= min → automatyczne wznowienie
-```
-
-### 8.6 API REST
-
-| Endpoint | Metoda | Opis |
-|----------|--------|------|
-| `/` | GET | Strona HTML panelu sterowania |
-| `/api/status` | GET | JSON ze stanem systemu (+ anomalia pistoletów) |
-| `/api/stats` | GET | Statystyki lifetime + sesja + per-gun |
-| `/api/reports` | GET | Lista plików raportów CSV z karty SD |
-| `/api/control` | POST | Sterowanie maszyną (action=start\|pause\|stop\|start_from_gap\|set_pattern\|toggle_reverse\|set_mode\|semi_next_line\|save_custom_pattern\|cal_start\|cal_finish\|set_max_speed\|set_min_speed\|set_tank_capacity\|set_paint_rate\|set_auto_resume) |
-| `/api/reports/download` | GET | Pobierz plik raportu CSV z karty SD |
-| `/api/tracks` | GET | Lista plików tras GPS (GPX/GeoJSON) |
-| `/api/tracks/download` | GET | Pobierz plik trasy GPS |
-| `/api/html_reports` | GET | Lista raportów HTML sesji |
-| `/api/html_reports/download` | GET | Pobierz raport HTML sesji |
-| `/api/reports/geojson` | GET | Eksport GeoJSON |
-
-Szczegółowa dokumentacja API → [API_WWW.md](API_WWW.md)
-
----
-
-## 9. Parametry konfiguracyjne
-
-### 9.1 Parametry zdefiniowane w config.h
-
-| Parametr | Wartość | Opis |
-|----------|---------|------|
-| FW_VERSION | "2.52.0" | Wersja firmware |
-| FW_NAME | "TrassarV3" | Nazwa systemu |
-| WIFI_AP_SSID | "TrassarV3" | Nazwa sieci WiFi |
-| WIFI_AP_PASS | *generowane z MAC* | Hasło WiFi (unikalne per urządzenie) |
-| WIFI_AP_CHANNEL | 6 | Kanał WiFi |
-| WIFI_AP_MAX_CON | 4 | Max klientów WiFi |
-| WEB_SERVER_PORT | 80 | Port serwera HTTP |
-| MIN_PAINT_SPEED_KMH | 3.0 | Minimalna prędkość malowania [km/h] |
-| DEFAULT_PULSES_PER_METER | 100.0 | Domyślna wartość kalibracji |
-| CALIBRATION_DISTANCE_M | 10.0 | Dystans kalibracji [m] |
-| TFT_SCREEN_W | 320 | Szerokość ekranu [px] (landscape) |
-| TFT_SCREEN_H | 240 | Wysokość ekranu [px] (landscape) |
-| TFT_BACKLIGHT_PWM | 200 | Jasność podświetlenia (0–255) |
-| TFT_BL_LEDC_FREQ | 5000 | Częstotliwość PWM podświetlenia [Hz] |
-| BTN_DEBOUNCE_MS | 50 | Czas debounce przycisków [ms] |
-| BTN_LONG_PRESS_MS | 1500 | Próg długiego naciśnięcia [ms] |
-| ENC_ISR_DEBOUNCE_US | 50 | Debounce ISR enkodera [μs] |
-| SPEED_CALC_INTERVAL_MS | 250 | Interwał obliczania prędkości [ms] |
-| SPEED_FILTER_ALPHA | 0.3 | Współczynnik filtra wykładniczego prędkości |
-| PIN_BUZZER | 8 | GPIO pinu buzzera pasywnego |
-| BUZZER_LEDC_CH | 1 | Kanał LEDC dla buzzera (0 = podświetlenie TFT) |
-| DEFAULT_MAX_PAINT_SPEED_KMH | 15.0 | Domyślny próg alarmu prędkości [km/h] |
-| WDT_TIMEOUT_SEC | 3 | Timeout watchdoga [s] z auto-resetem |
-| GUN_KEEPALIVE_TIMEOUT_MS | 300 | Timeout keepalive pistoletów [ms] |
-| GUN_ANOMALY_DISTANCE_M | 50.0 | Min dystans sesji do detekcji anomalii [m] |
-| GUN_ANOMALY_CHECK_MS | 10000 | Interwał sprawdzania anomalii [ms] |
-| PIN_GPS_RX | 47 | ESP32 RX ← GPS TX (UART2) |
-| PIN_GPS_TX | 48 | ESP32 TX → GPS RX (UART2) |
-| GPS_BAUD | 9600 | Domyślny baudrate NEO-6M |
-| PIN_JOY_VRX | 19 | Joystick oś X (ADC2_CH8) |
-| PIN_JOY_VRY | 20 | Joystick oś Y (ADC2_CH9) |
-| PIN_JOY_SW | 46 | Joystick przycisk (strap pin) |
-| JOY_DEAD_ZONE | 500 | Strefa martwa ±500 z centrum 2048 |
-| JOY_INITIAL_DELAY_MS | 400 | Opóźnienie przed auto-repeat [ms] |
-| JOY_REPEAT_MS | 200 | Interwał auto-repeat [ms] |
-| MCP23017_I2C_ADDR | 0x20 | Adres I2C ekspandera MCP23017 |
-| MCP23017_NUM_BUTTONS | 15 | Liczba przycisków wzorców |
-| MCP23017_SCAN_MS | 20 | Interwał skanowania przycisków [ms] |
-| MCP23017_BUTTON_MASK | 0x7FFF | Maska bitowa aktywnych przycisków (bity 0–14) |
-
-### 9.2 Kolory UI (format RGB565)
-
-| Stała | Wartość | Kolor | Zastosowanie |
-|-------|---------|-------|-------------|
-| COLOR_BG | 0x0000 | Czarny | Tło ekranu |
-| COLOR_TEXT | 0xFFFF | Biały | Tekst główny |
-| COLOR_ACCENT | 0x07E0 | Zielony | Status OK, wzorzec, kalibracja |
-| COLOR_WARNING | 0xFBE0 | Żółty | Pauza, odwrócenie, pistolety we wzorcu |
-| COLOR_ERROR | 0xF800 | Czerwony | Błędy, zatrzymany |
-| COLOR_GUN_ON | 0x07E0 | Zielony | Pistolet aktywnie maluje |
-| COLOR_GUN_OFF | 0x4208 | Szary | Pistolet nieużywany |
-| COLOR_DIVIDER | 0x4208 | Szary | Separatory |
-| COLOR_HEADER_BG | 0x1A3C | Ciemnoniebieski | Tło nagłówka |
-| COLOR_MENU_SEL | 0x2A7D | Ciemnozielony | Zaznaczenie w menu |
-| COLOR_MENU_TXT | 0xC618 | Jasnoszary | Tekst menu/etykiety |
-
----
-
-## 10. Uwagi montażowe
-
-### 10.1 Okablowanie
-
-1. **SPI (TFT + SD):** Połączenia jak najkrótsze (max 15–20 cm). Dłuższe przewody mogą powodować błędy komunikacji przy 27 MHz
-2. **I2C (RTC):** Do 50 cm z wbudowanymi pull-up na module DS1307
-3. **Enkoder:** Przy dłuższych przewodach (>30 cm) dodaj kondensatory filtrujące 100 nF między CLK/DT a GND
-4. **Przekaźniki:** Przewody do 50 cm — sygnał cyfrowy 3.3V jest odporny na zakłócenia
-5. **Przyciski:** Bez ograniczeń długości dla BS-33B (sygnał cyfrowy z pull-up)
-6. **GPS (UART2):** Przewody TX/RX do 1 m — sygnał cyfrowy 3.3V. Antena GPS na zewnątrz kabiny z widocznością nieba
-
-### 10.2 Montaż enkodera
-
-- Enkoder powinien być zamontowany na kole pomiarowym z dobrym stykiem z podłożem
-- Koło pomiarowe musi obracać się swobodnie bez poślizgu
-- Po montażu wykonać kalibrację na odcinku 10 m
-
-### 10.3 Karta SD
-
-- Format: FAT32
-- Moduł SD współdzieli magistralę SPI z wyświetlaczem — nie wymaga dodatkowego okablowania poza jednym przewodem CS (GPIO 16)
-- **Ważne:** Przed inicjalizacją TFT pin SD_CS (GPIO 16) jest ustawiany na HIGH. Jeśli SD_CS jest floating (LOW), karta SD może odpowiadać na ruch SPI i zakłócać obraz TFT
-
-### 10.4 Zasilanie przekaźników
-
-- 6 przekaźników jednocześnie: ~420 mA (cewki) + ~20 mA (optocouplers)
-- Przy zasilaniu z USB-C (500 mA): może nie wystarczyć przy wszystkich przekaźnikach + TFT + WiFi
-- Zalecane: zewnętrzny zasilacz 5V/2A dla modułu przekaźnikowego lub zasilacz USB-C wspierający 1.5A+
-
-### 10.5 Bezpieczeństwo GPIO
-
-- **GPIO 26–37:** ZAJĘTE przez Flash + Octal PSRAM na module N16R8. Podłączenie czegokolwiek spowoduje niestabilność lub crash
-- **GPIO 0:** Używany przez bootloader — nie podłączać
-- Moduły przekaźnikowe powinny mieć diody zabezpieczające (flyback) — wbudowane w większości modułów
-
-### 10.6 Montaż anteny GPS
-
-- Antena ceramiczna modułu GY-NEO6MV2 **musi mieć widoczność nieba** — zamontuj na zewnątrz kabiny
-- Antena na kablu — można poprowadzić przewód do dachu maszyny
-- Cold start (pierwsze uruchomienie): do 35 sekund na złapanie fix
-- Warm start (kolejne): 1–5 sekund
-- Moduł GPS zasilany z 3.3V — podłączyć do pinu 3V3 ESP32-S3
-
-### 10.7 Aktualizacja firmware
-
-- Podłącz ESP32-S3 przez USB-C
-- W PlatformIO: `pio run --target upload`
-- Alternatywnie: OTA przez WiFi (wymaga dodatkowej implementacji)
-
----
-
----
-
-## 11. Nowe moduły w v2.52.0
-
-### 11.1 Zapis trasy GPS (GPX + GeoJSON)
-
-Podczas malowania system buforuje punkty GPS w PSRAM (max 4320 punktów = ~6h). Po STOP eksportuje trasę na kartę SD w dwóch formatach:
-- `/tracks/trasa_RRRRMMDD_HHMMSS.gpx` — Google Earth, QGIS, Strava
-- `/tracks/trasa_RRRRMMDD_HHMMSS.geojson` — narzędzia GIS, mapy webowe
-
-Punkt GPS zawiera: lat, lng, altitude, speed, timestamp (32 bajty/punkt).
-
-### 11.2 Backup NVS na SD (JSON)
-
-Wszystkie ustawienia NVS (kalibracja, statystyki, wzorce, progi) automatycznie backupowane co 30 min do `/backup/nvs_backup.json`. Automatyczne przywracanie przy pustym NVS (nowe ESP32).
-
-### 11.3 Predykcja zużycia farby
-
-Oblicza zużycie farby na podstawie namalowanej powierzchni i współczynnika (domyślnie 0.6 l/m²). Parametry konfigurowalne z panelu WWW, zapisywane w NVS.
-
-### 11.4 Raporty HTML sesji
-
-Po każdym STOP generowany jest stylizowany raport HTML ze szczegółami sesji, rozbiciem na wzorce, zużyciem farby i koordynatami GPS. Pliki: `/html_reports/raport_RRRRMMDD_HHMMSS.html`.
-
-### 11.5 Czujnik temperatury (opcjonalny)
-
-DS18B20 na GPIO 15 (OneWire). Odczyt co 5 s. Progi: < 5°C (za zimno na farbę), > 35°C (przegrzanie). Wynik na ekranie POST.
-
-### 11.6 Motogodziny (MTH)
-
-Rejestracja czasu pracy silnika malowania. Zapis co 5 min do NVS. Niezależne od czasu sesji.
-
-### 11.7 Auto-pauza / auto-wznowienie
-
-Automatyczna pauza gdy prędkość < 0.5 km/h przez 1.5 s. Automatyczne wznowienie po przekroczeniu progu minimalnej prędkości. Konfigurowalne z WWW.
-
-### 11.8 WebSocket (port 81)
-
-Broadcast statusu JSON co 500 ms do wszystkich podłączonych klientów. Niższe opóźnienie niż HTTP polling.
-
-### 11.9 Tryb nocny
-
-Alternatywna paleta kolorów (amber/dark) dla pracy nocnej. Zmniejsza oślepienie operatora.
-
-### 11.10 Tryb DEMO
-
-Czwarty tryb pracy — nauka operatora. Logika identyczna jak AUTO, ale przekaźniki zawsze OFF. Wizualizacja na ekranie pokazuje co by strzelało.
-
-### 11.11 Ekran POST (Power-On Self-Test)
-
-Diagnostyka startowa: SD, RTC, GPS, MCP23017, enkoder, czujnik temp. Wynik wyświetlany na TFT z 5 s timeoutem.
-
----
-
----
-
-## 11. Nowe moduły w v2.52.0 — szczegóły podłączeń
-
-### 11.1 Czujnik temperatury DS18B20 (opcjonalny)
-
-```
-    ESP32-S3               DS18B20 (TO-92)
-    ┌──────────┐           ┌──────────────┐
-    │          │           │              │
-    │ GPIO 15  ├───────────┤ DATA (pin 2) │
-    │          │    4.7kΩ  │              │
-    │    3V3   ├───┤├──────┤ VDD  (pin 3) │
-    │          │           │              │
-    │    GND   ├───────────┤ GND  (pin 1) │
-    └──────────┘           └──────────────┘
-
-    DS18B20 TO-92 (widok od przodu, nóżki w dół):
-    ┌─────────┐
-    │  DS18B20│
-    │    ___  │
-    │   /   \ │
-    │  │     ││
-    │   \___/ │
-    └─┤─┤─┤──┘
-      1  2  3
-     GND DQ VDD
-
-    Rezystor pull-up 4.7kΩ WYMAGANY między DQ a VDD!
-    Pin: GPIO 15 (współdzielony z Touch CS — jeśli Touch nie jest aktywny)
-```
-
-> **UWAGA:** Czujnik DS18B20 jest opcjonalny. System działa poprawnie bez niego — na ekranie POST wyświetli "Temp: BRAK". Jeśli Touch wyświetlacza jest aktywny, GPIO 15 nie może być użyty do czujnika.
-
----
-
-## 12. Specyfikacja przewodów i złączy
-
-### 12.1 Zalecane przekroje i typy przewodów
-
-| Magistrala | Typ przewodu | Długość max | Uwagi |
-|------------|-------------|-------------|-------|
-| **SPI (TFT+SD)** | AWG 24-26, ekranowany | 15–20 cm | Wyżej 27 MHz — wrażliwe na zakłócenia |
-| **I2C (RTC+MCP)** | AWG 24-28 | 50 cm | Pull-up 4.7kΩ na module DS1307 |
-| **UART (GPS)** | AWG 24-28 | 100 cm | 3.3V, odporny na zakłócenia |
-| **Przekaźniki** | AWG 22-24 | 50 cm | Sygnał 3.3V, niskostratne |
-| **Przyciski** | AWG 22-28 | Bez limitu | Sygnał cyfrowy z pull-up |
-| **Enkoder** | AWG 24, **skrętka** | 200 cm | Dodaj 100 nF przy >30 cm |
-| **Zasilanie 5V** | AWG 20-22, **gruby** | 30 cm | Prąd do 1A przy 6 przekaźnikach |
-| **Zasilanie 3.3V** | AWG 22-24 | 30 cm | Z regulatora ESP32-S3 |
-| **Buzzer** | AWG 24-28 | 50 cm | Sygnał PWM |
-| **Joystick** | AWG 24-28, **ekranowany** | 50 cm | ADC wrażliwy na szum |
-| **Antena GPS** | Koaksjalny (w zestawie) | Wg producenta | Nie skracać! |
-
-### 12.2 Zalecane typy złączy
-
-| Złącze | Zastosowanie | Typ | Uwagi |
-|--------|-------------|-----|-------|
-| **Dupont 2.54mm** | Podłączenia do ESP32 i modułów | żeńskie/męskie | Standardowe dla prototypów |
-| **JST-XH 2.54mm** | Trwałe podłączenia panelowe | Zatrzaskowe | Lepsze niż Dupont w terenie |
-| **Molex KK 2.54mm** | Przekaźniki, zasilanie | Złącze z zabezpieczeniem | Odporne na wibracje |
-| **Goldpin 2.54mm** | Na PCB modułów | Lutowane | Nie na przewodach! |
-| **Śrubowe (screw terminal)** | Przekaźniki → zawory | AWG 14-22 | Dla przewodów zasilania zaworów |
-
-### 12.3 Schemat kolorów przewodów (zalecany)
-
-```
-    ┌──────────────────────────────────────────────────────────┐
-    │              STANDARD KOLORÓW PRZEWODÓW                  │
-    ├──────────────────────────────────────────────────────────┤
-    │                                                          │
-    │  🔴 CZERWONY     = Zasilanie 3.3V                       │
-    │  🔴+⬜ CZERW.+BIAŁY = Zasilanie 5V (UWAGA!)             │
-    │  ⬛ CZARNY       = Masa (GND)                           │
-    │                                                          │
-    │  🔵 NIEBIESKI    = SPI MOSI / I2C SDA / Enkoder CLK    │
-    │  🟣 FIOLETOWY    = SPI SCK                              │
-    │  ⬜ SZARY         = SPI MISO                             │
-    │  🟡 ŻÓŁTY        = Chip Select (CS) / Przycisk START    │
-    │  🟢 ZIELONY      = DC / Enkoder DT / I2C SCL           │
-    │  ⬜ BIAŁY         = TFT Reset                            │
-    │  🟠 POMARAŃCZOWY = Przekaźniki / Buzzer / LED           │
-    │  🟤 BRĄZOWY      = Touch CS                              │
-    │                                                          │
-    │  Magistrala I2C: zielony+biały (SDA), niebieski+biały (SCL) │
-    │  Magistrala UART GPS: zielony (RX), żółty (TX)          │
-    └──────────────────────────────────────────────────────────┘
-```
-
----
-
-## 13. Zabezpieczenia elektryczne
-
-### 13.1 Schemat zabezpieczeń
-
-```
-    USB-C 5V
-      │
-      ├──── [Bezpiecznik polimerowy PTC 1.5A] ──── VCC_5V
-      │                                              │
-      │     ┌────────────────────────────────────────┤
-      │     │                                        │
-      │  [TVS dioda 5.5V]                    ESP32-S3 DevKit
-      │     │                               (regulator 3.3V wbudowany)
-      │     GND                                      │
-      │                                        VCC_3V3
-      │                                              │
-      │     ┌────────────────────────────────────────┤
-      │     │         │         │         │         │
-      │  ILI9341    GPS      MCP23017  Enkoder   Joystick
-      │  (3.3V)   (3.3V)    (3.3V)   (3.3V)    (3.3V)
-      │
-      ├──── Moduł DS1307 (5V)
-      │
-      └──── Moduł przekaźnikowy 6ch (5V)
-             │
-             └──── [Diody flyback wbudowane]
-                   [Opto-izolacja wbudowana]
-```
-
-### 13.2 Zabezpieczenie magistrali SPI
-
-```
-    Przełączanie urządzeń SPI — logika Chip Select:
-
-    ESP32-S3          TFT CS      SD CS       Touch CS
-    GPIO 10 ─────────[LOW]────── [HIGH]────── [HIGH]     ← TFT aktywny
-    GPIO 16 ─────────[HIGH]───── [LOW]─────── [HIGH]     ← SD aktywna
-    GPIO 15 ─────────[HIGH]───── [HIGH]────── [LOW]      ← Touch aktywny
-
-    WAŻNE: Przed inicjalizacją TFT system ustawia GPIO 16 (SD_CS) = HIGH
-    aby karta SD nie odpowiadała na ruch SPI przeznaczony dla wyświetlacza.
-
-    Kolejność inicjalizacji SPI w setup():
-    1. pinMode(PIN_SD_CS, OUTPUT); digitalWrite(PIN_SD_CS, HIGH);
-    2. tft.init();          // TFT CS obsługiwany przez bibliotekę
-    3. SD.begin(PIN_SD_CS); // SD CS obsługiwany przez bibliotekę SD
-```
-
-### 13.3 Zabezpieczenie enkodera przed zakłóceniami
-
-```
-    Dla przewodów enkodera > 30 cm:
-
-    GPIO 5 (CLK) ──┬──── Enkoder CLK
-                    │
-                  [100nF]  ← Kondensator filtrujący
-                    │
-                   GND
-
-    GPIO 6 (DT) ───┬──── Enkoder DT
-                    │
-                  [100nF]  ← Kondensator filtrujący
-                    │
-                   GND
-
-    Dodatkowo: użyj skrętki (twisted pair) dla CLK+DT
-    z oddzielnym GND jako trzecim przewodem.
-```
-
-### 13.4 Zabezpieczenie przekaźników — diody flyback
-
-```
-    Moduł przekaźnikowy (wbudowane zabezpieczenia):
-
-    GPIO ──► [Optocoupler] ──► [Tranzystor] ──► [Cewka przekaźnika]
-                                                      │     │
-                                                   [Dioda flyback]
-                                                      │     │
-                                                     VCC   GND
-
-    Wyjście NO (Normally Open) ──► Zawór elektromagnetyczny pistoletu
-    Wyjście COM ──────────────────► Zasilanie zaworu (zewnętrzne)
-
-    UWAGA: Zawory pistoletów mają WŁASNE zasilanie (12V/24V DC),
-    niezależne od zasilania ESP32. Przekaźnik działa jako przełącznik.
-```
-
----
-
-## 14. Layout PCB — zalecenia dla płytki pośredniczącej
-
-### 14.1 Sugerowany rozkład komponentów
-
-```
-    ┌───────────────────────────────────────────────────────────┐
-    │                    PŁYTA GŁÓWNA TRASSARV3                  │
-    │                                                           │
-    │  ┌─────────────┐     ┌──────────────┐    ┌────────────┐  │
-    │  │  ESP32-S3   │     │  ILI9341     │    │  Moduł     │  │
-    │  │  DevKitC-1  │     │  2.8" TFT    │    │  6-ch      │  │
-    │  │  (centralny)│     │  (front      │    │  przekaźn. │  │
-    │  │             │     │   panel)     │    │            │  │
-    │  └──────┬──────┘     └──────┬───────┘    └─────┬──────┘  │
-    │         │                   │                   │         │
-    │    ┌────┴────┐         ┌────┴────┐         ┌───┴───┐     │
-    │    │  I2C    │         │  SPI    │         │  GPIO │     │
-    │    │ Bus     │         │ Bus     │         │ Bus   │     │
-    │    └────┬────┘         └────┬────┘         └───┬───┘     │
-    │         │                   │                   │         │
-    │  ┌──────┴──────┐     ┌─────┴─────┐     ┌──────┴──────┐  │
-    │  │ DS1307 RTC  │     │  SD Card  │     │ 6× Zawory   │  │
-    │  │ MCP23017    │     │  (w ILI9341│     │ pistoletów  │  │
-    │  └─────────────┘     └───────────┘     └─────────────┘  │
-    │                                                           │
-    │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐ │
-    │  │ Enkoder  │  │ 3×przycisk│  │ Joystick │  │  GPS     │ │
-    │  │ (koło)   │  │ BS-33B    │  │ KY-023   │  │ NEO-6M   │ │
-    │  └──────────┘  └──────────┘  └──────────┘  └──────────┘ │
-    │                                                           │
-    │  ┌──────────────────────────────────────┐                │
-    │  │  MCP23017 + 15 przycisków wzorców    │                │
-    │  │  (panel boczny)                      │                │
-    │  └──────────────────────────────────────┘                │
-    │                                                           │
-    │  [Buzzer]    [USB-C zasilanie]    [Zasilacz 5V/2A]       │
-    └───────────────────────────────────────────────────────────┘
-```
-
-### 14.2 Zasady trasowania
-
-| Reguła | Opis |
-|--------|------|
-| Separacja SPI | Przewody MOSI/MISO/SCK prowadzić razem, daleko od enkodera i przekaźników |
-| Separacja I2C | SDA/SCL prowadzić jako parę, daleko od linii zasilania 5V |
-| Masa gwiaździsta | Wszystkie GND zbiegają się w jednym punkcie (przy ESP32) |
-| Kondensatory blokujące | 100 nF ceramiczny przy VCC każdego modułu (blisko pinu VCC) |
-| Prowadzenie zasilania | Oddzielny przewód 5V do modułu przekaźnikowego (duży prąd) |
-| Antena GPS | Kabel antenowy daleko od przewodów SPI i zasilania |
-
----
-
-## 15. Diagnostyka połączeń elektrycznych
-
-### 15.1 Procedura weryfikacji (checklist montażowy)
-
-**Faza 1 — Zasilanie (BEZ podłączania modułów)**
-
-| # | Test | Narzędzie | Wynik OK |
-|---|------|-----------|----------|
-| 1 | Napięcie na 3V3 | Multimetr | 3.20–3.40 V |
-| 2 | Napięcie na 5V (VBUS) | Multimetr | 4.75–5.25 V |
-| 3 | Napięcie GND–3V3 | Multimetr | 3.20–3.40 V |
-| 4 | Napięcie GND–5V | Multimetr | 4.75–5.25 V |
-
-**Faza 2 — I2C (podłącz DS1307 i MCP23017)**
-
-| # | Test | Narzędzie | Wynik OK |
-|---|------|-----------|----------|
-| 5 | I2C scan (Wire.begin + scan) | Monitor szeregowy | 0x20, 0x68 |
-| 6 | Odczyt czasu RTC | Monitor szeregowy | Data i godzina poprawna |
-| 7 | Odczyt rejestrów MCP23017 | Monitor szeregowy | 0xFF (pull-up, brak wciśnięć) |
-
-**Faza 3 — SPI (podłącz ILI9341)**
-
-| # | Test | Narzędzie | Wynik OK |
-|---|------|-----------|----------|
-| 8 | Inicjalizacja TFT | Wzrok | Ekran powitalny TrassarV3 |
-| 9 | Inicjalizacja SD | Monitor szeregowy | "SD OK" |
-| 10 | Podświetlenie | Wzrok | Jasny ekran (PWM 200/255) |
-
-**Faza 4 — Przekaźniki (podłącz moduł)**
-
-| # | Test | Narzędzie | Wynik OK |
-|---|------|-----------|----------|
-| 11 | Czyszczenie dysz → P1 | Słuch (kliknięcie) | Przekaźnik klika |
-| 12 | Czyszczenie dysz → P2 | Słuch | Przekaźnik klika |
-| 13 | Czyszczenie dysz → P3–P6 | Słuch | Wszystkie klikają |
-
-**Faza 5 — Enkoder, przyciski, joystick**
-
-| # | Test | Narzędzie | Wynik OK |
-|---|------|-----------|----------|
-| 14 | Obrót enkodera | Ekran → prędkość | Prędkość > 0 |
-| 15 | START | Ekran | Zmiana stanu |
-| 16 | STOP | Ekran | Zmiana stanu |
-| 17 | SELEKTOR | Ekran | Nawigacja w menu |
-| 18 | GAP | Ekran | "Start od przerwy" |
-| 19 | Joystick góra/dół | Menu | Nawigacja |
-| 20 | Joystick lewo/prawo | Menu | Wejście/cofnij |
-
-**Faza 6 — GPS i WiFi**
-
-| # | Test | Narzędzie | Wynik OK |
-|---|------|-----------|----------|
-| 21 | GPS fix | Panel WWW → GPS | Fix: TAK po 1–2 min |
-| 22 | WiFi AP | Telefon → WiFi | Widoczna sieć TrassarV3 |
-| 23 | Panel WWW | Przeglądarka | http://192.168.4.1 ładuje się |
-
-### 15.2 Typowe błędy montażowe i ich objawy
-
-| Objaw | Prawdopodobna przyczyna | Test |
-|-------|------------------------|------|
-| Biały ekran TFT | Zamienione MOSI/MISO lub brak CS | Sprawdź GPIO 11↔MOSI, 13↔MISO, 10↔CS |
-| Migający ekran TFT | SD_CS floating LOW | Sprawdź GPIO 16 → HIGH przed tft.init() |
-| I2C scan: 0 urządzeń | Zamienione SDA/SCL | Sprawdź GPIO 17↔SDA, 18↔SCL |
-| I2C scan: tylko 0x68 | MCP23017 brak zasilania lub adres | Sprawdź VDD=3.3V, A0=A1=A2=GND |
-| Przekaźnik nie klika | Brak 5V na module | Sprawdź VCC przekaźnika → 5V (VBUS) |
-| Enkoder liczy do tyłu | Zamienione CLK/DT | Zamień GPIO 5↔6 |
-| GPS brak danych | Zamienione TX/RX | Zamień GPIO 47↔48 |
-| Joystick driftuje | Szum ADC | Zwiększ JOY_DEAD_ZONE, dodaj kondensator |
-| Boot loop | GPIO 46 zwarty do GND | Nie wciskaj joysticka przy starcie |
-| Boot loop | GPIO 26–37 podłączone | Odłącz — zajęte przez PSRAM! |
-
-### 15.3 Pomiar prądów — weryfikacja zasilania
-
-```
-    Test poboru prądu — podłącz multimetr szeregowo w linię USB-C:
-
-    Zasilacz USB-C ──[A]── ESP32-S3
-                     │
-                   Multimetr
-                   (zakres 2A DC)
-
-    Oczekiwane odczyty:
-    ┌─────────────────────────────────┬────────────┐
-    │ Stan                            │ Prąd [mA]  │
-    ├─────────────────────────────────┼────────────┤
-    │ Boot (POST)                     │ 200–300    │
-    │ IDLE (HOME, WiFi, TFT, GPS)    │ 250–350    │
-    │ Malowanie 1 pistolet           │ 350–450    │
-    │ Malowanie 2 pistolety          │ 420–520    │
-    │ Malowanie 3 pistolety          │ 490–600    │
-    │ Malowanie 6 pistoletów + SD    │ 700–960    │
-    │ WebSocket + 4 klienty          │ +30–50     │
-    └─────────────────────────────────┴────────────┘
-
-    Jeśli IDLE > 500 mA → zwarcie lub uszkodzony moduł
-    Jeśli 6 pistoletów > 1200 mA → użyj zewnętrznego zasilacza
-    dla modułu przekaźnikowego
-```
-
----
-
-## 16. Kompletny diagram okablowania — widok z lotu ptaka
-
-```
-                                 ANTENA GPS
-                                 (na zewnątrz)
-                                    │
-                                    │ kabel
-                            ┌───────┴───────┐
-                            │  GPS NEO-6M   │
-                            │  GY-NEO6MV2   │
-                            │  TX→GPIO47    │
-                            │  RX←GPIO48    │
-                            │  VCC←3V3      │
-                            │  GND←GND      │
-                            └───────────────┘
-                                    │
-    ┌───────────────────────────────┼───────────────────────────────┐
-    │                               │                               │
-    │              ┌────────────────┴────────────────┐              │
-    │              │                                  │              │
-    │              │         ESP32-S3 N16R8           │              │
-    │              │         DevKitC-1                │              │
-    │              │                                  │              │
-    │  ┌───────────┤  3V3  5V  GND                   ├──────────┐  │
-    │  │           │                                  │          │  │
-    │  │  ┌────────┤  GPIO 5,6,7 (Enkoder)           │          │  │
-    │  │  │        │  GPIO 38,39,40 (Przyciski)      │          │  │
-    │  │  │  ┌─────┤  GPIO 19,20,46 (Joystick)      │          │  │
-    │  │  │  │     │  GPIO 8 (Buzzer)                │          │  │
-    │  │  │  │     │  GPIO 41,42,1,2,3,4 (Przek.)   ├──┐       │  │
-    │  │  │  │     │  GPIO 10,9,14,21 (TFT ctrl)    │  │       │  │
-    │  │  │  │     │  GPIO 11,12,13 (SPI bus)        │  │       │  │
-    │  │  │  │     │  GPIO 15,16 (Touch CS, SD CS)   │  │       │  │
-    │  │  │  │     │  GPIO 17,18 (I2C SDA/SCL)       │  │       │  │
-    │  │  │  │     │                                  │  │       │  │
-    │  │  │  │     └────────────────┬─────────────────┘  │       │  │
-    │  │  │  │                      │                    │       │  │
-    │  │  │  │                      │ USB-C              │       │  │
-    │  │  │  │                ┌─────┴─────┐              │       │  │
-    │  │  │  │                │ Zasilacz  │              │       │  │
-    │  │  │  │                │ 5V/2A     │              │       │  │
-    │  │  │  │                └───────────┘              │       │  │
-    │  │  │  │                                           │       │  │
-    │  │  │  │                                           │       │  │
-    │  │  │  │                                           │       │  │
-┌───┴──┴──┴──┴───┐  ┌──────────────┐  ┌─────────────┐  │  ┌────┴────────┐
-│  PANEL         │  │  WYŚWIETLACZ │  │  DS1307 RTC │  │  │  MODUŁ      │
-│  STEROWANIA    │  │  ILI9341     │  │  + CR2032   │  │  │  PRZEKAŹN.  │
-│                │  │  2.8" TFT    │  │  I2C: 0x68  │  │  │  6-kanałowy │
-│  [START]       │  │  + SD card   │  └──────┬──────┘  │  │             │
-│  [STOP]        │  │  SPI 27MHz   │         │ I2C     │  │  IN1→P1     │
-│  [SELECT]      │  └──────┬───────┘         │         │  │  IN2→P2     │
-│  [GAP]         │         │ SPI             │         │  │  IN3→P3     │
-│                │         │                 │         │  │  IN4→P4     │
-│  Enkoder       │  ┌──────┴───────┐  ┌──────┴──────┐ │  │  IN5→P5     │
-│  CLK/DT/SW     │  │  MicroSD     │  │  MCP23017   │ │  │  IN6→P6     │
-│                │  │  FAT32       │  │  I2C: 0x20  │ │  │             │
-│  Joystick      │  │  CS=GPIO 16  │  │  15 przycisk│ │  │  VCC←5V     │
-│  KY-023        │  └──────────────┘  └──────┬──────┘ │  │  GND←GND    │
-│                │                           │         │  │             │
-│  Buzzer        │                    ┌──────┴──────┐  │  │  NO→Zawory  │
-│  GPIO 8        │                    │ 15 PRZYCISK.│  │  └─────────────┘
-└────────────────┘                    │ WZORCÓW     │  │
-                                      │ P-1a...P-7d│  │
-                                      └─────────────┘  │
-                                                       │
-                                              ┌────────┴────────┐
-                                              │  6× ZAWORY      │
-                                              │  PISTOLETÓW      │
-                                              │  NATRYSKOWYCH    │
-                                              │  (12V/24V DC)    │
-                                              │  zewn. zasilanie │
-                                              └─────────────────┘
-```
-
----
-
-## 17. Zabezpieczenia sprzętowo-programowe (v2.52.0 SAFETY PATCH)
-
-### 17.1 Wielowarstwowa ochrona pistoletów
-
-System TrassarV3 v2.52.0 implementuje **5 warstw ochrony** przed niekontrolowanym działaniem pistoletów natryskowych:
-
-```
-Warstwa 1: Sprzętowy STOP awaryjny (ISR na GPIO 39)
-   │        Bezpośredni zapis do rejestrów GPIO — <1 µs, niezależny od oprogramowania
-   │
-Warstwa 2: Gun keepalive (300 ms timeout)
-   │        Core 1 + Core 0 monitorują niezależnie — brak update() → allOff()
-   │
-Warstwa 3: Overspeed gun disable (v2.52.0)
-   │        Przekroczenie maxSpeedKmh → natychmiastowe wyłączenie pistoletów + alarm
-   │
-Warstwa 4: Shutdown handler (v2.52.0)
-   │        esp_register_shutdown_handler() → guns OFF PRZED resetem WDT/panic
-   │        Bezpośredni GPIO register write — działa nawet w kontekście panic
-   │
-Warstwa 5: Watchdog timer (3s)
-           TWDT per-task — ostatnia linia obrony, reset całego ESP
-```
-
-### 17.2 Izolacja awarii Core 0 (serwer WWW)
-
-```
-    Core 1 (loop)                        Core 0 (web task)
-    ┌─────────────────┐                  ┌──────────────────┐
-    │  Enkoder        │                  │  HTTP server     │
-    │  Przyciski      │   monitoruje     │  WebSocket       │
-    │  Pistolety      │◄────────────────►│  REST API        │
-    │  Wyświetlacz    │  core0AliveMs    │                  │
-    │  GPS/RTC        │                  │  WDT per-task    │
-    │                 │                  │                  │
-    │ Soft watchdog   │  ┌────────────┐  │ Aktualizuje      │
-    │ sprawdza co 5s  │──│ Restart    │  │ core0AliveMs     │
-    │ isCore0Alive()  │  │ web task   │  │ co 2 ms          │
-    │                 │  │ (nie ESP!) │  │                  │
-    └─────────────────┘  └────────────┘  └──────────────────┘
-
-    Awaria Core 0:
-    1. core0AliveMs przestaje się aktualizować
-    2. Core 1 wykrywa po 10s (isCore0Alive timeout)
-    3. restartWebTask() — usuwa stary task, tworzy nowy
-    4. Malowanie NIE jest przerywane, pistolety NIE są wyłączane
-    5. Event log: "Core 0 web task nie odpowiada — restart tasku"
-```
-
-### 17.3 Detekcja zablokowanego przekaźnika
-
-```
-    ┌─── Normalny cykl (wzorzec DASHED) ───┐
-    │                                        │
-    │  ON ████████████      ON ████████████  │
-    │  OFF            ██████              ██ │
-    │     ← lineLen → ← gapLen →            │
-    │                                        │
-    └────────────────────────────────────────┘
-
-    ┌─── Podejrzenie zablokowanego przekaźnika ───┐
-    │                                              │
-    │  ON ██████████████████████████████████████████│  >60s ciągły ON
-    │                                              │  bez cyklowania!
-    │  → Alarm BUZ_ERROR                           │
-    │  → Event log: "Podejrzenie zablokowanego     │
-    │    przekaznika: P3 (ON > 60s)"               │
-    │                                              │
-    └──────────────────────────────────────────────┘
-```
-
-**Parametry:** Sprawdzanie co 5s (`GUN_RELAY_STUCK_CHECK_MS`), próg 60s ciągłego ON (`GUN_RELAY_MAX_CONT_ON_MS`). Dotyczy wyłącznie pistoletów w trybie `GUN_DASHED` — pistolet `GUN_CONTINUOUS` nie jest monitorowany (ciągły ON jest prawidłowy).
-
-### 17.4 Automatyczne działanie przy niskim heapie
-
-```
-    Heap wolny                    Działanie
-    ────────────────────────────────────────────────
-    > 64 KB                       Normalny tryb pracy
-    ────────────────────────────────────────────────
-    < 64 KB (WARNING)             Ostrzeżenie w logu
-    ────────────────────────────────────────────────
-    < 32 KB (CRITICAL)            • Wyłączenie broadcastu WebSocket
-                                  • Zatrzymanie malowania (stop)
-                                  • Alarm BUZ_ERROR
-                                  • Event log: "KRYTYCZNY heap"
-    ────────────────────────────────────────────────
-```
-
-### 17.5 Ochrona SPI (TFT vs karta SD)
-
-```
-    Przed KAŻDĄ operacją renderowania TFT:
-
-    digitalWrite(PIN_SD_CS, HIGH)  ← gwarantuje że karta SD
-         │                           nie odpowiada na ruch SPI
-         ▼
-    menu.update()                  ← bezpieczne renderowanie TFT
-         │
-         ▼
-    SD_LOCK() / SD_UNLOCK()        ← mutex chroni każdy dostęp do SD
-                                     (timeout 2s < WDT 3s)
-```
-
-### 17.6 Overspeed — wyłączenie pistoletów
-
-```
-    Prędkość          Działanie pistoletów     Alarm
-    ──────────────────────────────────────────────────
-    < minSpeed         OFF (za wolno)           BUZ_LOW_SPEED co 3s
-    ──────────────────────────────────────────────────
-    minSpeed...maxSpeed ON (normalny tryb)      Brak
-    ──────────────────────────────────────────────────
-    > maxSpeed          OFF (za szybko!)        BUZ_OVERSPEED co 2s
-                        + natychmiastowe        + log zdarzenia
-                        guns.allOff()
-    ──────────────────────────────────────────────────
-```
-
-### 17.7 Auto-resume z cooldown
-
-```
-    ┌──── Cykl auto-pauza / auto-resume ────┐
-    │                                         │
-    │  Malowanie → prędkość < 0.5 km/h       │
-    │     │                                   │
-    │     ▼  (1.5s delay)                     │
-    │  AUTO-PAUZA → pistolety OFF             │
-    │     │                                   │
-    │     ▼  prędkość >= minSpeed (0.5s debounce) │
-    │  AUTO-RESUME → pistolety ON             │
-    │     │                                   │
-    │     ▼  COOLDOWN 2s                      │
-    │  Auto-pauza ZABLOKOWANA na 2s           │
-    │  (zapobiega oscylacji pauza↔resume)     │
-    │     │                                   │
-    │     ▼  Po 2s — normalna detekcja        │
-    └─────────────────────────────────────────┘
-```
-
----
-
-## 18. FAQ — Najczęściej zadawane pytania o podłączenia
-
-### Q: Czy mogę użyć innych pinów GPIO?
-
-**A:** Tak, ale wymagana jest zmiana w pliku `config.h` i ponowna kompilacja firmware. Pamiętaj:
-- GPIO 26–37: **ZAKAZANE** (PSRAM)
-- GPIO 0: Zarezerwowany (bootloader)
-- GPIO 43, 44: UART0 (monitor szeregowy) — nie używać
-- GPIO 45: Strap pin — unikać
-- GPIO 46: Strap pin (joystick SW) — ostrożność przy starcie
-
-### Q: Czy mogę zasilić ESP32-S3 z baterii?
-
-**A:** Tak, ale:
-- Bateria LiPo 3.7V + przetwornica boost do 5V (minimum 1.5A)
-- Lub power bank USB-C z output 5V/2A
-- Monitoruj napięcie — przy <4.5V system może zachowywać się niestabilnie
-
-### Q: Ile MCP23017 mogę podłączyć?
-
-**A:** Do 8 sztuk na jednej magistrali I2C (adresy 0x20–0x27 przez A0/A1/A2). Kod obsługuje aktualnie 1 sztukę (0x20). Rozszerzenie wymaga modyfikacji `pattern_buttons.cpp`.
-
-### Q: Czy mogę użyć wyświetlacza innego niż ILI9341?
-
-**A:** Biblioteka TFT_eSPI obsługuje wiele sterowników (ST7735, ST7789, ILI9488, HX8357 itp.), ale:
-- Zmiana sterownika wymaga modyfikacji flag kompilacji w `platformio.ini`
-- Layout UI jest zaprojektowany dla rozdzielczości 320×240
-- Inna rozdzielczość wymaga modyfikacji stałych w `display_internal.h`
-
-### Q: Dlaczego DS1307 wymaga 5V a MCP23017 3.3V?
-
-**A:** DS1307 jest zaprojektowany dla 5V (Vcc min. 4.5V wg datasheet). MCP23017 akceptuje 1.8–5.5V, ale przy 3.3V zapewnia kompatybilność poziomów logicznych z ESP32-S3 (3.3V). Obie układy współdzielą magistralę I2C — moduł DS1307 ma wbudowane pull-upy zasilane z jego VCC (5V), ale piny SDA/SCL ESP32-S3 tolerują 5V (są 5V-tolerant na większości GPIO).
-
-### Q: Czy mogę wydłużyć kabel enkodera do 5 m?
-
-**A:** Przy 5 m zalecamy:
-1. Użyj skrętki (twisted pair) CAT5/CAT6
-2. Dodaj kondensatory 100 nF na obu końcach (CLK i DT)
-3. Rozważ driver linii RS-485 dla bardzo długich kabli
-4. Zwiększ `ENC_ISR_DEBOUNCE_US` do 500–1000 µs
-5. Przetestuj dokładność kalibracji po montażu
-
----
-
----
-
-## 19. Złącza maszynowe — schemat wyprowadzeń na maszynę
-
-### 19.1 Przegląd złączy
-
-System TrassarV3 łączy się z maszyną malowarki przez 5 złączy przemysłowych. Złącza dobrane z zapasem pinów — umożliwiają przyszłą rozbudowę bez wymiany konektorów.
-
-| Złącze | Model | Parametry | Funkcja | Pinów użytych / dostępnych |
-|--------|-------|-----------|---------|---------------------------|
-| **J1** | TS13CP03 | 13A/250V | Zasilanie 5V z maszyny | 3 / 3 |
-| **J2** | TS17CP10 | 5A/400V | Wyjścia przekaźników pistoletów (6ch) | 8 / 10 |
-| **J3** | TS13CP05 | 5A/180V | Enkoder obrotowy (koło pomiarowe) | 5 / 5 |
-| **J4** | TS13PS06 | 5A/125V | Pilot zdalny (4 przyciski) | 5 / 6 |
-| **J5** | TS21CP04 | 30A/500V | Przycisk nożny (start/pauza, stop) | 3 / 4 |
-
-### 19.2 Schemat rozmieszczenia złączy na obudowie
-
-```
-    ┌─────────────────────────────────────────────────────────────────┐
-    │                    OBUDOWA KOMPUTERA POKŁADOWEGO                 │
-    │                                                                 │
-    │  ┌───────────────────────────────┐                              │
-    │  │      WYŚWIETLACZ ILI9341      │   [START]  [STOP]  [SELECT] │
-    │  │         320×240 px            │                              │
-    │  │                               │   [Joystick KY-023]         │
-    │  └───────────────────────────────┘                              │
-    │                                                                 │
-    │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐  ┌────────────┐│
-    │  │ P-1a │ │ P-1b │ │ P-1c │ │ P-1d │ │ P-1e │  │  Buzzer    ││
-    │  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘  └────────────┘│
-    │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐                │
-    │  │ P-2a │ │ P-2b │ │ P-3a │ │ P-3b │ │ P-4  │                │
-    │  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘                │
-    │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐                │
-    │  │ P-6  │ │ P-7a │ │ P-7b │ │ P-7c │ │ P-7d │                │
-    │  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘                │
-    │                                                                 │
-    ├─────────────────────────────────────────────────────────────────┤
-    │  PANEL DOLNY — ZŁĄCZA MASZYNOWE                                 │
-    │                                                                 │
-    │  ┌──────┐  ┌──────────┐  ┌──────┐  ┌──────┐  ┌──────┐        │
-    │  │  J1  │  │    J2    │  │  J3  │  │  J4  │  │  J5  │        │
-    │  │TS13  │  │  TS17    │  │TS13  │  │TS13  │  │TS21  │        │
-    │  │CP03  │  │  CP10    │  │CP05  │  │PS06  │  │CP04  │        │
-    │  │ 5V   │  │ Pistolety│  │ Enk. │  │Pilot │  │Nożny │        │
-    │  └──────┘  └──────────┘  └──────┘  └──────┘  └──────┘        │
-    └─────────────────────────────────────────────────────────────────┘
-```
-
-### 19.3 J1 — Zasilanie 5V (TS13CP03 13A/250V, 3 piny)
-
-Złącze doprowadzające zasilanie 5V DC z przetwornika napięcia maszyny do komputera pokładowego.
-
-```
-    TS13CP03 (widok od strony lutowania)
-    ┌───────────────────┐
-    │     ┌───┐         │
-    │  1  │ ● │  +5V    │──── ESP32 5V (VBUS) + moduł przekaźnikowy VCC
-    │     └───┘         │
-    │     ┌───┐         │
-    │  2  │ ● │  GND    │──── Masa wspólna (ESP32 GND + przekaźniki GND)
-    │     └───┘         │
-    │     ┌───┐         │
-    │  3  │ ● │  GND    │──── Masa (zdublowana — grubszy przekrój)
-    │     └───┘         │
-    └───────────────────┘
-```
-
-| Pin J1 | Sygnał | Kolor | Do wewnątrz (ESP32) | Uwagi |
-|--------|--------|-------|---------------------|-------|
-| 1 | **+5V DC** | czerwony | 5V VBUS ESP32 + VCC moduł przekaźnikowy | Min. 2A, zalecane 3A |
-| 2 | **GND** | czarny | GND ESP32 + GND przekaźniki | Masa wspólna |
-| 3 | **GND** | czarny | Równolegle z pin 2 | Zdublowane GND — niższa impedancja |
-
-> **WAŻNE:** Zasilanie 5V DC z maszyny. Źródło: przetwornica DC-DC 12V/24V→5V montowana na maszynie. Minimalny prąd 2A, zalecany 3A (6 przekaźników = ~0.5A + ESP32 = ~0.5A). Złącze TS13CP03 (13A/250V) ma duży zapas prądowy — bezpieczeństwo przy przepięciach rozruchowych.
-
-### 19.4 J2 — Wyjścia przekaźników pistoletów (TS17CP10 5A/400V, 10 pinów)
-
-Złącze wyprowadzające sygnały sterowania 6 zaworami elektromagnetycznymi pistoletów natryskowych. Wyjścia NO (Normally Open) z modułu przekaźnikowego — przełączają zasilanie zaworów (12V/24V DC z instalacji maszyny).
-
-```
-    TS17CP10 (widok od strony lutowania)
-    ┌─────────────────────────────────┐
-    │  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐│
-    │  │ 1 │ │ 2 │ │ 3 │ │ 4 │ │ 5 ││
-    │  │ ● │ │ ● │ │ ● │ │ ● │ │ ● ││  Górny rząd
-    │  └───┘ └───┘ └───┘ └───┘ └───┘│
-    │  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐│
-    │  │ 6 │ │ 7 │ │ 8 │ │ 9 │ │10 ││
-    │  │ ● │ │ ● │ │ ● │ │ ● │ │ ● ││  Dolny rząd
-    │  └───┘ └───┘ └───┘ └───┘ └───┘│
-    └─────────────────────────────────┘
-```
-
-| Pin J2 | Sygnał | Pistolet | Szer. | Do zewnątrz (maszyna) | Kolor |
-|--------|--------|----------|-------|-----------------------|-------|
-| 1 | **P1 NO** | Pistolet 1 — oś L | 12 cm | Zawór P1 — styk 1 | pomarańczowy |
-| 2 | **P2 NO** | Pistolet 2 — oś C | 12 cm | Zawór P2 — styk 1 | pomarańczowy |
-| 3 | **P3 NO** | Pistolet 3 — oś R | 12 cm | Zawór P3 — styk 1 | pomarańczowy |
-| 4 | **P4 NO** | Pistolet 4 — oś W | 24 cm | Zawór P4 — styk 1 | pomarańczowy |
-| 5 | **P5 NO** | Pistolet 5 — kraw. | 12 cm | Zawór P5 — styk 1 | pomarańczowy |
-| 6 | **P6 NO** | Pistolet 6 — kraw. | 24 cm | Zawór P6 — styk 1 | pomarańczowy |
-| 7 | **COM** | Wspólny | — | Zasilanie zaworów + (12V/24V z maszyny) | czerwony |
-| 8 | **COM** | Wspólny | — | Zasilanie zaworów + (zdublowany) | czerwony |
-| 9 | *REZERWA* | — | — | Wolny (przyszła rozbudowa) | — |
-| 10 | *REZERWA* | — | — | Wolny (przyszła rozbudowa) | — |
-
-```
-    Schemat podłączenia zaworów:
-
-    Zasilanie zaworów 12V/24V DC (z instalacji maszyny)
-        │
-        ├──── J2 pin 7 (COM) ──► Moduł przekaźnikowy COM ──┐
-        │                                                    │
-        │     J2 pin 1 (P1 NO) ◄── Przekaźnik 1 NO ────────┤──► Zawór P1
-        │     J2 pin 2 (P2 NO) ◄── Przekaźnik 2 NO ────────┤──► Zawór P2
-        │     J2 pin 3 (P3 NO) ◄── Przekaźnik 3 NO ────────┤──► Zawór P3
-        │     J2 pin 4 (P4 NO) ◄── Przekaźnik 4 NO ────────┤──► Zawór P4
-        │     J2 pin 5 (P5 NO) ◄── Przekaźnik 5 NO ────────┤──► Zawór P5
-        │     J2 pin 6 (P6 NO) ◄── Przekaźnik 6 NO ────────┘──► Zawór P6
-        │
-        └──── GND zaworów (masa instalacji maszyny — NIE łączyć z GND ESP32!)
-```
-
-> **WAŻNE:** Obwód zaworów jest galwanicznie izolowany od ESP32 dzięki opto-izolacji w module przekaźnikowym. Zasilanie zaworów (12V/24V DC) pochodzi z instalacji maszyny, NIE z komputera pokładowego. Masa zaworów NIE jest połączona z GND ESP32.
-
-### 19.5 J3 — Enkoder obrotowy (TS13CP05 5A/180V, 5 pinów)
-
-Złącze do enkodera kwadraturowego zamontowanego na kole pomiarowym maszyny.
-
-```
-    TS13CP05 (widok od strony lutowania)
-    ┌───────────────────────────────┐
-    │  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐│
-    │  │ 1 │ │ 2 │ │ 3 │ │ 4 │ │ 5 ││
-    │  │ ● │ │ ● │ │ ● │ │ ● │ │ ● ││
-    │  └───┘ └───┘ └───┘ └───┘ └───┘│
-    └───────────────────────────────┘
-```
-
-| Pin J3 | Sygnał | Kolor | Do wewnątrz (ESP32) | Uwagi |
-|--------|--------|-------|---------------------|-------|
-| 1 | **CLK (A)** | niebieski | GPIO 5 (INPUT_PULLUP, ISR CHANGE) | Sygnał kwadraturowy A |
-| 2 | **DT (B)** | zielony | GPIO 6 (INPUT_PULLUP) | Sygnał kwadraturowy B |
-| 3 | **SW** | żółty | GPIO 7 (INPUT_PULLUP) | Przycisk "Start od przerwy" |
-| 4 | **VCC** | czerwony | 3V3 ESP32 | Zasilanie 3.3V (opcjonalne) |
-| 5 | **GND** | czarny | GND ESP32 | Masa |
-
-```
-    Kabel enkodera (zalecana skrętka CAT5):
-
-    Obudowa komputera                          Koło pomiarowe
-    ┌──────────────┐                           ┌──────────────┐
-    │   J3 pin 1   ├───╲╱───╲╱───╲╱───────────┤ Enkoder CLK  │
-    │   J3 pin 2   ├───╱╲───╱╲───╱╲───────────┤ Enkoder DT   │
-    │   J3 pin 3   ├───────────────────────────┤ Enkoder SW   │
-    │   J3 pin 4   ├───────────────────────────┤ Enkoder VCC  │
-    │   J3 pin 5   ├───────────────────────────┤ Enkoder GND  │
-    └──────────────┘    skrętka CLK/DT         └──────────────┘
-
-    Długość kabla: do 200 cm (przy skrętce + kondensatory 100nF)
-    Przy >30 cm: dodaj 100nF między CLK/GND i DT/GND po stronie enkodera
-```
-
-> **Uwaga montażowa:** Enkoder musi być zamontowany z dobrym stykiem koła pomiarowego z podłożem. Zastosować skrętkę (twisted pair) dla sygnałów CLK i DT — ochrona przed EMI od solenoidów pistoletów. Po montażu wymagana kalibracja na odcinku 10 m.
-
-### 19.6 J4 — Pilot zdalny (TS13PS06 5A/125V, 6 pinów)
-
-Złącze do pilota przewodowego z zduplikowanymi przyciskami sterowania. Umożliwia operatorowi sterowanie z pozycji oddalonych od głównego panelu (np. z tyłu maszyny).
-
-```
-    TS13PS06 (widok od strony lutowania)
-    ┌─────────────────────────────────┐
-    │  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐│
-    │  │ 1 │ │ 2 │ │ 3 │ │ 4 │ │ 5 │ │ 6 ││
-    │  │ ● │ │ ● │ │ ● │ │ ● │ │ ● │ │ ● ││
-    │  └───┘ └───┘ └───┘ └───┘ └───┘ └───┘│
-    └─────────────────────────────────┘
-```
-
-| Pin J4 | Sygnał | Przycisk pilota | Kolor | Do wewnątrz (ESP32) | Uwagi |
-|--------|--------|-----------------|-------|---------------------|-------|
-| 1 | **START/PAUZA** | Przycisk START | czerwony | GPIO 38 (równolegle z panelowym) | NO, zwiera do GND |
-| 2 | **SELEKTOR** | Przycisk SELECT | zielony | GPIO 40 (równolegle z panelowym) | NO, zwiera do GND |
-| 3 | **STOP** | Przycisk STOP | żółty | GPIO 39 (równolegle z panelowym) | NO, zwiera do GND |
-| 4 | **START GAP** | Przycisk GAP | niebieski | GPIO 7 (równolegle z SW enkodera) | NO, zwiera do GND |
-| 5 | **GND** | Masa wspólna | czarny | GND ESP32 | Masa wszystkich przycisków |
-| 6 | *REZERWA* | — | — | Wolny | Przyszła rozbudowa |
-
-```
-    Schemat podłączenia pilota (równoległe z przyciskami panelowymi):
-
-    GPIO 38 (START) ──────┬──── Przycisk panelowy BS-33B ──── GND
-                          │
-                          └──── J4 pin 1 (pilot START) ──── J4 pin 5 (GND)
-
-    GPIO 39 (STOP) ───────┬──── Przycisk panelowy BS-33B ──── GND
-                          │
-                          └──── J4 pin 3 (pilot STOP) ───── J4 pin 5 (GND)
-
-    GPIO 40 (SELECT) ─────┬──── Przycisk panelowy BS-33B ──── GND
-                          │
-                          └──── J4 pin 2 (pilot SELECT) ─── J4 pin 5 (GND)
-
-    GPIO 7 (GAP) ─────────┬──── Enkoder SW ──── GND
-                          │
-                          └──── J4 pin 4 (pilot GAP) ────── J4 pin 5 (GND)
-```
-
-> **WAŻNE:** Przyciski pilota podłączone **równolegle** z przyciskami panelowymi (wspólne GPIO z wewnętrznymi pull-up). Nie wymagają żadnych zmian w firmware — ESP32 widzi zwarcie do GND identycznie niezależnie od źródła. Debounce 50 ms eliminuje fałszywe wyzwolenia. Maksymalna długość kabla pilota: bez ograniczeń (sygnał cyfrowy z pull-up 3.3V).
-
-### 19.7 J5 — Przycisk nożny (TS21CP04 30A/500V, 4 piny)
-
-Złącze do przemysłowego przycisku nożnego (footswitch) umożliwiającego sterowanie nogą. Funkcja: START/PAUZA + STOP.
-
-```
-    TS21CP04 (widok od strony lutowania)
-    ┌─────────────────────────────┐
-    │  ┌───┐ ┌───┐ ┌───┐ ┌───┐  │
-    │  │ 1 │ │ 2 │ │ 3 │ │ 4 │  │
-    │  │ ● │ │ ● │ │ ● │ │ ● │  │
-    │  └───┘ └───┘ └───┘ └───┘  │
-    └─────────────────────────────┘
-```
-
-| Pin J5 | Sygnał | Funkcja | Kolor | Do wewnątrz (ESP32) | Uwagi |
-|--------|--------|---------|-------|---------------------|-------|
-| 1 | **START/PAUZA** | Przycisk nożny lewy | czerwony | GPIO 38 (równolegle) | NO, zwiera do GND |
-| 2 | **STOP** | Przycisk nożny prawy | żółty | GPIO 39 (równolegle) | NO, zwiera do GND |
-| 3 | **GND** | Masa wspólna | czarny | GND ESP32 | Masa przycisków nożnych |
-| 4 | *REZERWA* | — | — | Wolny | Przyszła rozbudowa |
-
-```
-    Schemat podłączenia przycisku nożnego:
-
-    Przycisk nożny podwójny (dual footswitch)
-    ┌──────────────────────────────────────┐
-    │                                      │
-    │   ┌─────────┐       ┌─────────┐     │
-    │   │ LEWY    │       │ PRAWY   │     │
-    │   │ (START) │       │ (STOP)  │     │
-    │   └────┬────┘       └────┬────┘     │
-    │        │                  │          │
-    │   styk NO            styk NO        │
-    │        │                  │          │
-    └────────┼──────────────────┼──────────┘
-             │                  │
-    J5 pin 1 ┘                  └ J5 pin 2
-    J5 pin 3 ────────────────────────────── GND
-
-    Wewnątrz komputera:
-
-    GPIO 38 (START) ──┬── Przycisk panelowy ── GND
-                      ├── J4 pin 1 (pilot) ── GND
-                      └── J5 pin 1 (nożny) ── J5 pin 3 (GND)
-
-    GPIO 39 (STOP) ───┬── Przycisk panelowy ── GND
-                      ├── J4 pin 3 (pilot) ── GND
-                      └── J5 pin 2 (nożny) ── J5 pin 3 (GND)
-```
-
-> **WAŻNE:** Złącze TS21CP04 (30A/500V) ma duży zapas — celowo, bo przycisk nożny narażony jest na warunki terenowe (woda, piasek, wibracje). Podłączenie równoległe jak pilot — bez zmian w firmware. STOP z przycisku nożnego wyzwala ISR awaryjnego stopu (natychmiastowe wyłączenie pistoletów, <1 µs).
-
-### 19.8 Kompletny schemat okablowania ze złączami maszynowymi
-
-```
-                                       ANTENA GPS
-                                       (na zewnątrz)
-                                          │
-                            ┌─────────────┴─────────────┐
-                            │     GPS NEO-6M             │
-                            └─────────────┬─────────────┘
-                                          │ UART2
-    ════════════════════════════════════════════════════════════
-    ║                    OBUDOWA KOMPUTERA POKŁADOWEGO          ║
-    ║                                                           ║
-    ║  ┌──────────────────────────────────────────────────────┐ ║
-    ║  │                                                      │ ║
-    ║  │   ┌──────────┐    ┌──────────────────────┐          │ ║
-    ║  │   │ ESP32-S3 │    │ Wyświetlacz ILI9341  │          │ ║
-    ║  │   │  N16R8   │◄──►│ 2.8" TFT + SD        │          │ ║
-    ║  │   │          │SPI │                       │          │ ║
-    ║  │   │          │    └──────────────────────┘          │ ║
-    ║  │   │          │I2C                                    │ ║
-    ║  │   │          │◄──►┌──────────┐ ┌──────────────────┐ │ ║
-    ║  │   │          │    │ DS1307   │ │ MCP23017 + 15btn │ │ ║
-    ║  │   │          │    └──────────┘ └──────────────────┘ │ ║
-    ║  │   │          │                                       │ ║
-    ║  │   │          │◄──►Przyciski BS-33B (START/STOP/SEL) │ ║
-    ║  │   │          │◄──►Joystick KY-023                   │ ║
-    ║  │   │          │◄──►Buzzer pasywny                    │ ║
-    ║  │   │          │                                       │ ║
-    ║  │   │          │──►┌────────────────────┐              │ ║
-    ║  │   │          │   │ Moduł przekaźników │              │ ║
-    ║  │   │          │   │ 6-kanałowy 5V      │              │ ║
-    ║  │   └──────────┘   └─────────┬──────────┘              │ ║
-    ║  │                            │ NO wyjścia               │ ║
-    ║  └────────────────────────────┼──────────────────────────┘ ║
-    ║                               │                            ║
-    ║  ┌─── ZŁĄCZA MASZYNOWE ───────┼────────────────────────┐   ║
-    ║  │                            │                        │   ║
-    ║  │  ┌───────────┐  ┌─────────┴────────┐  ┌─────────┐ │   ║
-    ║  │  │ J1        │  │ J2               │  │ J3      │ │   ║
-    ║  │  │ TS13CP03  │  │ TS17CP10         │  │ TS13CP05│ │   ║
-    ║  │  │ ZASILANIE │  │ 6× PISTOLETÓW    │  │ ENKODER │ │   ║
-    ║  │  │ 5V DC     │  │ + COM + REZERWA  │  │ CLK/DT  │ │   ║
-    ║  │  │ 3 piny    │  │ 10 pinów         │  │ SW/VCC  │ │   ║
-    ║  │  └─────┬─────┘  └────────┬─────────┘  └────┬────┘ │   ║
-    ║  │        │                 │                  │      │   ║
-    ║  │  ┌─────┴─────┐  ┌───────┴───────┐  ┌──────┴────┐ │   ║
-    ║  │  │ J4        │  │ J5            │  │           │ │   ║
-    ║  │  │ TS13PS06  │  │ TS21CP04      │  │           │ │   ║
-    ║  │  │ PILOT     │  │ NOŻNY         │  │           │ │   ║
-    ║  │  │ 4 przyc.  │  │ START + STOP  │  │           │ │   ║
-    ║  │  │ 6 pinów   │  │ 4 piny        │  │           │ │   ║
-    ║  │  └───────────┘  └───────────────┘  └───────────┘ │   ║
-    ║  └──────────────────────────────────────────────────┘   ║
-    ║                                                          ║
-    ════════════════════════════════════════════════════════════
-
-    NA MASZYNIE:
-    ──────────────────────────────────────────────────────────
-    J1 ← Przetwornica 12V/24V → 5V DC (zasilanie z akumulatora)
-    J2 → 6× zawory elektromagnetyczne pistoletów (12V/24V DC)
-    J3 ← Enkoder na kole pomiarowym
-    J4 ← Pilot przewodowy (4 przyciski)
-    J5 ← Przycisk nożny podwójny (START + STOP)
-```
-
-### 19.9 Wewnętrzne połączenia złączy z ESP32
-
-```
-    Złącze J1 (TS13CP03 — zasilanie)
-    ┌──────┐
-    │ pin 1├── +5V ──┬── ESP32 5V (VBUS)
-    │      │         └── Moduł przekaźnikowy VCC
-    │ pin 2├── GND ──┬── ESP32 GND
-    │      │         └── Moduł przekaźnikowy GND
-    │ pin 3├── GND ──┘ (zdublowane)
-    └──────┘
-
-    Złącze J2 (TS17CP10 — pistolety)
-    ┌──────┐
-    │ pin 1├── Przekaźnik 1 NO ── GPIO 41 (P1)
-    │ pin 2├── Przekaźnik 2 NO ── GPIO 42 (P2)
-    │ pin 3├── Przekaźnik 3 NO ── GPIO  1 (P3)
-    │ pin 4├── Przekaźnik 4 NO ── GPIO  2 (P4)
-    │ pin 5├── Przekaźnik 5 NO ── GPIO  3 (P5)
-    │ pin 6├── Przekaźnik 6 NO ── GPIO  4 (P6)
-    │ pin 7├── COM (zasilanie zaworów +)
-    │ pin 8├── COM (zdublowane)
-    │ pin 9├── REZERWA
-    │pin 10├── REZERWA
-    └──────┘
-
-    Złącze J3 (TS13CP05 — enkoder)
-    ┌──────┐
-    │ pin 1├── GPIO  5 (CLK, ISR)
-    │ pin 2├── GPIO  6 (DT)
-    │ pin 3├── GPIO  7 (SW / GAP)
-    │ pin 4├── 3V3 (VCC)
-    │ pin 5├── GND
-    └──────┘
-
-    Złącze J4 (TS13PS06 — pilot)
-    ┌──────┐
-    │ pin 1├── GPIO 38 (START/PAUZA) ── równolegle z przyciskiem panelowym
-    │ pin 2├── GPIO 40 (SELEKTOR)    ── równolegle z przyciskiem panelowym
-    │ pin 3├── GPIO 39 (STOP)        ── równolegle z przyciskiem panelowym
-    │ pin 4├── GPIO  7 (START GAP)   ── równolegle z SW enkodera
-    │ pin 5├── GND
-    │ pin 6├── REZERWA
-    └──────┘
-
-    Złącze J5 (TS21CP04 — przycisk nożny)
-    ┌──────┐
-    │ pin 1├── GPIO 38 (START/PAUZA) ── równolegle z panelem + pilotem
-    │ pin 2├── GPIO 39 (STOP)        ── równolegle z panelem + pilotem
-    │ pin 3├── GND
-    │ pin 4├── REZERWA
-    └──────┘
-```
-
-### 19.10 Tabela kompletnych połączeń — złącza maszynowe (checklist)
-
-| # | Z (wewnątrz) | Złącze | Pin | Na zewnątrz (maszyna) | Kolor | Uwagi |
-|---|-------------|--------|-----|----------------------|-------|-------|
-| 1 | ESP32 5V + Przekaźn. VCC | J1 | 1 | Przetwornica 5V + | czerwony | Min. 2A |
-| 2 | ESP32 GND + Przekaźn. GND | J1 | 2 | Przetwornica 5V − | czarny | Masa |
-| 3 | GND (zdublowane) | J1 | 3 | Przetwornica 5V − | czarny | Zapas |
-| 4 | Przekaźnik 1 NO | J2 | 1 | Zawór P1 (oś L, 12cm) | pomarańczowy | |
-| 5 | Przekaźnik 2 NO | J2 | 2 | Zawór P2 (oś C, 12cm) | pomarańczowy | |
-| 6 | Przekaźnik 3 NO | J2 | 3 | Zawór P3 (oś R, 12cm) | pomarańczowy | |
-| 7 | Przekaźnik 4 NO | J2 | 4 | Zawór P4 (oś W, 24cm) | pomarańczowy | |
-| 8 | Przekaźnik 5 NO | J2 | 5 | Zawór P5 (kraw, 12cm) | pomarańczowy | |
-| 9 | Przekaźnik 6 NO | J2 | 6 | Zawór P6 (kraw, 24cm) | pomarańczowy | |
-| 10 | Przekaźniki COM | J2 | 7 | Zasilanie zaworów + (12/24V) | czerwony | Z maszyny |
-| 11 | Przekaźniki COM | J2 | 8 | Zasilanie zaworów + (zdub.) | czerwony | Zapas |
-| 12 | GPIO 5 (Enkoder CLK) | J3 | 1 | Enkoder kanał A | niebieski | Skrętka |
-| 13 | GPIO 6 (Enkoder DT) | J3 | 2 | Enkoder kanał B | zielony | Skrętka |
-| 14 | GPIO 7 (SW/GAP) | J3 | 3 | Enkoder przycisk SW | żółty | |
-| 15 | 3V3 | J3 | 4 | Enkoder VCC | czerwony | |
-| 16 | GND | J3 | 5 | Enkoder GND | czarny | |
-| 17 | GPIO 38 (START) | J4 | 1 | Pilot — przycisk START | czerwony | Równol. |
-| 18 | GPIO 40 (SELECT) | J4 | 2 | Pilot — przycisk SELECT | zielony | Równol. |
-| 19 | GPIO 39 (STOP) | J4 | 3 | Pilot — przycisk STOP | żółty | Równol. |
-| 20 | GPIO 7 (GAP) | J4 | 4 | Pilot — przycisk GAP | niebieski | Równol. |
-| 21 | GND | J4 | 5 | Pilot — masa wspólna | czarny | |
-| 22 | GPIO 38 (START) | J5 | 1 | Nożny — pedał lewy | czerwony | Równol. |
-| 23 | GPIO 39 (STOP) | J5 | 2 | Nożny — pedał prawy | żółty | Równol. |
-| 24 | GND | J5 | 3 | Nożny — masa | czarny | |
-
-> **Łączna liczba przewodów na złączach maszynowych: 24** (+ 2 piny rezerwy na J2, 1 pin rezerwy na J4, 1 pin rezerwy na J5)
-
----
-
-## 20. Ocena gotowości produkcyjnej — v2.52.0
-
-### 20.1 Podsumowanie
 
 | Parametr | Wartość |
 |----------|---------|
-| **Wersja firmware** | 2.52.0 (SAFETY PATCH) |
-| **Rewizja git** | `5c5a177` |
-| **Data rewizji** | 2026-03-17 |
-| **Linie kodu** | ~11 600 (57 plików .cpp/.h) |
-| **Ocena produkcyjna** | **8/10 — GOTOWY DO PRODUKCJI** |
+| Napięcie zasilania | 5 V DC |
+| Pobór prądu | zwykle 0,3–0,5 A zależnie od jasności (wartość szacunkowa — zmierzyć na egzemplarzu) |
+| Łączność | WiFi 802.11 b/g/n, klient sieci sterownika |
+| Limit klientów AP sterownika | 4 (moduł 7" zajmuje jednego; zostają 3 dla telefonów) |
 
-### 20.2 Mocne strony systemu
+### 5.2 Piny wewnętrzne płytki Sunton ESP32-8048S070C (informacyjnie — nie używać zewnętrznie)
 
-#### A. Bezpieczeństwo pistoletów — 5 warstw ochrony
+Interfejs panelu zajmuje niemal wszystkie GPIO ESP32-S3 (stąd wybór architektury „osobny moduł + WiFi").
 
-System implementuje wielowarstwowy model bezpieczeństwa klasy przemysłowej:
+| Funkcja | GPIO |
+|---------|------|
+| Dane RGB — niebieski B0…B4 | 15, 7, 6, 5, 4 |
+| Dane RGB — zielony G0…G5 | 9, 46, 3, 8, 16, 1 |
+| Dane RGB — czerwony R0…R4 | 14, 21, 47, 48, 45 |
+| DE / VSYNC / HSYNC / PCLK | 41 / 40 / 39 / 42 |
+| Podświetlenie (PWM) | 2 |
+| Dotyk GT911 — SDA / SCL / RST | 19 / 20 / 38 |
+| Slot microSD na płytce (nieużywany przez firmware) | CS 10, MOSI 11, SCK 12, MISO 13 |
 
-1. **Sprzętowy STOP awaryjny (ISR)** — bezpośredni zapis do rejestrów GPIO w <1 µs, niezależny od stanu firmware
-2. **Gun keepalive 300ms** — niezależne monitorowanie z Core 0 i Core 1
-3. **Overspeed gun disable** — natychmiastowe wyłączenie przy przekroczeniu prędkości + alarm
-4. **Shutdown handler** — `esp_register_shutdown_handler()` gwarantuje pistolet OFF przed każdym resetem/panic
-5. **Watchdog 3s** — ostatnia linia obrony, per-task na obu rdzeniach
+Parametry taktowania panelu: PCLK 12 MHz; HSYNC front/pulse/back = 8/2/43; VSYNC front/pulse/back = 8/2/12.
+Zestaw ustawiony pod stabilną pracę z aktywnym WiFi i PSRAM (bez migotania).
 
-**Ocena: wzorcowa** — wielokrotna redundancja, brak single point of failure.
+### 5.3 Montaż
 
-#### B. Synchronizacja dual-core
-
-- Wszystkie dostępy do `g_state` chronione przez `STATE_LOCK()`/`STATE_UNLOCK()` (portMUX spinlock)
-- Statystyki mają własny spinlock (`statsMux`)
-- Stany pistoletów chronione oddzielnym `gunMux`
-- Operacje SD chronione mutexem z timeoutem 2s (< WDT 3s — nie blokuje watchdoga)
-- Brak zidentyfikowanych deadlocków (wszystkie locki trzymane <5ms)
-
-#### C. Graceful degradation
-
-- SD niedostępna → kontynuuj bez logowania, ostrzeżenie na ekranie POST
-- RTC niedostępny → fallback do czasu kompilacji
-- GPS brak fixu → malowanie działa normalnie, brak trasy GPX
-- MCP23017 offline → wzorce z panelu WWW
-- Niski heap → automatyczne zatrzymanie malowania + alarm
-
-#### D. Architektura kodu
-
-- Czytelna struktura modułów (27 plików .cpp/.h)
-- Konsekwentne konwencje (camelCase, UPPER_SNAKE dla stałych, PascalCase dla klas)
-- Unit testy logiki czystej (gun_logic.h, środowisko native)
-- Comprehensive event logging na SD
-- NVS z checksumem i wersjonowaniem migracji
-
-### 20.3 Znane ograniczenia (akceptowalne w produkcji)
-
-| # | Ograniczenie | Ryzyko | Mitigacja |
-|---|-------------|--------|-----------|
-| 1 | GPIO 46 (joystick SW) jest strap pinem | Brak bootu jeśli wciśnięty przy starcie | Instrukcja operatora + mechaniczna osłona |
-| 2 | Debounce enkodera 50µs — granica przy silnym EMI | Fałszywe impulsy od solenoidów | Kondensatory 100nF + skrętka (sekcja 13.3) |
-| 3 | NVS checksum — ostrzeżenie, nie blokada | Potencjalnie uszkodzone dane po resecie | Backup NVS na SD co 30 min + auto-restore |
-| 4 | GPS ring buffer 4320 punktów (~6h) | Utrata starszych punktów przy dłuższych sesjach | Ostrzeżenie na ekranie, eksport częściowy |
-| 5 | WiFi bez SSL/TLS | Podsłuch na sieci lokalnej | AP-only, WPA2, hasło unikalne per MAC |
-| 6 | Linia 3.3V blisko limitu przy pełnym obciążeniu | Niestabilność przy ~477 mA | Zewnętrzne zasilanie 5V z zapasem |
-
-### 20.4 Zalecenia przed wdrożeniem
-
-**Wymagane (przed pierwszym użyciem na maszynie):**
-
-1. Kalibracja enkodera na odcinku 10 m (ekran KALIBRACJA)
-2. Test wszystkich 6 przekaźników (ekran CZYSZCZENIE DYSZ)
-3. Weryfikacja zasilania pod pełnym obciążeniem (sekcja 15.3)
-4. Test pilota i przycisku nożnego
-5. Wgranie aktualnej daty do RTC (automatyczne przy pierwszym połączeniu)
-
-**Zalecane (do wersji 2.53):**
-
-1. Zwiększenie debounce enkodera do 100 µs w środowisku z silnym EMI
-2. Implementacja OTA (Over-The-Air) firmware update
-3. Przeniesienie joysticka SW z GPIO 46 na inny pin (wymaga zmiany PCB)
-4. Dodanie czujnika napięcia zasilania (brownout detection)
-
-### 20.5 Werdykt
-
-**System TrassarV3 v2.52.0 jest GOTOWY DO PRODUKCJI** przy spełnieniu warunków:
-
-- Zasilanie 5V DC min. 2A (zalecane 3A) z przetwornicą na maszynie
-- Montaż enkodera ze skrętką + kondensatory filtrujące 100 nF
-- Instruktaż operatora (nie wciskać joysticka przy włączaniu)
-- Karta SD FAT32 zainstalowana (raporty, logi, backup NVS)
-- Kalibracja na odcinku 10 m po pierwszym montażu
-
-Firmware przeszedł 17 iteracji poprawek bezpieczeństwa (od v2.21.0 do v2.52.0). Wielowarstwowe zabezpieczenia pistoletów, izolacja awarii Core 0, automatyczne działanie przy niskim heapie i detekcja zablokowanych przekaźników czynią system bezpiecznym do pracy z farbą drogową w warunkach terenowych.
+- Kabel zasilający moduł prowadzić osobno od przewodów enkodera i zaworów.
+- Panel dobrać/osłonić pod pracę w pełnym słońcu (standardowe moduły mają jasność biurową — sprawdzić kartę katalogową; rozważyć osłonę przeciwsłoneczną).
+- Obudowa modułu (druk 3D / aluminium) jest osobnym etapem projektu.
 
 ---
 
-*TrassarV3 — Dokumentacja techniczna v2.52.0-prod (PRODUCTION RELEASE)*
-*Rewizja kodu: `5c5a177` | Data: 2026-03-17*
-*ESP32-S3 N16R8 | ILI9341 320×240 | GPS NEO-6M + GPX/GeoJSON | MCP23017 | 6 pistoletów | 16 wzorców | 15 przycisków | 4 tryby pracy | WiFi AP + WebSocket | backup NVS | motogodziny | predykcja farby | raporty HTML*
-*Złącza maszynowe: J1 TS13CP03 (5V), J2 TS17CP10 (pistolety), J3 TS13CP05 (enkoder), J4 TS13PS06 (pilot), J5 TS21CP04 (nożny)*
-*Dokumentacja aktualizowana: 17 marca 2026*
+## 6. Zasilanie
+
+### 6.1 Schemat
+
+```mermaid
+flowchart TD
+    AKU["Akumulator / instalacja maszyny<br/>12 V lub 24 V DC"] --> DCDC["Przetwornica DC-DC → 5 V<br/>min. 3 A, zalecane 5 A"]
+    AKU --> ZAW["Zasilanie zaworów pistoletów<br/>(przez COM przekaźników, J2)"]
+    DCDC --> J1["J1 (TS13CP03): +5 V / GND / GND"]
+    J1 --> PTC1["PTC 1,5 A + TVS 5,5 V"]
+    PTC1 --> ESP["ESP32-S3 (5 V VBUS)"]
+    PTC1 --> RELVCC["Moduł przekaźników VCC (5 V)"]
+    PTC1 --> RTC["DS1307 (5 V)"]
+    ESP --> REG["Regulator 3,3 V płytki"]
+    REG --> P33["TFT, SD, GPS, MCP23017,<br/>joystick, enkoder"]
+    DCDC --> PTC2["PTC ≥ 1 A"]
+    PTC2 --> DISP["Moduł 7 in (5 V)"]
+```
+
+### 6.2 Bilans prądu
+
+**Linia 3,3 V (regulator ESP32-S3, max ok. 500 mA):**
+
+| Odbiornik | Typowo | Max |
+|-----------|--------|-----|
+| ESP32-S3 (CPU + WiFi AP) | 120 mA | 240 mA |
+| TFT ILI9341 z podświetleniem | 40 mA | 80 mA |
+| Karta SD (zapis) | 30 mA | 100 mA |
+| GPS NEO-6M | 35 mA | 50 mA |
+| MCP23017, joystick, enkoder | ~7 mA | ~7 mA |
+| **Razem** | **~232 mA** | **~477 mA** (blisko limitu) |
+
+**Linia 5 V sterownika:**
+
+| Odbiornik | Typowo | Max |
+|-----------|--------|-----|
+| Cewki przekaźników (6 × ~70 mA) | ~70 mA / kanał | ~420 mA |
+| Optoizolacja (6 × ~10 mA) | | ~60 mA |
+| DS1307 | 1,5 mA | 3 mA |
+| Regulator 3,3 V (obciążenie jak wyżej) | ~232 mA | ~477 mA |
+| **Razem sterownik** | **~384 mA** | **~960 mA** |
+
+| Scenariusz | Pobór 5 V sterownika |
+|------------|----------------------|
+| Spoczynek (HOME, WiFi, TFT, GPS) | ~250 mA |
+| 1 pistolet | ~350 mA |
+| 3 pistolety (typowe P-3, P-4) | ~500 mA |
+| 6 pistoletów + zapis SD + WiFi | ~960 mA (max) |
+
+Do tego **moduł 7"** (0,3–0,5 A) na osobnym odgałęzieniu. **Wymagana przetwornica 5 V: min. 3 A (zalecane 5 A).**
+
+> Port USB komputera (500 mA) jest **niewystarczający** przy 3 i więcej aktywnych przekaźnikach.
+> Zalecane osobne zasilanie 5 V modułu przekaźników (wspólna masa z ESP32) przy dużych obciążeniach.
+
+---
+
+## 7. Złącza maszynowe J1–J5
+
+| Złącze | Model | Parametry | Funkcja | Piny użyte / dostępne |
+|--------|-------|-----------|---------|------------------------|
+| J1 | TS13CP03 | 13 A / 250 V | Zasilanie 5 V z maszyny | 3 / 3 |
+| J2 | TS17CP10 | 5 A / 400 V | Wyjścia przekaźników (zawory P1–P6) | 8 / 10 |
+| J3 | TS13CP05 | 5 A / 180 V | Enkoder | 5 / 5 |
+| J4 | TS13PS06 | 5 A / 125 V | Pilot przewodowy | 5 / 6 |
+| J5 | TS21CP04 | 30 A / 500 V | Przycisk nożny | 3 / 4 |
+
+### 7.1 J1 — zasilanie 5 V
+
+| Pin | Sygnał | Kolor | Do wewnątrz |
+|-----|--------|-------|-------------|
+| 1 | +5 V DC | czerwony | 5 V VBUS ESP32 + VCC modułu przekaźników |
+| 2 | GND | czarny | Masa wspólna |
+| 3 | GND | czarny | Zdublowane GND |
+
+### 7.2 J2 — zawory pistoletów
+
+| Pin | Sygnał | Pistolet | Szer. | Na zewnątrz | Kolor |
+|-----|--------|----------|-------|-------------|-------|
+| 1 | P1 NO | oś lewy | 12 cm | Zawór P1 | pomarańczowy |
+| 2 | P2 NO | oś środek | 12 cm | Zawór P2 | pomarańczowy |
+| 3 | P3 NO | oś prawy | 12 cm | Zawór P3 | pomarańczowy |
+| 4 | P4 NO | oś szeroki | 24 cm | Zawór P4 | pomarańczowy |
+| 5 | P5 NO | krawędź | 12 cm | Zawór P5 | pomarańczowy |
+| 6 | P6 NO | krawędź | 24 cm | Zawór P6 | pomarańczowy |
+| 7 | COM | wspólny | — | + zasilania zaworów (12/24 V) | czerwony |
+| 8 | COM | wspólny | — | + zasilania zaworów (zdublowany) | czerwony |
+| 9, 10 | — | rezerwa | — | wolne | — |
+
+Masa zaworów wraca do minusa instalacji maszyny i **nie jest** łączona z GND ESP32.
+
+### 7.3 J3 — enkoder
+
+| Pin | Sygnał | Kolor | Do wewnątrz |
+|-----|--------|-------|-------------|
+| 1 | CLK (A) | niebieski | GPIO 5 |
+| 2 | DT (B) | zielony | GPIO 6 |
+| 3 | SW | żółty | GPIO 7 (GAP) |
+| 4 | VCC | czerwony | 3V3 |
+| 5 | GND | czarny | GND |
+
+Kabel: skrętka (CLK+DT), do 200 cm; przy > 30 cm dodać 100 nF CLK–GND i DT–GND po stronie enkodera.
+
+### 7.4 J4 — pilot przewodowy
+
+| Pin | Sygnał | Kolor | Do wewnątrz |
+|-----|--------|-------|-------------|
+| 1 | START / PAUZA | czerwony | GPIO 38 (równolegle do panelu) |
+| 2 | SELEKTOR | zielony | GPIO 40 (równolegle) |
+| 3 | STOP | żółty | GPIO 39 (równolegle) |
+| 4 | GAP | niebieski | GPIO 7 (równolegle do SW enkodera) |
+| 5 | GND | czarny | GND |
+| 6 | — | rezerwa | — |
+
+### 7.4a J5 — przycisk nożny
+
+| Pin | Sygnał | Kolor | Do wewnątrz |
+|-----|--------|-------|-------------|
+| 1 | START / PAUZA (pedał lewy) | czerwony | GPIO 38 (równolegle) |
+| 2 | STOP (pedał prawy) | żółty | GPIO 39 (równolegle) |
+| 3 | GND | czarny | GND |
+| 4 | — | rezerwa | — |
+
+STOP z pilota lub pedału wyzwala tę samą ścieżkę co przycisk panelowy, w tym przerwanie awaryjnego stopu
+(natychmiastowe wyłączenie pistoletów).
+
+### 7.5 Zbiorcza tabela połączeń (24 przewody)
+
+| # | Wewnątrz | Złącze / pin | Na zewnątrz |
+|---|----------|--------------|-------------|
+| 1–3 | 5 V, GND, GND | J1 / 1–3 | Przetwornica 5 V |
+| 4–9 | Przekaźniki 1–6 NO | J2 / 1–6 | Zawory P1–P6 |
+| 10–11 | COM przekaźników | J2 / 7–8 | + zasilania zaworów |
+| 12–16 | GPIO 5, 6, 7, 3V3, GND | J3 / 1–5 | Enkoder |
+| 17–21 | GPIO 38, 40, 39, 7, GND | J4 / 1–5 | Pilot |
+| 22–24 | GPIO 38, 39, GND | J5 / 1–3 | Przycisk nożny |
+
+---
+
+## 8. Kompletny diagram okablowania
+
+```
+                                    ANTENA GPS (na zewnątrz)
+                                           │
+   ┌───────────────────────── OBUDOWA STEROWNIKA ──────────────────────────────┐
+   │                                                                            │
+   │   ┌───────────┐ SPI  ┌──────────────────┐                                  │
+   │   │           │◄────►│ TFT ILI9341 + SD │                                  │
+   │   │           │ I2C  ├──────────────────┤                                  │
+   │   │ ESP32-S3  │◄────►│ DS1307 │ MCP23017│◄── 15 przycisków wzorców         │
+   │   │  N16R8    │ UART │ GPS NEO-6M       │                                  │
+   │   │           │◄────►│                  │                                  │
+   │   │           │◄─────── START/STOP/SEL (panel)  ◄── J4 pilot, J5 nożny     │
+   │   │           │◄─────── Joystick KY-023                                     │
+   │   │           │──────►  Buzzer                                              │
+   │   │           │──────►┌────────────────────┐                                │
+   │   └───────────┘       │ Moduł przekaźników │                                │
+   │       ▲  WiFi AP      │ 6 kanałów, opto    │                                │
+   │       │ (antena)      └─────────┬──────────┘                                │
+   │       │                         │ NO ×6 + COM                               │
+   │  ┌────┴──── ZŁĄCZA MASZYNOWE ───┴────────────────────────────────┐          │
+   │  │ J1 5 V │ J2 zawory P1–P6 │ J3 enkoder │ J4 pilot │ J5 nożny  │          │
+   │  └────┬───────────┬────────────────┬─────────────────────────────┘          │
+   └───────┼───────────┼────────────────┼────────────────────────────────────────┘
+           │           │                │
+    Przetwornica    Zawory           Enkoder na kole
+      12/24→5 V   pistoletów        pomiarowym
+           │
+           └──(osobne odgałęzienie 5 V)──► MODUŁ WYŚWIETLACZA 7" ~~~WiFi~~~ (do sterownika)
+```
+
+---
+
+## 9. Przewody, złącza, zabezpieczenia
+
+### 9.1 Przewody
+
+| Magistrala | Typ | Długość max | Uwagi |
+|------------|-----|-------------|-------|
+| SPI (TFT+SD) | AWG 24–26, ekranowany | 15–20 cm | 27 MHz — wrażliwe |
+| I2C (RTC+MCP) | AWG 24–28 | 50 cm | Pull-up 4,7 kΩ na DS1307 |
+| UART (GPS) | AWG 24–28 | 100 cm | |
+| Przekaźniki (sygnał) | AWG 22–24 | 50 cm | 3,3 V |
+| Przyciski | AWG 22–28 | bez limitu | Cyfrowe z pull-up |
+| Enkoder | AWG 24, **skrętka** | 200 cm | 100 nF przy > 30 cm |
+| Zasilanie 5 V | AWG 20–22 | 30 cm | do 1 A (sterownik) |
+| Zasilanie modułu 7" | AWG 20–22 | wg potrzeby | osobne odgałęzienie |
+| Zawory 12/24 V | AWG 16–20 | wg instalacji | Przewody zasilania mocy — osobno od sygnałowych |
+| Joystick | AWG 24–28, ekranowany | 50 cm | ADC wrażliwy na szum |
+
+### 9.2 Kolory (zalecane)
+
+Czerwony = +5 V / +3,3 V (3,3 V oznaczać dodatkowo), czarny = GND, niebieski = SDA / MOSI / CLK enkodera,
+zielony = SCL / DT enkodera, żółty = CS / START, pomarańczowy = przekaźniki / buzzer.
+
+### 9.3 Zabezpieczenia
+
+- PTC 1,5 A + dioda TVS 5,5 V w linii 5 V sterownika; osobne PTC ≥ 1 A dla modułu 7".
+- Filtr 100 nF ceramiczny przy VCC każdego modułu i na liniach enkodera.
+- Masa w jednym punkcie (gwiazda przy ESP32). Zawory: masa instalacji maszyny, nie ESP32.
+- Kabel antenowy GPS z dala od SPI i zasilania. Przewody SPI i I2C z dala od zaworów i przekaźników.
+
+---
+
+## 10. Checklist montażowy i diagnostyka
+
+### 10.1 Procedura uruchomienia (kolejno)
+
+| Faza | Test | Wynik OK |
+|------|------|----------|
+| 1. Zasilanie (bez modułów) | 3V3 / 5V multimetrem | 3,20–3,40 V / 4,75–5,25 V |
+| 2. I2C | skan magistrali | 0x20 i 0x68 |
+| 3. SPI | ekran powitalny, „SD OK" | TrassarV3 na TFT |
+| 4. Przekaźniki | Serwis → Czyszczenie dysz, trzymaj START | klik każdego z 6 przekaźników |
+| 5. Wejścia | obrót enkodera, START/STOP/SEL/GAP, joystick | prędkość > 0, zmiany ekranów |
+| 6. GPS / WiFi | panel WWW → GPS; sieć TrassarV3 | Fix po 1–2 min; `http://192.168.4.1` |
+| 7. Moduł 7" | wpisz hasło WiFi (MENU → POŁĄCZENIE) | pasek „POŁĄCZONO", dane na żywo |
+| 8. Test STOP | STOP na ekranie 7" oraz fizyczny STOP | pistolety OFF w obu przypadkach |
+
+### 10.2 Typowe błędy
+
+| Objaw | Przyczyna | Rozwiązanie |
+|-------|-----------|-------------|
+| Biały ekran TFT | zamienione MOSI/MISO lub brak CS | GPIO 11 = MOSI, 13 = MISO, 10 = CS |
+| Migający TFT | SD_CS pływa | GPIO 16 → HIGH przed `tft.init()` |
+| Skan I2C: 0 urządzeń | zamienione SDA/SCL | GPIO 17 = SDA, 18 = SCL |
+| Skan I2C: tylko 0x68 | MCP23017 bez zasilania / zły adres | VDD = 3,3 V, A0 = A1 = A2 = GND |
+| Przekaźnik nie klika | brak 5 V na module | VCC → 5 V (VBUS) |
+| Enkoder liczy wstecz | zamienione CLK/DT | zamień GPIO 5 ↔ 6 |
+| GPS bez danych | zamienione TX/RX | zamień GPIO 47 ↔ 48 |
+| Boot loop | GPIO 46 zwarty do GND / użyte GPIO 26–37 | nie wciskać joysticka; odłączyć piny PSRAM |
+| Moduł 7": czarny/przesunięty obraz | błędne timingi panelu | `display-module/src/lgfx_sunton7.h` |
+| Moduł 7": „BRAK ŁĄCZNOŚCI" | złe hasło / poza zasięgiem / AP pełny (4 klientów) | MENU → POŁĄCZENIE WiFi; odłącz zbędne telefony |
+
+### 10.3 Oczekiwane prądy (sterownik, linia 5 V)
+
+Boot 200–300 mA · spoczynek 250–350 mA · 1 pistolet 350–450 mA · 3 pistolety 490–600 mA ·
+6 pistoletów + SD 700–960 mA. Spoczynek > 500 mA lub 6 pistoletów > 1200 mA = zwarcie/uszkodzenie lub
+konieczność osobnego zasilania modułu przekaźników.
+
+---
+
+## 11. Bezpieczeństwo sprzętowe
+
+Warstwy ochrony pistoletów (kolejno od najszybszej):
+
+1. **Przerwanie awaryjnego STOP** na GPIO 39 (zbocze opadające) — bezpośredni zapis do rejestrów GPIO, niezależny od pętli głównej.
+2. **Gun keepalive 300 ms** — brak aktualizacji silnika malowania → wszystkie pistolety OFF.
+3. **Wyłączenie przy przekroczeniu prędkości maksymalnej** (domyślnie 15 km/h) i poniżej minimalnej (3 km/h).
+4. **Shutdown handler** — przed każdym resetem/panic przekaźniki są wyłączane bezpośrednio w rejestrach GPIO.
+5. **Watchdog 5 s** na obu rdzeniach — reset i powrót wszystkich wyjść do LOW.
+6. **Detekcja zablokowanego przekaźnika** (ciągłe ON > 60 s w trybie przerywanym) i **anomalii pistoletu** (po 50 m jazdy).
+7. **Izolacja awarii Core 0** — zawieszenie serwera WWW nie przerywa malowania.
+
+Moduł wyświetlacza 7" **nie jest elementem bezpieczeństwa**: jego przycisk STOP działa przez WiFi. Przy utracie
+łączności moduł wyświetla pełnoekranowe ostrzeżenie o użyciu fizycznego STOP. Fizyczny STOP sterownika
+(panel, pilot, pedał) pozostaje głównym zabezpieczeniem.
+
+---
+
+*MPD2026 — dokumentacja sprzętowa. Sterownik: ESP32-S3 N16R8, firmware 2.52.0. Moduł 7": Sunton ESP32-8048S070C.*

@@ -1,9 +1,17 @@
-# TrassarV3 — Komputer pokładowy malowarki pasów drogowych
+# MPD2026 — Komputer pokładowy malowarki pasów drogowych
 
 ## Opis projektu
-Firmware ESP32-S3 (N16R8) dla komputera pokładowego malowarki drogowej.
-Steruje 6 pistoletami natrysku farby wg 16 wzorców (polskie oznakowanie poziome P-1 do P-7).
-Obsługuje 3 tryby pracy: AUTO, SEMI-AUTO, MANUAL.
+Repozytorium zawiera dwa firmware'y i aplikację:
+- **Sterownik Trassar** (`src/`) — ESP32-S3 (N16R8), steruje 6 pistoletami wg 16 wzorców (P-1 do P-7),
+  tryby AUTO / SEMI-AUTO / MANUAL / DEMO. Jedyny element sterujący pistoletami.
+- **Moduł wyświetlacza 7"** (`display-module/`) — Sunton ESP32-8048S070C, klient WiFi sterownika, LVGL.
+  Nie steruje pistoletami; używa istniejącego API (WebSocket :81 + `POST /api/control`).
+- **Aplikacja Android** (`android-app/`).
+
+**Zasada pracy:** to repozytorium (MPD2026) jest rozwojową kopią `Trassar_251v3`. Repozytorium
+`miastekpl/Trassar_251v3` pozostaje niezmienioną referencją — nowe zmiany zapisujemy wyłącznie tutaj.
+Zmiany w sterowniku mają być **addytywne** (nie usuwać funkcjonalności). Dokumentacja: `docs/`
+(instrukcja, schemat połączeń, API, moduł 7") — aktualizować razem ze zmianami w kodzie.
 
 ## Platforma i build
 - **MCU**: ESP32-S3 N16R8 (dual-core, 16MB flash, 8MB PSRAM)
@@ -42,9 +50,18 @@ src/                    # Cały kod źródłowy (.cpp + .h w jednym katalogu)
   report_logger.cpp/.h  # Raporty sesji (CSV na karcie SD)
   event_log.cpp/.h      # Log zdarzeń systemowych (SD)
   nvs_backup.cpp/.h     # Backup/restore NVS na kartę SD
-data/                   # Pliki SPIFFS (obecnie puste)
+data/                   # Zasoby LittleFS (panel WWW)
 docs/                   # Dokumentacja
+display-module/         # Firmware modułu 7" (osobny projekt PlatformIO)
+  platformio.ini        # espressif32@6.3.1, LovyanGFX + LVGL 8.3 + WebSockets + ArduinoJson
+  src/main.cpp          # LovyanGFX + LVGL + dotyk, start zadań
+  src/link.cpp/.h       # WiFi STA + WebSocket + HTTP + kolejka poleceń (zadanie FreeRTOS, Core 0)
+  src/model.cpp/.h      # Status/StatsData, parsery JSON, tabela wzorców (kopia patterns.cpp!)
+  src/ui_*.cpp          # Ekran roboczy, widgety własne (7-seg, droga), nakładki (menu, wzory, ustawienia)
+  src/lgfx_sunton7.h    # Piny i timingi panelu RGB + GT911
 ```
+
+Build modułu 7": `cd display-module && pio run` (upload: `pio run -t upload`).
 
 ## Architektura dual-core
 - **Core 1** (Arduino loop): Enkoder, przyciski, joystick, pistolety, wyświetlacz, GPS, buzzer
@@ -77,8 +94,14 @@ docs/                   # Dokumentacja
 - `displayNeedsUpdate` / `forceFullRedraw` — flagi odświeżania TFT
 
 ## Ważne uwagi
-- Watchdog timer 3s na obu rdzeniach — nie blokować loop()
+- Watchdog timer 5 s (`WDT_TIMEOUT_SEC`) — nie blokować loop()
 - SPI współdzielone: TFT + karta SD (PIN_SD_CS musi być HIGH przed TFT)
-- GPIO 33-37 zajęte przez PSRAM — nie używać!
+- GPIO 26-37 zajęte przez Flash/PSRAM — nie używać!
 - PIN_JOY_SW (GPIO 46) to strap pin — nie trzymać przy starcie
 - Pamięć: ~300KB heap wolne, PSRAM na bufor GPS (135KB)
+- Hasło WiFi AP = ostatnie 4 bajty MAC (8 znaków HEX), generowane w `web_server.cpp`
+- Długie naciśnięcie przycisków: 1,5 s (`BTN_LONG_PRESS_MS`)
+- Tryb RĘCZNY: pistolety strzelają tylko przy fizycznie trzymanym START (`buttons.isStartHeld()`) — moduł 7" nie może tego obejść (celowo)
+- Pole `patDist` w `/api/status` (dystans od startu wzorca) służy modułowi 7" do synchronizacji animacji; nie usuwać
+- Tabela `PATTERNS` w `display-module/src/model.cpp` musi być zgodna z `src/patterns.cpp`
+- Tekst UI modułu 7" wyłącznie ASCII (czcionki wbudowane LVGL nie mają polskich znaków)

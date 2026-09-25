@@ -7,6 +7,27 @@ Wersjonowanie zgodne z [Semantic Versioning](https://semver.org/lang/pl/).
 
 ---
 
+## [MPD2026 — Unreleased] — moduł wyświetlacza 7" i nowa dokumentacja
+
+Repozytorium MPD2026 powstało jako kopia `Trassar_251v3` (firmware 2.52.0, commit bazowy `24e12c5`).
+
+### Dodano
+- **Moduł wyświetlacza 7"** (`display-module/`, wersja 0.1.0) — Sunton ESP32-8048S070C (ESP32-S3, 800×480, GT911), LVGL 8.3.
+  - Klient WiFi sterownika: WebSocket `:81` (status) + `POST /api/control` (polecenia), fallback HTTP, kolejka poleceń z priorytetem STOP i ponawianiem.
+  - Ekran roboczy w stylu kabinowym: prędkość 7-segmentowa, animowany widok drogi w perspektywie zsynchronizowany z dystansem wzorca, 9 szybkich wzorców + lista wszystkich 16, pasek trybów AUTO/SEMI/RĘCZNY, START/PAUZA/WZNÓW/NASTĘPNA LINIA, STOP, START OD PRZERWY, odwracanie P-3a/P-3b, kapsuły pistoletów, banery alarmów, ostrzeżenie o utracie łączności.
+  - Menu: statystyki, edytor wzorca własnego (3 sloty), kalibracja enkodera, farba/zbiornik (tankowanie), ustawienia (progi prędkości, Smart/Instant, auto-wznowienie, jasność), hasło WiFi, informacje.
+  - Zawsze dostępny przycisk STOP (także w oknach menu); polecenie STOP wysyłane priorytetowo.
+- **Sterownik:** pole `patDist` w `GET /api/status` i broadcastcie WebSocket (dystans od startu wzorca). Zmiana wyłącznie addytywna.
+- **Dokumentacja napisana od nowa:** `README.md`, `docs/INSTRUKCJA_OBSLUGI.md`, `docs/SCHEMAT_PODLACZEN.md` (diagramy, mapa GPIO, schematy modułów, złącza J1–J5, zasilanie, diagnostyka), `docs/API_WWW.md`, nowy `docs/MODUL_WYSWIETLACZA.md`, `CLAUDE.md`.
+
+### Poprawiono (dokumentacja)
+- Hasło WiFi sterownika jest generowane z MAC (8 znaków HEX) — poprzednie `12345678` było nieaktualne.
+- Watchdog 5 s (nie 3 s), długie naciśnięcie przycisków 1,5 s, menu serwisowe ma 11 pozycji (nie 5), piny joysticka 19/20/46.
+- Start od przerwy: pierwsza przerwa ma pełną długość przerwy wzorca (offset = długość kreski).
+- Opisane ograniczenie trybu RĘCZNEGO (fizyczny START) i zakres funkcji dostępnych tylko na sterowniku.
+
+---
+
 ## [2.22.0] - 2026-02-28
 
 ### Dodano - 15 fizycznych przycisków wzorców (MCP23017 I2C)

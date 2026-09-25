@@ -331,7 +331,7 @@ static void updateTopBar(LinkState ls, const Status& st, bool have) {
         if (pct < 0) pct = 0;
         if (pct > 100) pct = 100;
         if (lv_bar_get_value(s_barPaint) != pct) lv_bar_set_value(s_barPaint, pct, LV_ANIM_OFF);
-        lv_color_t bc = pct < 15 ? C_RED : (pct < 30 ? C_ORANGE : C_GREEN);
+        lv_color_t bc = pct < 5 ? C_RED : (pct < 15 ? C_ORANGE : C_GREEN);
         if (lv_obj_get_style_bg_color(s_barPaint, LV_PART_INDICATOR).full != bc.full)
             lv_obj_set_style_bg_color(s_barPaint, bc, LV_PART_INDICATOR);
         snprintf(buf, sizeof(buf), "FARBA %d%%", pct);
@@ -388,6 +388,9 @@ static void updateBanner(const Status& st, bool blink) {
     else if (st.lowSpeed && st.state == MS_PAINTING) { txt = "ZA WOLNO"; col = C_ORANGE; }
     else if (st.mode == MM_SEMI && st.state == MS_PAINTING && st.semiLineComplete) {
         txt = "LINIA GOTOWA - NASTEPNA LINIA"; col = C_BTN;
+    }
+    else if (st.mode == MM_MANUAL && st.state == MS_PAINTING) {
+        txt = "RECZNY: TRZYMAJ FIZYCZNY START"; col = C_BTN;
     }
 
     if (!txt) { setVisible(s_banner, false); return; }
