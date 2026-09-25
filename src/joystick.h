@@ -1,0 +1,56 @@
+#pragma once
+// ============================================================
+// TrassarV3 - Joystick analogowy KY-023
+// Nawigacja menu: gora/dol/lewo/prawo + przycisk
+// ============================================================
+
+#include "config.h"
+#include "button_handler.h"
+
+class JoystickHandler {
+public:
+    void begin();
+    void update();
+    ButtonEvent getEvent();
+    bool wasAxisEvent() const { return _wasAxisEvent; }
+    void requireCenter();  // Blokuj osie dopoki joystick nie wroci do centrum
+
+private:
+    enum JoyDir : uint8_t {
+        JOY_NONE = 0,
+        JOY_UP,
+        JOY_DOWN,
+        JOY_LEFT,
+        JOY_RIGHT
+    };
+
+    // Stan osi analogowych
+    JoyDir currentDir = JOY_NONE;
+    unsigned long dirStartMs = 0;
+    unsigned long lastRepeatMs = 0;
+    bool firstEventFired = false;
+    ButtonEvent pendingEvent = EVT_NONE;
+
+    // Lockout dla kierunkow jednorazowych (LEFT/RIGHT) — zapobieganie bounceowi
+    JoyDir lastNonRepeatDir = JOY_NONE;
+    unsigned long lastNonRepeatFiredMs = 0;
+    static const unsigned long NON_REPEAT_LOCKOUT_MS = 1200;
+
+    // Stan przycisku SW
+    bool swPressed = false;
+    bool swLastReading = true;
+    unsigned long swPressStart = 0;
+    bool swLongFired = false;
+    bool swPendingShort = false;
+    bool swPendingLong = false;
+
+    bool _wasAxisEvent = false;   // true = ostatnie zdarzenie z osi, false = z SW
+    bool _centerRequired = false; // Blokada osi dopoki joystick nie wroci do centrum
+    bool _strapPinError = false;  // GPIO 46 zwarty do GND przy starcie — SW wylaczony
+
+    JoyDir readDirection();
+    ButtonEvent dirToEvent(JoyDir dir);
+    bool dirRepeatable(JoyDir dir);
+};
+
+extern JoystickHandler joystick;
