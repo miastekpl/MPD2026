@@ -32,14 +32,22 @@ Makieta ekranu 800×480: prędkość 7-segmentowa, widok drogi, 10 wzorców w bo
 - **Zalety:** niski pulpit, wygodny do montażu przed operatorem.
 - **Wady:** klawisze poza osią etykiet — potrzebny wariant UI z etykietami wzdłuż dolnej krawędzi ekranu (do wykonania w module 7").
 
-## Propozycja C — panel pionowy (jak na zdjęciu STiM)
+## Propozycja C — panel pionowy, klawisze fizyczne obok etykiet wzorców
 
 ![Propozycja C](schematy/panel_C_pionowy.svg)
 
-- Ekran obrócony do pionu (480 × 800), S1–S5 i S6–S10 po bokach, blok START / STOP / GRUPA / SELEKTOR / GAP na dole.
-- Orientacyjnie ok. 227 × 327 mm.
-- **Zalety:** wąska obudowa, kształt najbardziej zbliżony do zdjęcia referencyjnego.
-- **Wady:** wymaga przeróbki interfejsu modułu 7" na tryb pionowy (LVGL); układ drogi i kolumn trzeba przeprojektować.
+- Ekran 7" obrócony do pionu (480 × 800). Etykiety wzorców stoją w dwóch kolumnach **przy krawędziach ekranu**, a
+  fizyczne klawisze **S1–S5 (lewa strona) i S6–S10 (prawa strona) są na tej samej wysokości co etykieta** — każdy
+  klawisz leży dokładnie obok „swojego" wzorca.
+- W górnej części ekranu zakładki **OŚ JEZDNI / KRAWĘDŹ** (dotyk; ta sama grupa co fizyczny przycisk GRUPA).
+- W środku: kod wzorca, prędkość, liczniki, pionowy widok drogi i kapsuły pistoletów; na dole tryby, START OD PRZERWY,
+  START i STOP na ekranie.
+- Pod ekranem blok fizyczny: GRUPA, SELEKTOR, GAP oraz duże START i STOP.
+- Orientacyjnie ok. 245 × 330 mm.
+- **Zalety:** klawisz i etykieta w jednej linii (najmniejsze ryzyko pomyłki), wąska obudowa, kształt najbardziej
+  zbliżony do zdjęcia referencyjnego STiM.
+- **Wady:** interfejs modułu 7" jest dziś poziomy — potrzebny **tryb pionowy UI** (obrót ekranu LVGL + przeprojektowanie
+  układu środka). Elektronika i firmware sterownika bez zmian.
 
 ## Propozycja D — duży grzybek awaryjnego STOP + blok klawiszy 2 × 5
 
@@ -60,13 +68,14 @@ Makieta ekranu 800×480: prędkość 7-segmentowa, widok drogi, 10 wzorców w bo
 |---|-----------|--------------------|-----------|------------------|
 | Przyciski fizyczne (S + GRUPA + START/STOP/SEL/GAP) | 15 | 15 | 15 | 15 (STOP jako grzybek) |
 | Zmiany w oprogramowaniu | brak | wariant UI (etykiety u dołu) | tryb pionowy UI | brak |
-| Szerokość / wysokość (orient.) | 340 × 215 mm | 340 × 190 mm | 227 × 327 mm | 340 × 215 mm |
-| Czytelność etykiet obok klawiszy | najlepsza | średnia | najlepsza | dobra |
+| Szerokość / wysokość (orient.) | 340 × 215 mm | 340 × 190 mm | 245 × 330 mm | 340 × 215 mm |
+| Czytelność etykiet obok klawiszy | najlepsza | średnia | najlepsza (ta sama wysokość) | dobra |
 | Dostępność STOP | dobra | dobra | dobra | najlepsza |
 | Ryzyko | niskie | średnie | wysokie (UI) | niskie |
 
 **Rekomendacja:** zacząć od **A** (nie wymaga żadnych zmian w oprogramowaniu) i rozważyć **grzybek STOP z D** jako
-element bezpieczeństwa niezależnie od wybranego układu. Wariant **C** ma sens dopiero jako osobny etap (przeróbka UI).
+element bezpieczeństwa niezależnie od wybranego układu. Wariant **C** (pionowy, klawisze obok etykiet) jest
+najbliższy zdjęciu referencyjnemu i ma sens jako osobny etap wymagający pionowego trybu UI.
 
 ## Regeneracja grafik
 

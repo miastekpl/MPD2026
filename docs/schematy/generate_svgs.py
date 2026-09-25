@@ -450,39 +450,109 @@ def panel_B():
     s.save("panel_B_pas_pod_ekranem.svg")
 
 
+def ui_mock_portrait(s, x, y, scale, group=0):
+    """Makieta ekranu pionowego 480x800: wzorce w kolumnach przy krawędziach (5 + 5)."""
+    s.group_open(f"translate({x},{y}) scale({scale})")
+    s.rect(0, 0, 480, 800, "#07142e")
+    # pasek górny
+    s.text(10, 32, "POŁĄCZONO", 16, "#35f27a", weight="bold")
+    s.text(140, 32, "GPS 8 sat", 16, "#35f27a", weight="bold")
+    s.rect(240, 10, 96, 28, "#0f2557", rx=6)
+    s.rect(240, 10, 70, 28, "#1fa34a", rx=6)
+    s.text(288, 30, "FARBA 72%", 12, "#fff", "middle")
+    s.rect(346, 4, 130, 40, "#1f52d6", rx=10)
+    s.text(411, 32, "MENU", 18, "#fff", "middle", "bold")
+    # zakładki grup
+    s.rect(6, 54, 228, 42, "#2f86ff" if group == 0 else "#1f52d6", "#ffd400" if group == 0 else "#5b7fe0",
+           5 if group == 0 else 2, 10)
+    s.text(120, 83, "OŚ JEZDNI", 20, "#fff", "middle", "bold")
+    s.rect(246, 54, 228, 42, "#2f86ff" if group == 1 else "#1f52d6", "#ffd400" if group == 1 else "#5b7fe0",
+           5 if group == 1 else 2, 10)
+    s.text(360, 83, "KRAWĘDŹ", 20, "#fff", "middle", "bold")
+    left = ["P-1a", "P-1b", "P-1c", "P-1d", "P-1e"]
+    right = ["P-2a", "P-2b", "P-3a", "P-3b", "P-4"]
+    if group == 1:
+        left = ["P-6", "P-7a", "P-7b", "P-7c", "P-7d"]
+        right = ["WŁASNY", "", "", "", ""]
+    sel = "P-3a" if group == 0 else "P-7b"
+    for names, x0 in ((left, 4), (right, 368)):
+        for i, n in enumerate(names):
+            yy = 106 + i * 116
+            if not n:
+                s.rect(x0, yy, 108, 106, "#27314d", "#3b4a73", 2, 10)
+                continue
+            is_sel = (n == sel)
+            s.rect(x0, yy, 108, 106, "#2f86ff" if is_sel else "#1f52d6", "#ffd400" if is_sel else "#5b7fe0",
+                   5 if is_sel else 2, 10)
+            s.rect(x0 + 8, yy + 10, 34, 86, "#1b1b1f", rx=3)
+            s.rect(x0 + 23, yy + 14, 4, 78, "#ffd400")
+            s.text(x0 + 100, yy + 62, n, 24 if len(n) < 6 else 15, "#fff", "end", "bold")
+    # środek: wzorzec, prędkość, liczniki
+    cx = 240
+    s.text(cx, 152, sel, 40, "#ffd400", "middle", "bold")
+    s.text(cx, 176, "AUTO  MALOWANIE", 15, "#35f27a", "middle")
+    s.text(cx, 254, "12.5", 70, "#fff", "middle", "bold", 'font-family="Consolas, monospace"')
+    s.text(cx, 284, "km/h", 20, "#8fa3cc", "middle")
+    s.text(cx, 316, "DYST 1234.5 m", 15, "#fff", "middle")
+    s.text(cx, 338, "POW 148.1 m2", 15, "#fff", "middle")
+    s.text(cx, 360, "CZAS 12:34", 15, "#fff", "middle")
+    # droga
+    s.rect(118, 372, 244, 232, "#143a7a", rx=6)
+    s.polygon([(128, 600), (352, 600), (290, 376), (190, 376)], "#1b1b1f")
+    for i, (yy, hh, w) in enumerate([(548, 44, 11), (478, 34, 9), (420, 24, 7), (390, 14, 5)]):
+        s.polygon([(cx - w, yy + hh), (cx + w, yy + hh), (cx + w - 1, yy), (cx - w + 1, yy)],
+                  "#35f27a" if i == 0 else "#ffd400")
+    s.rect(140, 596, 200, 4, "#fff")
+    for g in range(6):
+        on = g in ((0, 2) if group == 0 else (5,))
+        s.rect(120 + g * 41, 610, 38, 28, "#35f27a" if on else "#0f2557", "#ffd400" if g in (0, 2) else "#0f2557", 2, 14)
+        s.text(120 + g * 41 + 19, 630, f"P{g + 1}", 13, "#03210f" if on else "#fff", "middle")
+    # pasek dolny
+    for i, (t, c) in enumerate([("AUTO", "#2f86ff"), ("SEMI", "#1f52d6"), ("RĘCZNY", "#1f52d6")]):
+        s.rect(4 + i * 96, 694, 92, 44, c, "#ffd400" if i == 0 else "#5b7fe0", 4 if i == 0 else 2, 8)
+        s.text(50 + i * 96, 722, t, 15, "#fff", "middle", "bold")
+    s.rect(292, 694, 184, 44, "#1f52d6", rx=8)
+    s.text(384, 722, "START OD PRZERWY", 14, "#fff", "middle")
+    s.rect(4, 746, 296, 50, "#1fa34a", rx=10)
+    s.text(152, 780, "▶ START", 24, "#fff", "middle", "bold")
+    s.rect(306, 746, 170, 50, "#d62828", rx=10)
+    s.text(391, 780, "■ STOP", 24, "#fff", "middle", "bold")
+    s.group_close()
+
+
 def panel_C():
-    W, H = 760, 1120
+    """Panel pionowy: fizyczne klawisze S1-S10 stoją tuż obok etykiet wzorców na ekranie."""
+    W, H = 820, 1120
     s = Svg(W, H, "#f8f9fa")
-    s.text(30, 38, "Propozycja C — panel pionowy (jak na zdjęciu STiM)", 22, "#0b1f4a", weight="bold")
-    s.text(30, 62, "Ekran obrócony do pionu (480x800). Wymaga trybu portretowego UI (LVGL) — do wykonania.", 14, "#444")
-    px, py, pw, ph = 40, 90, 680, 980
+    s.text(30, 38, "Propozycja C — panel pionowy, klawisze fizyczne obok etykiet wzorców", 22, "#0b1f4a", weight="bold")
+    s.text(30, 62, "Ekran 7\" obrócony do pionu (480x800). Każdy klawisz S1-S10 jest na tej samej wysokości co etykieta wzorca. "
+                   "Wymaga trybu pionowego UI.", 14, "#444")
+    px, py, pw, ph = 40, 90, 740, 990
     panel_frame(s, px, py, pw, ph, "TRASSAR  MPD2026")
-    # ekran pionowy 480x800 -> 0.6
-    sw, sh = 288, 480
-    sx, sy = px + (pw - sw) / 2, py + 70
+    scale = 0.75
+    sw, sh = 480 * scale, 800 * scale       # 360 x 600
+    sx, sy = px + (pw - sw) / 2, py + 62
     screen_bezel(s, sx, sy, sw, sh)
-    s.rect(sx, sy, sw, sh, "#07142e")
-    s.text(sx + sw / 2, sy + 30, "12.5 km/h", 30, "#fff", "middle", "bold", 'font-family="Consolas, monospace"')
-    s.text(sx + sw / 2, sy + 58, "P-3a  AUTO  MALOWANIE", 13, "#35f27a", "middle")
-    s.polygon([(sx + 40, sy + 470), (sx + sw - 40, sy + 470), (sx + sw - 90, sy + 200), (sx + 90, sy + 200)], "#1b1b1f")
-    for i, (yy, hh, w) in enumerate([(430, 34, 8), (370, 24, 6), (320, 16, 5), (280, 11, 4), (250, 7, 3)]):
-        s.polygon([(sx + sw / 2 - w, yy + hh), (sx + sw / 2 + w, yy + hh), (sx + sw / 2 + w - 1, yy), (sx + sw / 2 - w + 1, yy)],
-                  "#ffd400")
-    s.text(sx + sw / 2, sy + 98, "OŚ   |   KRAWĘDŹ", 14, "#8fa3cc", "middle", "bold")
+    ui_mock_portrait(s, sx, sy, scale, 0)
+    # fizyczne klawisze dokładnie na wysokości etykiet
+    kh = 106 * scale
     for i in range(5):
-        yy = sy + 6 + i * 96
-        key(s, px + 40, yy, 92, 76, f"S{i + 1}", "◄")
-        key(s, px + pw - 132, yy, 92, 76, f"S{i + 6}", "►")
+        yy = sy + (106 + i * 116) * scale
+        key(s, sx - 8 - 12 - 108, yy, 108, kh, f"S{i + 1}", "◄ obok etykiety")
+        key(s, sx + sw + 8 + 12, yy, 108, kh, f"S{i + 6}", "obok etykiety ►")
+        s.line(sx - 20, yy + kh / 2, sx - 8, yy + kh / 2, "#495057", 2)
+        s.line(sx + sw + 8, yy + kh / 2, sx + sw + 20, yy + kh / 2, "#495057", 2)
     # dolny blok
-    by = sy + sh + 50
-    key(s, px + 40, by, 130, 70, "GRUPA", "OŚ ⇄ KRAWĘDŹ", "#7a4b00", "#fff", "#ffd400")
-    key(s, px + 190, by, 130, 70, "SELEKTOR", None)
-    key(s, px + 340, by, 130, 70, "GAP", "od przerwy")
-    s.rect(px + 60, by + 100, 270, 110, "#1fa34a", "#0b6b2e", 3, 16)
-    s.text(px + 195, by + 168, "START", 30, "#fff", "middle", "bold")
-    s.rect(px + 350, by + 100, 270, 110, "#d62828", "#7a0f0f", 3, 16)
-    s.text(px + 485, by + 168, "STOP", 30, "#fff", "middle", "bold")
-    s.text(px + 30, py + ph - 20, "Zaleta: kształt znany operatorom STiM, wąska obudowa. Wada: wymaga przeróbki UI na tryb pionowy.", 12, "#495057")
+    by = sy + sh + 40
+    key(s, px + 40, by, 200, 62, "GRUPA", "OŚ ⇄ KRAWĘDŹ", "#7a4b00", "#fff", "#ffd400")
+    key(s, px + 270, by, 200, 62, "SELEKTOR", None)
+    key(s, px + 500, by, 200, 62, "GAP", "od przerwy")
+    s.rect(px + 40, by + 84, 400, 100, "#1fa34a", "#0b6b2e", 3, 16)
+    s.text(px + 240, by + 148, "START", 32, "#fff", "middle", "bold")
+    s.rect(px + 470, by + 84, 230, 100, "#d62828", "#7a0f0f", 3, 16)
+    s.text(px + 585, by + 148, "STOP", 32, "#fff", "middle", "bold")
+    s.text(px + 30, py + ph - 16, "Zaleta: klawisz i etykieta w jednej linii, wąska obudowa jak STiM.  Wada: przeróbka UI na tryb pionowy (LVGL).",
+           12, "#495057")
     s.save("panel_C_pionowy.svg")
 
 
