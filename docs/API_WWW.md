@@ -129,6 +129,7 @@ Zwraca aktualny stan systemu w formacie JSON.
 | `activeSlot` | int | Aktywny slot wzorca własnego (0-2) |
 | `slotsValid` | array[3] | Flagi zapisanych slotów (true = slot zawiera wzorzec) |
 | `smartSwitch` | bool | Tryb przełączania wzorców: true=Smart (czekaj na cykl), false=Instant (natychmiast) |
+| `patDist` | number | Dystans od startu wzorca [m] (0 poza malowaniem) — używany przez moduł wyświetlacza 7" do synchronizacji animacji kreska/przerwa |
 | `gpsFix` | bool | Czy GPS ma fix (lokalizacja ważna, age < 3 s) |
 | `gpsLat` | string | Szerokość geograficzna (6 miejsc po przecinku) |
 | `gpsLng` | string | Długość geograficzna (6 miejsc po przecinku) |

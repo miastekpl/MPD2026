@@ -924,6 +924,7 @@ String TrassarWebServer::getStateJson() {
     doc["autoPaused"] = paintEngine.isAutoPaused();
     doc["autoResumeEnabled"] = paintEngine.isAutoResumeEnabled();
     doc["semiSegment"] = paintEngine.getSemiSegmentNum();
+    doc["patDist"] = serialized(String(paintEngine.getPatternDistance(), 2));
 
     // Przelaczanie wzorcow
     doc["smartSwitch"] = paintEngine.isSmartSwitch();
