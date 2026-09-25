@@ -589,7 +589,207 @@ def panel_D():
     s.save("panel_D_estop.svg")
 
 
+# ---------------------------------------------------------------------------
+# 4. Wiązka okablowania: złącza maszynowe J1-J5 + łącze do modułu 7"
+# ---------------------------------------------------------------------------
+COLORS = {"czerwony": "#d62828", "czarny": "#222222", "pomarańczowy": "#f77f00", "niebieski": "#1f52d6",
+          "zielony": "#1fa34a", "żółty": "#ffd400", "brązowy": "#7b4a12", "biały": "#f8f9fa", "ekran": "#9aa5b1", "-": "#ffffff"}
+
+
+def connector_card(s, x, y, w, title, subtitle, rows, accent):
+    """rows: (pin, sygnał, kolor, wewnątrz, na zewnątrz)"""
+    rh = 30
+    h = 64 + rh * (len(rows) + 1)
+    s.rect(x, y, w, h, "#ffffff", accent, 2.5, 10)
+    s.rect(x, y, w, 44, accent, accent, 2.5, 10)
+    s.text(x + 14, y + 20, title, 16, "#fff", weight="bold")
+    s.text(x + 14, y + 37, subtitle, 12, "#fff")
+    hy = y + 64
+    cols = [x + 14, x + 62, x + 218, x + 318, x + 470]
+    for cx, t in zip(cols, ["Pin", "Sygnał", "Kolor", "Wewnątrz (sterownik)", "Na zewnątrz (maszyna)"]):
+        s.text(cx, hy, t, 11, "#555", weight="bold")
+    s.line(x + 8, hy + 6, x + w - 8, hy + 6, "#bbb", 1)
+    for i, (pin, sig, col, inside, outside) in enumerate(rows):
+        yy = hy + 24 + i * rh
+        s.circle(cols[0] + 10, yy - 5, 11, "#f1f3f5", "#555", 1.2)
+        s.text(cols[0] + 10, yy - 1, str(pin), 12, "#111", "middle", "bold")
+        s.text(cols[1], yy, sig, 12, "#111", weight="bold")
+        if col != "-":
+            s.rect(cols[2], yy - 13, 22, 16, COLORS.get(col, "#ccc"), "#444", 1.2, 3)
+            s.text(cols[2] + 28, yy, col, 11, "#333")
+        else:
+            s.text(cols[2], yy, "rezerwa", 11, "#888")
+        s.text(cols[3], yy, inside, 11, "#0b1f4a")
+        s.text(cols[4], yy, outside, 11, "#333")
+        if i < len(rows) - 1:
+            s.line(x + 8, yy + 10, x + w - 8, yy + 10, "#eee", 1)
+    return h
+
+
+def harness():
+    W, H = 2000, 900
+    s = Svg(W, H, "#f8f9fa")
+    s.text(40, 46, "MPD2026 — wiązka okablowania: złącza maszynowe i łącze do modułu 7\"", 28, "#0b1f4a", weight="bold")
+    s.text(40, 72, "Kolory przewodów wg zalecanego standardu. Numery GPIO wg src/config.h. Złącza patrz SCHEMAT_PODLACZEN.md rozdz. 7.",
+           14, "#444")
+    cw = 620
+    x1, x2, x3 = 40, 690, 1340
+    connector_card(s, x1, 100, cw, "J1 — Zasilanie 5 V (TS13CP03)", "13 A / 250 V, 3 piny; przewód AWG 20-22, min. 3 A", [
+        (1, "+5 V DC", "czerwony", "5 V VBUS ESP32, VCC przekaźników", "przetwornica 12/24 V -> 5 V (+)"),
+        (2, "GND", "czarny", "GND wspólna (gwiazda przy ESP32)", "przetwornica (-)"),
+        (3, "GND", "czarny", "równolegle z pinem 2", "przetwornica (-), zdublowane"),
+    ], "#c1121f")
+    hj2 = connector_card(s, x2, 100, cw, "J2 — Zawory pistoletów (TS17CP10)", "5 A / 400 V, 10 pinów; obwód mocy 12/24 V, AWG 16-18", [
+        (1, "P1 NO", "pomarańczowy", "przekaźnik 1 (GPIO 41)", "zawór P1 (oś lewy, 12 cm)"),
+        (2, "P2 NO", "pomarańczowy", "przekaźnik 2 (GPIO 42)", "zawór P2 (oś środek, 12 cm)"),
+        (3, "P3 NO", "pomarańczowy", "przekaźnik 3 (GPIO 1)", "zawór P3 (oś prawy, 12 cm)"),
+        (4, "P4 NO", "pomarańczowy", "przekaźnik 4 (GPIO 2)", "zawór P4 (oś szeroki, 24 cm)"),
+        (5, "P5 NO", "pomarańczowy", "przekaźnik 5 (GPIO 3)", "zawór P5 (krawędź, 12 cm)"),
+        (6, "P6 NO", "pomarańczowy", "przekaźnik 6 (GPIO 4)", "zawór P6 (krawędź, 24 cm)"),
+        (7, "COM", "czerwony", "COM przekaźników", "+12/24 V instalacji maszyny"),
+        (8, "COM", "czerwony", "COM (zdublowany)", "+12/24 V instalacji maszyny"),
+        (9, "-", "-", "-", "-"),
+        (10, "-", "-", "-", "-"),
+    ], "#e65100")
+    connector_card(s, x3, 100, cw, "J3 — Enkoder (TS13CP05)", "5 A / 180 V, 5 pinów; skrętka CLK+DT, 100 nF do GND", [
+        (1, "CLK (A)", "niebieski", "GPIO 5 (ISR)", "enkoder kanał A"),
+        (2, "DT (B)", "zielony", "GPIO 6 (ISR)", "enkoder kanał B"),
+        (3, "SW", "żółty", "GPIO 7 (GAP)", "przycisk enkodera"),
+        (4, "VCC", "czerwony", "3V3", "zasilanie enkodera"),
+        (5, "GND", "czarny", "GND", "masa enkodera"),
+    ], "#006064")
+    connector_card(s, x1, 314, cw, "J4 — Pilot przewodowy (TS13PS06)", "5 A / 125 V, 6 pinów; równolegle do przycisków panelu", [
+        (1, "START / PAUZA", "czerwony", "GPIO 38", "przycisk START pilota (NO -> GND)"),
+        (2, "SELEKTOR", "zielony", "GPIO 40", "przycisk SELEKTOR pilota"),
+        (3, "STOP", "żółty", "GPIO 39 (+ISR awaryjny)", "przycisk STOP pilota"),
+        (4, "GAP", "niebieski", "GPIO 7", "przycisk START OD PRZERWY pilota"),
+        (5, "GND", "czarny", "GND", "masa przycisków"),
+        (6, "-", "-", "-", "-"),
+    ], "#880e4f")
+    connector_card(s, x1, 618, cw, "J5 — Przycisk nożny (TS21CP04)", "30 A / 500 V, 4 piny; równolegle do START/STOP", [
+        (1, "START / PAUZA", "czerwony", "GPIO 38", "pedał lewy (NO -> GND)"),
+        (2, "STOP", "żółty", "GPIO 39 (+ISR awaryjny)", "pedał prawy (NO -> GND)"),
+        (3, "GND", "czarny", "GND", "masa pedałów"),
+        (4, "-", "-", "-", "-"),
+    ], "#880e4f")
+    connector_card(s, x2, 524, cw, "J6 — Łącze do modułu 7\" (M12 A, 4 piny) — PROPOZYCJA", "Wariant przewodowy zamiast WiFi; opis w LACZE_PRZEWODOWE.md", [
+        (1, "+5 V", "brązowy", "odgałęzienie 5 V (PTC >= 1 A)", "zasilanie modułu 7\" (5 V)"),
+        (2, "RS-485 A (+)", "biały", "moduł RS-485 sterownika", "moduł RS-485 wyświetlacza"),
+        (3, "GND", "niebieski", "GND", "GND modułu 7\""),
+        (4, "RS-485 B (-)", "czarny", "moduł RS-485 sterownika", "moduł RS-485 wyświetlacza"),
+        ("PE", "ekran kabla", "ekran", "obudowa / PE (jeden koniec)", "nie łączyć po stronie modułu 7\""),
+    ], "#311b92")
+    s.rect(x3, 374, cw, 300, "#fffde7", "#f57f17", 2, 10)
+    s.text(x3 + 14, 404, "Zasady okablowania", 16, "#111", weight="bold")
+    rules = ["1. Zasilanie 5 V i obwody zaworów (J1, J2) prowadzić osobno od sygnałowych (J3-J6).",
+             "2. Enkoder (J3): skrętka CLK+DT ekranowana, kondensatory 100 nF przy enkoderze.",
+             "3. Masa sygnałowa w jednym punkcie (gwiazda przy ESP32); GND zaworów = minus instalacji maszyny,",
+             "    NIE łączyć z GND ESP32 (optoizolacja modułu przekaźników).",
+             "4. Wszystkie przyciski (panel, pilot J4, pedał J5) łączą wejście z GND — styk NO.",
+             "5. STOP z pilota lub pedału działa tak samo jak przycisk panelu (przerwanie awaryjne).",
+             "6. Końcówki tulejkowe na wszystkich przewodach; opisać przewody numerami pinów.",
+             "7. PTC 1,5 A + TVS 5,5 V w linii 5 V sterownika, osobne PTC dla modułu 7\".",
+             "8. Przed pierwszym uruchomieniem: pomiar 3V3 i 5 V oraz test ciągłości GND."]
+    for i, r in enumerate(rules):
+        s.text(x3 + 14, 434 + i * 22, r, 12, "#333")
+    s.save("schemat_zlacza_wiazka.svg")
+
+
+# ---------------------------------------------------------------------------
+# 5. Łącze przewodowe RS-485 sterownik <-> moduł 7" (propozycja)
+# ---------------------------------------------------------------------------
+def rs485():
+    W, H = 2000, 860
+    s = Svg(W, H, "#ffffff")
+    s.text(40, 46, "Łącze przewodowe sterownik <-> moduł 7\" (RS-485) — PROPOZYCJA", 28, "#0b1f4a", weight="bold")
+    s.text(40, 72, "Zamiast WiFi: UART 3,3 V przez konwerter RS-485 z automatycznym kierunkiem (bez pinu DE)."
+                   " Zasilanie modułu 7\" tym samym kablem.", 14, "#444")
+    # --- sterownik ---
+    s.rect(60, 140, 380, 520, "#e8f0fe", "#0b1f4a", 3, 12)
+    s.text(250, 172, "Sterownik Trassar (ESP32-S3 N16R8)", 17, "#0b1f4a", "middle", "bold")
+    ports_l = [(250, "GPIO 20  UART1 TX", "#111"), (290, "GPIO 19  UART1 RX", "#111"),
+               (330, "3V3", "#111"), (370, "GND", "#111"), (410, "+5 V (odgałęzienie, PTC)", "#c1121f")]
+    for yy, lab, col in ports_l:
+        s.circle(440, yy - 5, 5, "#0b1f4a")
+        s.text(80, yy, lab, 14, col, weight="bold")
+    s.text(80, 470, "GPIO 19 i 20 są dziś używane przez joystick KY-023 —", 12, "#b71c1c")
+    s.text(80, 488, "w wariancie przewodowym joystick jest pomijany", 12, "#b71c1c")
+    s.text(80, 506, "(ekran dotykowy go zastępuje).", 12, "#b71c1c")
+    s.text(80, 540, "GPIO 15 zostaje wolny (T_CS / DS18B20).", 12, "#555")
+    s.text(80, 574, "Protokół: wiersze JSON, 230400 baud, 8N1,", 12, "#555")
+    s.text(80, 592, "status co 100-200 ms, polecenia z sumą CRC.", 12, "#555")
+    # --- konwerter po stronie sterownika ---
+    s.rect(560, 210, 270, 230, "#e8f5e9", "#1b5e20", 2.5, 10)
+    s.text(695, 238, "Konwerter RS-485 (MAX3485)", 15, "#111", "middle", "bold")
+    s.text(695, 258, "auto-kierunek, zasilanie 3,3 V", 12, "#333", "middle")
+    for yy, lab in [(300, "RXD  <- TX sterownika"), (325, "TXD  -> RX sterownika"), (350, "VCC  3V3"), (375, "GND")]:
+        s.circle(560, yy - 4, 4, "#1b5e20")
+        s.text(574, yy, lab, 12, "#111")
+    s.text(816, 300, "A", 14, "#111", "end", "bold")
+    s.text(816, 335, "B", 14, "#111", "end", "bold")
+    s.circle(830, 296, 4, "#1b5e20")
+    s.circle(830, 331, 4, "#1b5e20")
+    s.text(816, 420, "terminator 120 ohm A-B", 11, "#555", "end")
+    s.line(440, 245, 470, 245, "#1b5e20", 2); s.line(470, 245, 470, 296, "#1b5e20", 2); s.line(470, 296, 560, 296, "#1b5e20", 2)
+    s.line(440, 285, 490, 285, "#1b5e20", 2); s.line(490, 285, 490, 321, "#1b5e20", 2); s.line(490, 321, 560, 321, "#1b5e20", 2)
+    s.line(440, 325, 510, 325, "#111", 2); s.line(510, 325, 510, 346, "#111", 2); s.line(510, 346, 560, 346, "#111", 2)
+    s.line(440, 365, 530, 365, "#111", 2); s.line(530, 365, 530, 371, "#111", 2); s.line(530, 371, 560, 371, "#111", 2)
+    # --- kabel ---
+    s.rect(860, 240, 300, 150, "#fff8e1", "#e65100", 2.5, 10)
+    s.text(1010, 268, "Kabel ekranowany 2 x 2 x 0,5 mm2", 13, "#111", "middle", "bold")
+    s.text(1010, 290, "skrętka A/B + skrętka +5 V/GND", 12, "#333", "middle")
+    s.text(1010, 312, "ekran do PE po jednej stronie", 12, "#333", "middle")
+    s.text(1010, 334, "złącze M12 A, 4 piny, IP67", 12, "#333", "middle")
+    s.text(1010, 356, "długość zwykle 1-5 m (RS-485 do 1200 m)", 12, "#333", "middle")
+    s.text(1010, 378, "pin 1 +5 V, 2 A, 3 GND, 4 B", 12, "#333", "middle")
+    s.line(830, 296, 860, 296, "#e65100", 3); s.line(830, 331, 860, 331, "#e65100", 3)
+    s.line(1160, 296, 1190, 296, "#e65100", 3); s.line(1160, 331, 1190, 331, "#e65100", 3)
+    # --- konwerter po stronie modułu ---
+    s.rect(1190, 210, 270, 230, "#e8f5e9", "#1b5e20", 2.5, 10)
+    s.text(1325, 238, "Konwerter RS-485 (MAX3485)", 15, "#111", "middle", "bold")
+    s.text(1325, 258, "auto-kierunek, zasilanie 3,3 V", 12, "#333", "middle")
+    s.circle(1190, 296, 4, "#1b5e20"); s.circle(1190, 331, 4, "#1b5e20")
+    s.text(1204, 300, "A", 14, "#111", weight="bold")
+    s.text(1204, 335, "B", 14, "#111", weight="bold")
+    s.text(1204, 420, "terminator 120 ohm A-B", 11, "#555")
+    for yy, lab in [(300, "RXD  <- TX modułu"), (325, "TXD  -> RX modułu"), (350, "VCC  3V3"), (375, "GND")]:
+        s.circle(1460, yy - 4, 4, "#1b5e20")
+        s.text(1446, yy, lab, 12, "#111", "end")
+    # --- moduł 7" ---
+    s.rect(1560, 140, 380, 520, "#ede7f6", "#311b92", 3, 12)
+    s.text(1750, 172, "Moduł 7\" Sunton ESP32-8048S070C", 17, "#311b92", "middle", "bold")
+    ports_r = [(250, "GPIO 17  UART1 TX", "#111"), (290, "GPIO 18  UART1 RX", "#111"),
+               (330, "3V3 (złącze rozszerzeń)", "#111"), (370, "GND", "#111"), (410, "+5 V (zasilanie płytki)", "#c1121f")]
+    for yy, lab, col in ports_r:
+        s.circle(1560, yy - 5, 5, "#311b92")
+        s.text(1580, yy, lab, 14, col, weight="bold")
+    s.text(1580, 470, "GPIO 17/18 są wolne (I2S wzmacniacza i INT dotyku", 12, "#555")
+    s.text(1580, 488, "niewykorzystane w projekcie; sprawdzić mostek R17).", 12, "#555")
+    s.text(1580, 522, "GPIO 43/44 (UART0) zostają dla USB i programowania.", 12, "#555")
+    s.line(1460, 296, 1510, 296, "#1b5e20", 2); s.line(1510, 296, 1510, 285, "#1b5e20", 2); s.line(1510, 285, 1560, 285, "#1b5e20", 2)
+    s.line(1460, 321, 1530, 321, "#1b5e20", 2); s.line(1530, 321, 1530, 245, "#1b5e20", 2); s.line(1530, 245, 1560, 245, "#1b5e20", 2)
+    s.line(1460, 346, 1490, 346, "#111", 2); s.line(1490, 346, 1490, 325, "#111", 2); s.line(1490, 325, 1560, 325, "#111", 2)
+    s.line(1460, 371, 1470, 371, "#111", 2); s.line(1470, 371, 1470, 365, "#111", 2); s.line(1470, 365, 1560, 365, "#111", 2)
+    # --- zasilanie i masa przez kabel ---
+    s.line(440, 405, 470, 405, "#c1121f", 3); s.line(470, 405, 470, 560, "#c1121f", 3)
+    s.line(470, 560, 1540, 560, "#c1121f", 3); s.line(1540, 560, 1540, 405, "#c1121f", 3); s.line(1540, 405, 1560, 405, "#c1121f", 3)
+    s.text(1000, 552, "+5 V przez ten sam kabel (żyły +5 V / GND), PTC >= 1 A po stronie sterownika", 12, "#c1121f", "middle", "bold")
+    s.line(440, 370, 450, 370, "#111", 2); s.line(450, 370, 450, 600, "#111", 2)
+    s.line(450, 600, 1520, 600, "#111", 2); s.line(1520, 600, 1520, 370, "#111", 2); s.line(1520, 370, 1560, 370, "#111", 2)
+    s.text(1000, 620, "GND (wspólna masa sygnałowa i zasilania)", 12, "#111", "middle", "bold")
+    # --- opis ---
+    s.text(40, 700, "Zalety: brak zależności od WiFi (zakłócenia, hasło, limit 4 klientów, czas łączenia), stały niski czas reakcji STOP, zasilanie i dane w jednym kablu.",
+           14, "#0b1f4a")
+    s.text(40, 726, "Wymagania: nowy moduł komunikacyjny w firmware sterownika i modułu 7\" (rozdz. wdrożenia w LACZE_PRZEWODOWE.md); "
+                    "WiFi zostaje jako łącze zapasowe i dla telefonów.", 14, "#0b1f4a")
+    s.text(40, 752, "Fizyczny STOP sterownika (panel, pilot, pedał) nadal jest głównym zabezpieczeniem — łącze przewodowe go nie zastępuje.",
+           14, "#b71c1c")
+    s.save("schemat_lacze_rs485.svg")
+
+
 if __name__ == "__main__":
+    harness()
+    rs485()
     wiring()
     screen_mock()
     panel_A()

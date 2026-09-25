@@ -71,6 +71,8 @@ Szczegóły: [Instrukcja obsługi](docs/INSTRUKCJA_OBSLUGI.md).
 |----------|-----------|
 | [Instrukcja obsługi](docs/INSTRUKCJA_OBSLUGI.md) | obsługa modułu 7" i panelu fizycznego, tryby, kalibracja, alarmy, 11 przykładów |
 | [Schemat połączeń](docs/SCHEMAT_PODLACZEN.md) | architektura, BOM, mapa GPIO, schematy wszystkich modułów, złącza J1–J5, zasilanie, diagnostyka |
+| [Instrukcja terenowa](docs/INSTRUKCJA_TERENOWA.md) | praca w terenie: przygotowanie, procedury malowania, farba, awarie, konserwacja, karty do wydruku |
+| [Łącze przewodowe](docs/LACZE_PRZEWODOWE.md) | analiza: kabel RS-485 zamiast WiFi, piny, protokół, plan wdrożenia (propozycja) |
 | [Wizualizacje panelu](docs/WIZUALIZACJE.md) | makieta ekranu i 4 propozycje wyglądu kontrolera (SVG), porównanie i rekomendacja |
 | [Moduł wyświetlacza 7"](docs/MODUL_WYSWIETLACZA.md) | architektura firmware modułu, komunikacja, UI, rozszerzanie |
 | [API sterownika](docs/API_WWW.md) | REST + WebSocket, wszystkie pola i polecenia |

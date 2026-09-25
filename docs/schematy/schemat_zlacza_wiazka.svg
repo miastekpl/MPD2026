@@ -1,0 +1,330 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="900" viewBox="0 0 2000 900">
+<rect x="0" y="0" width="2000" height="900" fill="#f8f9fa"/>
+<text x="40" y="46" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="28" fill="#0b1f4a" text-anchor="start" font-weight="bold" >MPD2026 — wiązka okablowania: złącza maszynowe i łącze do modułu 7"</text>
+<text x="40" y="72" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#444" text-anchor="start" font-weight="normal" >Kolory przewodów wg zalecanego standardu. Numery GPIO wg src/config.h. Złącza patrz SCHEMAT_PODLACZEN.md rozdz. 7.</text>
+<rect x="40" y="100" width="620" height="184" rx="10" fill="#ffffff" stroke="#c1121f" stroke-width="2.5" />
+<rect x="40" y="100" width="620" height="44" rx="10" fill="#c1121f" stroke="#c1121f" stroke-width="2.5" />
+<text x="54" y="120" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#fff" text-anchor="start" font-weight="bold" >J1 — Zasilanie 5 V (TS13CP03)</text>
+<text x="54" y="137" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#fff" text-anchor="start" font-weight="normal" >13 A / 250 V, 3 piny; przewód AWG 20-22, min. 3 A</text>
+<text x="54" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Pin</text>
+<text x="102" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Sygnał</text>
+<text x="258" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Kolor</text>
+<text x="358" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Wewnątrz (sterownik)</text>
+<text x="510" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Na zewnątrz (maszyna)</text>
+<line x1="48" y1="170" x2="652" y2="170" stroke="#bbb" stroke-width="1"/>
+<circle cx="64" cy="183" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="187" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >1</text>
+<text x="102" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >+5 V DC</text>
+<rect x="258" y="175" width="22" height="16" rx="3" fill="#d62828" stroke="#444" stroke-width="1.2" />
+<text x="286" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czerwony</text>
+<text x="358" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >5 V VBUS ESP32, VCC przekaźników</text>
+<text x="510" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >przetwornica 12/24 V -&gt; 5 V (+)</text>
+<line x1="48" y1="198" x2="652" y2="198" stroke="#eee" stroke-width="1"/>
+<circle cx="64" cy="213" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="217" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >2</text>
+<text x="102" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >GND</text>
+<rect x="258" y="205" width="22" height="16" rx="3" fill="#222222" stroke="#444" stroke-width="1.2" />
+<text x="286" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czarny</text>
+<text x="358" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GND wspólna (gwiazda przy ESP32)</text>
+<text x="510" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >przetwornica (-)</text>
+<line x1="48" y1="228" x2="652" y2="228" stroke="#eee" stroke-width="1"/>
+<circle cx="64" cy="243" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="247" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >3</text>
+<text x="102" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >GND</text>
+<rect x="258" y="235" width="22" height="16" rx="3" fill="#222222" stroke="#444" stroke-width="1.2" />
+<text x="286" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czarny</text>
+<text x="358" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >równolegle z pinem 2</text>
+<text x="510" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >przetwornica (-), zdublowane</text>
+<rect x="690" y="100" width="620" height="394" rx="10" fill="#ffffff" stroke="#e65100" stroke-width="2.5" />
+<rect x="690" y="100" width="620" height="44" rx="10" fill="#e65100" stroke="#e65100" stroke-width="2.5" />
+<text x="704" y="120" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#fff" text-anchor="start" font-weight="bold" >J2 — Zawory pistoletów (TS17CP10)</text>
+<text x="704" y="137" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#fff" text-anchor="start" font-weight="normal" >5 A / 400 V, 10 pinów; obwód mocy 12/24 V, AWG 16-18</text>
+<text x="704" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Pin</text>
+<text x="752" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Sygnał</text>
+<text x="908" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Kolor</text>
+<text x="1008" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Wewnątrz (sterownik)</text>
+<text x="1160" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Na zewnątrz (maszyna)</text>
+<line x1="698" y1="170" x2="1302" y2="170" stroke="#bbb" stroke-width="1"/>
+<circle cx="714" cy="183" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="187" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >1</text>
+<text x="752" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >P1 NO</text>
+<rect x="908" y="175" width="22" height="16" rx="3" fill="#f77f00" stroke="#444" stroke-width="1.2" />
+<text x="936" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >pomarańczowy</text>
+<text x="1008" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >przekaźnik 1 (GPIO 41)</text>
+<text x="1160" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >zawór P1 (oś lewy, 12 cm)</text>
+<line x1="698" y1="198" x2="1302" y2="198" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="213" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="217" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >2</text>
+<text x="752" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >P2 NO</text>
+<rect x="908" y="205" width="22" height="16" rx="3" fill="#f77f00" stroke="#444" stroke-width="1.2" />
+<text x="936" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >pomarańczowy</text>
+<text x="1008" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >przekaźnik 2 (GPIO 42)</text>
+<text x="1160" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >zawór P2 (oś środek, 12 cm)</text>
+<line x1="698" y1="228" x2="1302" y2="228" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="243" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="247" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >3</text>
+<text x="752" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >P3 NO</text>
+<rect x="908" y="235" width="22" height="16" rx="3" fill="#f77f00" stroke="#444" stroke-width="1.2" />
+<text x="936" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >pomarańczowy</text>
+<text x="1008" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >przekaźnik 3 (GPIO 1)</text>
+<text x="1160" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >zawór P3 (oś prawy, 12 cm)</text>
+<line x1="698" y1="258" x2="1302" y2="258" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="273" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="277" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >4</text>
+<text x="752" y="278" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >P4 NO</text>
+<rect x="908" y="265" width="22" height="16" rx="3" fill="#f77f00" stroke="#444" stroke-width="1.2" />
+<text x="936" y="278" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >pomarańczowy</text>
+<text x="1008" y="278" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >przekaźnik 4 (GPIO 2)</text>
+<text x="1160" y="278" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >zawór P4 (oś szeroki, 24 cm)</text>
+<line x1="698" y1="288" x2="1302" y2="288" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="303" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="307" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >5</text>
+<text x="752" y="308" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >P5 NO</text>
+<rect x="908" y="295" width="22" height="16" rx="3" fill="#f77f00" stroke="#444" stroke-width="1.2" />
+<text x="936" y="308" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >pomarańczowy</text>
+<text x="1008" y="308" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >przekaźnik 5 (GPIO 3)</text>
+<text x="1160" y="308" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >zawór P5 (krawędź, 12 cm)</text>
+<line x1="698" y1="318" x2="1302" y2="318" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="333" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="337" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >6</text>
+<text x="752" y="338" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >P6 NO</text>
+<rect x="908" y="325" width="22" height="16" rx="3" fill="#f77f00" stroke="#444" stroke-width="1.2" />
+<text x="936" y="338" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >pomarańczowy</text>
+<text x="1008" y="338" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >przekaźnik 6 (GPIO 4)</text>
+<text x="1160" y="338" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >zawór P6 (krawędź, 24 cm)</text>
+<line x1="698" y1="348" x2="1302" y2="348" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="363" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="367" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >7</text>
+<text x="752" y="368" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >COM</text>
+<rect x="908" y="355" width="22" height="16" rx="3" fill="#d62828" stroke="#444" stroke-width="1.2" />
+<text x="936" y="368" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czerwony</text>
+<text x="1008" y="368" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >COM przekaźników</text>
+<text x="1160" y="368" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >+12/24 V instalacji maszyny</text>
+<line x1="698" y1="378" x2="1302" y2="378" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="393" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="397" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >8</text>
+<text x="752" y="398" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >COM</text>
+<rect x="908" y="385" width="22" height="16" rx="3" fill="#d62828" stroke="#444" stroke-width="1.2" />
+<text x="936" y="398" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czerwony</text>
+<text x="1008" y="398" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >COM (zdublowany)</text>
+<text x="1160" y="398" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >+12/24 V instalacji maszyny</text>
+<line x1="698" y1="408" x2="1302" y2="408" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="423" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="427" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >9</text>
+<text x="752" y="428" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >-</text>
+<text x="908" y="428" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#888" text-anchor="start" font-weight="normal" >rezerwa</text>
+<text x="1008" y="428" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >-</text>
+<text x="1160" y="428" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >-</text>
+<line x1="698" y1="438" x2="1302" y2="438" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="453" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="457" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >10</text>
+<text x="752" y="458" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >-</text>
+<text x="908" y="458" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#888" text-anchor="start" font-weight="normal" >rezerwa</text>
+<text x="1008" y="458" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >-</text>
+<text x="1160" y="458" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >-</text>
+<rect x="1340" y="100" width="620" height="244" rx="10" fill="#ffffff" stroke="#006064" stroke-width="2.5" />
+<rect x="1340" y="100" width="620" height="44" rx="10" fill="#006064" stroke="#006064" stroke-width="2.5" />
+<text x="1354" y="120" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#fff" text-anchor="start" font-weight="bold" >J3 — Enkoder (TS13CP05)</text>
+<text x="1354" y="137" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#fff" text-anchor="start" font-weight="normal" >5 A / 180 V, 5 pinów; skrętka CLK+DT, 100 nF do GND</text>
+<text x="1354" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Pin</text>
+<text x="1402" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Sygnał</text>
+<text x="1558" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Kolor</text>
+<text x="1658" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Wewnątrz (sterownik)</text>
+<text x="1810" y="164" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Na zewnątrz (maszyna)</text>
+<line x1="1348" y1="170" x2="1952" y2="170" stroke="#bbb" stroke-width="1"/>
+<circle cx="1364" cy="183" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="1364" y="187" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >1</text>
+<text x="1402" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >CLK (A)</text>
+<rect x="1558" y="175" width="22" height="16" rx="3" fill="#1f52d6" stroke="#444" stroke-width="1.2" />
+<text x="1586" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >niebieski</text>
+<text x="1658" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GPIO 5 (ISR)</text>
+<text x="1810" y="188" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >enkoder kanał A</text>
+<line x1="1348" y1="198" x2="1952" y2="198" stroke="#eee" stroke-width="1"/>
+<circle cx="1364" cy="213" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="1364" y="217" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >2</text>
+<text x="1402" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >DT (B)</text>
+<rect x="1558" y="205" width="22" height="16" rx="3" fill="#1fa34a" stroke="#444" stroke-width="1.2" />
+<text x="1586" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >zielony</text>
+<text x="1658" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GPIO 6 (ISR)</text>
+<text x="1810" y="218" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >enkoder kanał B</text>
+<line x1="1348" y1="228" x2="1952" y2="228" stroke="#eee" stroke-width="1"/>
+<circle cx="1364" cy="243" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="1364" y="247" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >3</text>
+<text x="1402" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >SW</text>
+<rect x="1558" y="235" width="22" height="16" rx="3" fill="#ffd400" stroke="#444" stroke-width="1.2" />
+<text x="1586" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >żółty</text>
+<text x="1658" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GPIO 7 (GAP)</text>
+<text x="1810" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >przycisk enkodera</text>
+<line x1="1348" y1="258" x2="1952" y2="258" stroke="#eee" stroke-width="1"/>
+<circle cx="1364" cy="273" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="1364" y="277" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >4</text>
+<text x="1402" y="278" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >VCC</text>
+<rect x="1558" y="265" width="22" height="16" rx="3" fill="#d62828" stroke="#444" stroke-width="1.2" />
+<text x="1586" y="278" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czerwony</text>
+<text x="1658" y="278" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >3V3</text>
+<text x="1810" y="278" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >zasilanie enkodera</text>
+<line x1="1348" y1="288" x2="1952" y2="288" stroke="#eee" stroke-width="1"/>
+<circle cx="1364" cy="303" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="1364" y="307" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >5</text>
+<text x="1402" y="308" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >GND</text>
+<rect x="1558" y="295" width="22" height="16" rx="3" fill="#222222" stroke="#444" stroke-width="1.2" />
+<text x="1586" y="308" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czarny</text>
+<text x="1658" y="308" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GND</text>
+<text x="1810" y="308" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >masa enkodera</text>
+<rect x="40" y="314" width="620" height="274" rx="10" fill="#ffffff" stroke="#880e4f" stroke-width="2.5" />
+<rect x="40" y="314" width="620" height="44" rx="10" fill="#880e4f" stroke="#880e4f" stroke-width="2.5" />
+<text x="54" y="334" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#fff" text-anchor="start" font-weight="bold" >J4 — Pilot przewodowy (TS13PS06)</text>
+<text x="54" y="351" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#fff" text-anchor="start" font-weight="normal" >5 A / 125 V, 6 pinów; równolegle do przycisków panelu</text>
+<text x="54" y="378" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Pin</text>
+<text x="102" y="378" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Sygnał</text>
+<text x="258" y="378" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Kolor</text>
+<text x="358" y="378" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Wewnątrz (sterownik)</text>
+<text x="510" y="378" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Na zewnątrz (maszyna)</text>
+<line x1="48" y1="384" x2="652" y2="384" stroke="#bbb" stroke-width="1"/>
+<circle cx="64" cy="397" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="401" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >1</text>
+<text x="102" y="402" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >START / PAUZA</text>
+<rect x="258" y="389" width="22" height="16" rx="3" fill="#d62828" stroke="#444" stroke-width="1.2" />
+<text x="286" y="402" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czerwony</text>
+<text x="358" y="402" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GPIO 38</text>
+<text x="510" y="402" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >przycisk START pilota (NO -&gt; GND)</text>
+<line x1="48" y1="412" x2="652" y2="412" stroke="#eee" stroke-width="1"/>
+<circle cx="64" cy="427" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="431" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >2</text>
+<text x="102" y="432" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >SELEKTOR</text>
+<rect x="258" y="419" width="22" height="16" rx="3" fill="#1fa34a" stroke="#444" stroke-width="1.2" />
+<text x="286" y="432" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >zielony</text>
+<text x="358" y="432" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GPIO 40</text>
+<text x="510" y="432" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >przycisk SELEKTOR pilota</text>
+<line x1="48" y1="442" x2="652" y2="442" stroke="#eee" stroke-width="1"/>
+<circle cx="64" cy="457" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="461" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >3</text>
+<text x="102" y="462" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >STOP</text>
+<rect x="258" y="449" width="22" height="16" rx="3" fill="#ffd400" stroke="#444" stroke-width="1.2" />
+<text x="286" y="462" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >żółty</text>
+<text x="358" y="462" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GPIO 39 (+ISR awaryjny)</text>
+<text x="510" y="462" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >przycisk STOP pilota</text>
+<line x1="48" y1="472" x2="652" y2="472" stroke="#eee" stroke-width="1"/>
+<circle cx="64" cy="487" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="491" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >4</text>
+<text x="102" y="492" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >GAP</text>
+<rect x="258" y="479" width="22" height="16" rx="3" fill="#1f52d6" stroke="#444" stroke-width="1.2" />
+<text x="286" y="492" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >niebieski</text>
+<text x="358" y="492" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GPIO 7</text>
+<text x="510" y="492" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >przycisk START OD PRZERWY pilota</text>
+<line x1="48" y1="502" x2="652" y2="502" stroke="#eee" stroke-width="1"/>
+<circle cx="64" cy="517" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="521" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >5</text>
+<text x="102" y="522" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >GND</text>
+<rect x="258" y="509" width="22" height="16" rx="3" fill="#222222" stroke="#444" stroke-width="1.2" />
+<text x="286" y="522" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czarny</text>
+<text x="358" y="522" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GND</text>
+<text x="510" y="522" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >masa przycisków</text>
+<line x1="48" y1="532" x2="652" y2="532" stroke="#eee" stroke-width="1"/>
+<circle cx="64" cy="547" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="551" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >6</text>
+<text x="102" y="552" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >-</text>
+<text x="258" y="552" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#888" text-anchor="start" font-weight="normal" >rezerwa</text>
+<text x="358" y="552" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >-</text>
+<text x="510" y="552" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >-</text>
+<rect x="40" y="618" width="620" height="214" rx="10" fill="#ffffff" stroke="#880e4f" stroke-width="2.5" />
+<rect x="40" y="618" width="620" height="44" rx="10" fill="#880e4f" stroke="#880e4f" stroke-width="2.5" />
+<text x="54" y="638" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#fff" text-anchor="start" font-weight="bold" >J5 — Przycisk nożny (TS21CP04)</text>
+<text x="54" y="655" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#fff" text-anchor="start" font-weight="normal" >30 A / 500 V, 4 piny; równolegle do START/STOP</text>
+<text x="54" y="682" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Pin</text>
+<text x="102" y="682" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Sygnał</text>
+<text x="258" y="682" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Kolor</text>
+<text x="358" y="682" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Wewnątrz (sterownik)</text>
+<text x="510" y="682" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Na zewnątrz (maszyna)</text>
+<line x1="48" y1="688" x2="652" y2="688" stroke="#bbb" stroke-width="1"/>
+<circle cx="64" cy="701" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="705" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >1</text>
+<text x="102" y="706" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >START / PAUZA</text>
+<rect x="258" y="693" width="22" height="16" rx="3" fill="#d62828" stroke="#444" stroke-width="1.2" />
+<text x="286" y="706" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czerwony</text>
+<text x="358" y="706" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GPIO 38</text>
+<text x="510" y="706" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >pedał lewy (NO -&gt; GND)</text>
+<line x1="48" y1="716" x2="652" y2="716" stroke="#eee" stroke-width="1"/>
+<circle cx="64" cy="731" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="735" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >2</text>
+<text x="102" y="736" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >STOP</text>
+<rect x="258" y="723" width="22" height="16" rx="3" fill="#ffd400" stroke="#444" stroke-width="1.2" />
+<text x="286" y="736" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >żółty</text>
+<text x="358" y="736" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GPIO 39 (+ISR awaryjny)</text>
+<text x="510" y="736" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >pedał prawy (NO -&gt; GND)</text>
+<line x1="48" y1="746" x2="652" y2="746" stroke="#eee" stroke-width="1"/>
+<circle cx="64" cy="761" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="765" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >3</text>
+<text x="102" y="766" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >GND</text>
+<rect x="258" y="753" width="22" height="16" rx="3" fill="#222222" stroke="#444" stroke-width="1.2" />
+<text x="286" y="766" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czarny</text>
+<text x="358" y="766" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GND</text>
+<text x="510" y="766" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >masa pedałów</text>
+<line x1="48" y1="776" x2="652" y2="776" stroke="#eee" stroke-width="1"/>
+<circle cx="64" cy="791" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="64" y="795" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >4</text>
+<text x="102" y="796" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >-</text>
+<text x="258" y="796" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#888" text-anchor="start" font-weight="normal" >rezerwa</text>
+<text x="358" y="796" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >-</text>
+<text x="510" y="796" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >-</text>
+<rect x="690" y="524" width="620" height="244" rx="10" fill="#ffffff" stroke="#311b92" stroke-width="2.5" />
+<rect x="690" y="524" width="620" height="44" rx="10" fill="#311b92" stroke="#311b92" stroke-width="2.5" />
+<text x="704" y="544" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#fff" text-anchor="start" font-weight="bold" >J6 — Łącze do modułu 7" (M12 A, 4 piny) — PROPOZYCJA</text>
+<text x="704" y="561" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#fff" text-anchor="start" font-weight="normal" >Wariant przewodowy zamiast WiFi; opis w LACZE_PRZEWODOWE.md</text>
+<text x="704" y="588" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Pin</text>
+<text x="752" y="588" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Sygnał</text>
+<text x="908" y="588" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Kolor</text>
+<text x="1008" y="588" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Wewnątrz (sterownik)</text>
+<text x="1160" y="588" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="bold" >Na zewnątrz (maszyna)</text>
+<line x1="698" y1="594" x2="1302" y2="594" stroke="#bbb" stroke-width="1"/>
+<circle cx="714" cy="607" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="611" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >1</text>
+<text x="752" y="612" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >+5 V</text>
+<rect x="908" y="599" width="22" height="16" rx="3" fill="#7b4a12" stroke="#444" stroke-width="1.2" />
+<text x="936" y="612" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >brązowy</text>
+<text x="1008" y="612" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >odgałęzienie 5 V (PTC &gt;= 1 A)</text>
+<text x="1160" y="612" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >zasilanie modułu 7" (5 V)</text>
+<line x1="698" y1="622" x2="1302" y2="622" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="637" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="641" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >2</text>
+<text x="752" y="642" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >RS-485 A (+)</text>
+<rect x="908" y="629" width="22" height="16" rx="3" fill="#f8f9fa" stroke="#444" stroke-width="1.2" />
+<text x="936" y="642" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >biały</text>
+<text x="1008" y="642" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >moduł RS-485 sterownika</text>
+<text x="1160" y="642" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >moduł RS-485 wyświetlacza</text>
+<line x1="698" y1="652" x2="1302" y2="652" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="667" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="671" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >3</text>
+<text x="752" y="672" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >GND</text>
+<rect x="908" y="659" width="22" height="16" rx="3" fill="#1f52d6" stroke="#444" stroke-width="1.2" />
+<text x="936" y="672" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >niebieski</text>
+<text x="1008" y="672" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >GND</text>
+<text x="1160" y="672" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >GND modułu 7"</text>
+<line x1="698" y1="682" x2="1302" y2="682" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="697" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="701" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >4</text>
+<text x="752" y="702" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >RS-485 B (-)</text>
+<rect x="908" y="689" width="22" height="16" rx="3" fill="#222222" stroke="#444" stroke-width="1.2" />
+<text x="936" y="702" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >czarny</text>
+<text x="1008" y="702" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >moduł RS-485 sterownika</text>
+<text x="1160" y="702" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >moduł RS-485 wyświetlacza</text>
+<line x1="698" y1="712" x2="1302" y2="712" stroke="#eee" stroke-width="1"/>
+<circle cx="714" cy="727" r="11" fill="#f1f3f5" stroke="#555" stroke-width="1.2"/>
+<text x="714" y="731" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >PE</text>
+<text x="752" y="732" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="bold" >ekran kabla</text>
+<rect x="908" y="719" width="22" height="16" rx="3" fill="#9aa5b1" stroke="#444" stroke-width="1.2" />
+<text x="936" y="732" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >ekran</text>
+<text x="1008" y="732" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#0b1f4a" text-anchor="start" font-weight="normal" >obudowa / PE (jeden koniec)</text>
+<text x="1160" y="732" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#333" text-anchor="start" font-weight="normal" >nie łączyć po stronie modułu 7"</text>
+<rect x="1340" y="374" width="620" height="300" rx="10" fill="#fffde7" stroke="#f57f17" stroke-width="2" />
+<text x="1354" y="404" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#111" text-anchor="start" font-weight="bold" >Zasady okablowania</text>
+<text x="1354" y="434" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >1. Zasilanie 5 V i obwody zaworów (J1, J2) prowadzić osobno od sygnałowych (J3-J6).</text>
+<text x="1354" y="456" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >2. Enkoder (J3): skrętka CLK+DT ekranowana, kondensatory 100 nF przy enkoderze.</text>
+<text x="1354" y="478" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >3. Masa sygnałowa w jednym punkcie (gwiazda przy ESP32); GND zaworów = minus instalacji maszyny,</text>
+<text x="1354" y="500" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >    NIE łączyć z GND ESP32 (optoizolacja modułu przekaźników).</text>
+<text x="1354" y="522" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >4. Wszystkie przyciski (panel, pilot J4, pedał J5) łączą wejście z GND — styk NO.</text>
+<text x="1354" y="544" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >5. STOP z pilota lub pedału działa tak samo jak przycisk panelu (przerwanie awaryjne).</text>
+<text x="1354" y="566" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >6. Końcówki tulejkowe na wszystkich przewodach; opisać przewody numerami pinów.</text>
+<text x="1354" y="588" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >7. PTC 1,5 A + TVS 5,5 V w linii 5 V sterownika, osobne PTC dla modułu 7".</text>
+<text x="1354" y="610" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >8. Przed pierwszym uruchomieniem: pomiar 3V3 i 5 V oraz test ciągłości GND.</text>
+</svg>

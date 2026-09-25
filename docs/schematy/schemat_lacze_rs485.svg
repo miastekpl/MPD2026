@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="860" viewBox="0 0 2000 860">
+<rect x="0" y="0" width="2000" height="860" fill="#ffffff"/>
+<text x="40" y="46" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="28" fill="#0b1f4a" text-anchor="start" font-weight="bold" >Łącze przewodowe sterownik &lt;-&gt; moduł 7" (RS-485) — PROPOZYCJA</text>
+<text x="40" y="72" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#444" text-anchor="start" font-weight="normal" >Zamiast WiFi: UART 3,3 V przez konwerter RS-485 z automatycznym kierunkiem (bez pinu DE). Zasilanie modułu 7" tym samym kablem.</text>
+<rect x="60" y="140" width="380" height="520" rx="12" fill="#e8f0fe" stroke="#0b1f4a" stroke-width="3" />
+<text x="250" y="172" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" fill="#0b1f4a" text-anchor="middle" font-weight="bold" >Sterownik Trassar (ESP32-S3 N16R8)</text>
+<circle cx="440" cy="245" r="5" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="80" y="250" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >GPIO 20  UART1 TX</text>
+<circle cx="440" cy="285" r="5" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="80" y="290" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >GPIO 19  UART1 RX</text>
+<circle cx="440" cy="325" r="5" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="80" y="330" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >3V3</text>
+<circle cx="440" cy="365" r="5" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="80" y="370" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >GND</text>
+<circle cx="440" cy="405" r="5" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="80" y="410" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#c1121f" text-anchor="start" font-weight="bold" >+5 V (odgałęzienie, PTC)</text>
+<text x="80" y="470" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#b71c1c" text-anchor="start" font-weight="normal" >GPIO 19 i 20 są dziś używane przez joystick KY-023 —</text>
+<text x="80" y="488" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#b71c1c" text-anchor="start" font-weight="normal" >w wariancie przewodowym joystick jest pomijany</text>
+<text x="80" y="506" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#b71c1c" text-anchor="start" font-weight="normal" >(ekran dotykowy go zastępuje).</text>
+<text x="80" y="540" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >GPIO 15 zostaje wolny (T_CS / DS18B20).</text>
+<text x="80" y="574" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >Protokół: wiersze JSON, 230400 baud, 8N1,</text>
+<text x="80" y="592" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >status co 100-200 ms, polecenia z sumą CRC.</text>
+<rect x="560" y="210" width="270" height="230" rx="10" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2.5" />
+<text x="695" y="238" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >Konwerter RS-485 (MAX3485)</text>
+<text x="695" y="258" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="middle" font-weight="normal" >auto-kierunek, zasilanie 3,3 V</text>
+<circle cx="560" cy="296" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<text x="574" y="300" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="normal" >RXD  &lt;- TX sterownika</text>
+<circle cx="560" cy="321" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<text x="574" y="325" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="normal" >TXD  -&gt; RX sterownika</text>
+<circle cx="560" cy="346" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<text x="574" y="350" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="normal" >VCC  3V3</text>
+<circle cx="560" cy="371" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<text x="574" y="375" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="start" font-weight="normal" >GND</text>
+<text x="816" y="300" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="end" font-weight="bold" >A</text>
+<text x="816" y="335" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="end" font-weight="bold" >B</text>
+<circle cx="830" cy="296" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<circle cx="830" cy="331" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<text x="816" y="420" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="end" font-weight="normal" >terminator 120 ohm A-B</text>
+<line x1="440" y1="245" x2="470" y2="245" stroke="#1b5e20" stroke-width="2"/>
+<line x1="470" y1="245" x2="470" y2="296" stroke="#1b5e20" stroke-width="2"/>
+<line x1="470" y1="296" x2="560" y2="296" stroke="#1b5e20" stroke-width="2"/>
+<line x1="440" y1="285" x2="490" y2="285" stroke="#1b5e20" stroke-width="2"/>
+<line x1="490" y1="285" x2="490" y2="321" stroke="#1b5e20" stroke-width="2"/>
+<line x1="490" y1="321" x2="560" y2="321" stroke="#1b5e20" stroke-width="2"/>
+<line x1="440" y1="325" x2="510" y2="325" stroke="#111" stroke-width="2"/>
+<line x1="510" y1="325" x2="510" y2="346" stroke="#111" stroke-width="2"/>
+<line x1="510" y1="346" x2="560" y2="346" stroke="#111" stroke-width="2"/>
+<line x1="440" y1="365" x2="530" y2="365" stroke="#111" stroke-width="2"/>
+<line x1="530" y1="365" x2="530" y2="371" stroke="#111" stroke-width="2"/>
+<line x1="530" y1="371" x2="560" y2="371" stroke="#111" stroke-width="2"/>
+<rect x="860" y="240" width="300" height="150" rx="10" fill="#fff8e1" stroke="#e65100" stroke-width="2.5" />
+<text x="1010" y="268" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#111" text-anchor="middle" font-weight="bold" >Kabel ekranowany 2 x 2 x 0,5 mm2</text>
+<text x="1010" y="290" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="middle" font-weight="normal" >skrętka A/B + skrętka +5 V/GND</text>
+<text x="1010" y="312" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="middle" font-weight="normal" >ekran do PE po jednej stronie</text>
+<text x="1010" y="334" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="middle" font-weight="normal" >złącze M12 A, 4 piny, IP67</text>
+<text x="1010" y="356" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="middle" font-weight="normal" >długość zwykle 1-5 m (RS-485 do 1200 m)</text>
+<text x="1010" y="378" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="middle" font-weight="normal" >pin 1 +5 V, 2 A, 3 GND, 4 B</text>
+<line x1="830" y1="296" x2="860" y2="296" stroke="#e65100" stroke-width="3"/>
+<line x1="830" y1="331" x2="860" y2="331" stroke="#e65100" stroke-width="3"/>
+<line x1="1160" y1="296" x2="1190" y2="296" stroke="#e65100" stroke-width="3"/>
+<line x1="1160" y1="331" x2="1190" y2="331" stroke="#e65100" stroke-width="3"/>
+<rect x="1190" y="210" width="270" height="230" rx="10" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2.5" />
+<text x="1325" y="238" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >Konwerter RS-485 (MAX3485)</text>
+<text x="1325" y="258" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="middle" font-weight="normal" >auto-kierunek, zasilanie 3,3 V</text>
+<circle cx="1190" cy="296" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<circle cx="1190" cy="331" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<text x="1204" y="300" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >A</text>
+<text x="1204" y="335" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >B</text>
+<text x="1204" y="420" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#555" text-anchor="start" font-weight="normal" >terminator 120 ohm A-B</text>
+<circle cx="1460" cy="296" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<text x="1446" y="300" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="normal" >RXD  &lt;- TX modułu</text>
+<circle cx="1460" cy="321" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<text x="1446" y="325" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="normal" >TXD  -&gt; RX modułu</text>
+<circle cx="1460" cy="346" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<text x="1446" y="350" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="normal" >VCC  3V3</text>
+<circle cx="1460" cy="371" r="4" fill="#1b5e20" stroke="none" stroke-width="1"/>
+<text x="1446" y="375" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="normal" >GND</text>
+<rect x="1560" y="140" width="380" height="520" rx="12" fill="#ede7f6" stroke="#311b92" stroke-width="3" />
+<text x="1750" y="172" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" fill="#311b92" text-anchor="middle" font-weight="bold" >Moduł 7" Sunton ESP32-8048S070C</text>
+<circle cx="1560" cy="245" r="5" fill="#311b92" stroke="none" stroke-width="1"/>
+<text x="1580" y="250" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >GPIO 17  UART1 TX</text>
+<circle cx="1560" cy="285" r="5" fill="#311b92" stroke="none" stroke-width="1"/>
+<text x="1580" y="290" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >GPIO 18  UART1 RX</text>
+<circle cx="1560" cy="325" r="5" fill="#311b92" stroke="none" stroke-width="1"/>
+<text x="1580" y="330" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >3V3 (złącze rozszerzeń)</text>
+<circle cx="1560" cy="365" r="5" fill="#311b92" stroke="none" stroke-width="1"/>
+<text x="1580" y="370" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >GND</text>
+<circle cx="1560" cy="405" r="5" fill="#311b92" stroke="none" stroke-width="1"/>
+<text x="1580" y="410" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#c1121f" text-anchor="start" font-weight="bold" >+5 V (zasilanie płytki)</text>
+<text x="1580" y="470" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >GPIO 17/18 są wolne (I2S wzmacniacza i INT dotyku</text>
+<text x="1580" y="488" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >niewykorzystane w projekcie; sprawdzić mostek R17).</text>
+<text x="1580" y="522" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >GPIO 43/44 (UART0) zostają dla USB i programowania.</text>
+<line x1="1460" y1="296" x2="1510" y2="296" stroke="#1b5e20" stroke-width="2"/>
+<line x1="1510" y1="296" x2="1510" y2="285" stroke="#1b5e20" stroke-width="2"/>
+<line x1="1510" y1="285" x2="1560" y2="285" stroke="#1b5e20" stroke-width="2"/>
+<line x1="1460" y1="321" x2="1530" y2="321" stroke="#1b5e20" stroke-width="2"/>
+<line x1="1530" y1="321" x2="1530" y2="245" stroke="#1b5e20" stroke-width="2"/>
+<line x1="1530" y1="245" x2="1560" y2="245" stroke="#1b5e20" stroke-width="2"/>
+<line x1="1460" y1="346" x2="1490" y2="346" stroke="#111" stroke-width="2"/>
+<line x1="1490" y1="346" x2="1490" y2="325" stroke="#111" stroke-width="2"/>
+<line x1="1490" y1="325" x2="1560" y2="325" stroke="#111" stroke-width="2"/>
+<line x1="1460" y1="371" x2="1470" y2="371" stroke="#111" stroke-width="2"/>
+<line x1="1470" y1="371" x2="1470" y2="365" stroke="#111" stroke-width="2"/>
+<line x1="1470" y1="365" x2="1560" y2="365" stroke="#111" stroke-width="2"/>
+<line x1="440" y1="405" x2="470" y2="405" stroke="#c1121f" stroke-width="3"/>
+<line x1="470" y1="405" x2="470" y2="560" stroke="#c1121f" stroke-width="3"/>
+<line x1="470" y1="560" x2="1540" y2="560" stroke="#c1121f" stroke-width="3"/>
+<line x1="1540" y1="560" x2="1540" y2="405" stroke="#c1121f" stroke-width="3"/>
+<line x1="1540" y1="405" x2="1560" y2="405" stroke="#c1121f" stroke-width="3"/>
+<text x="1000" y="552" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#c1121f" text-anchor="middle" font-weight="bold" >+5 V przez ten sam kabel (żyły +5 V / GND), PTC &gt;= 1 A po stronie sterownika</text>
+<line x1="440" y1="370" x2="450" y2="370" stroke="#111" stroke-width="2"/>
+<line x1="450" y1="370" x2="450" y2="600" stroke="#111" stroke-width="2"/>
+<line x1="450" y1="600" x2="1520" y2="600" stroke="#111" stroke-width="2"/>
+<line x1="1520" y1="600" x2="1520" y2="370" stroke="#111" stroke-width="2"/>
+<line x1="1520" y1="370" x2="1560" y2="370" stroke="#111" stroke-width="2"/>
+<text x="1000" y="620" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >GND (wspólna masa sygnałowa i zasilania)</text>
+<text x="40" y="700" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#0b1f4a" text-anchor="start" font-weight="normal" >Zalety: brak zależności od WiFi (zakłócenia, hasło, limit 4 klientów, czas łączenia), stały niski czas reakcji STOP, zasilanie i dane w jednym kablu.</text>
+<text x="40" y="726" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#0b1f4a" text-anchor="start" font-weight="normal" >Wymagania: nowy moduł komunikacyjny w firmware sterownika i modułu 7" (rozdz. wdrożenia w LACZE_PRZEWODOWE.md); WiFi zostaje jako łącze zapasowe i dla telefonów.</text>
+<text x="40" y="752" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#b71c1c" text-anchor="start" font-weight="normal" >Fizyczny STOP sterownika (panel, pilot, pedał) nadal jest głównym zabezpieczeniem — łącze przewodowe go nie zastępuje.</text>
+</svg>

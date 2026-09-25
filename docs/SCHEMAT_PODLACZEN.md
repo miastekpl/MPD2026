@@ -459,6 +459,14 @@ Interfejs panelu zajmuje niemal wszystkie GPIO ESP32-S3 (stąd wybór architektu
 Parametry taktowania panelu: PCLK 12 MHz; HSYNC front/pulse/back = 8/2/43; VSYNC front/pulse/back = 8/2/12.
 Zestaw ustawiony pod stabilną pracę z aktywnym WiFi i PSRAM (bez migotania).
 
+### 5.2b Łącze przewodowe zamiast WiFi (propozycja)
+
+Zamiast łączności radiowej moduł 7" można połączyć ze sterownikiem kablem (RS-485, złącze M12, zasilanie w tym samym kablu).
+Analiza, piny (moduł 7": GPIO 17/18; sterownik: GPIO 19/20), protokół i plan wdrożenia: [LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md);
+schemat: [schematy/schemat_lacze_rs485.svg](schematy/schemat_lacze_rs485.svg). **Nie jest jeszcze zaimplementowane w oprogramowaniu.**
+
+![Łącze RS-485](schematy/schemat_lacze_rs485.svg)
+
 ### 5.3 Montaż
 
 - Kabel zasilający moduł prowadzić osobno od przewodów enkodera i zaworów.
@@ -591,6 +599,13 @@ Kabel: skrętka (CLK+DT), do 200 cm; przy > 30 cm dodać 100 nF CLK–GND i DT�
 
 STOP z pilota lub pedału wyzwala tę samą ścieżkę co przycisk panelowy, w tym przerwanie awaryjnego stopu
 (natychmiastowe wyłączenie pistoletów).
+
+### 7.4b Wiązka — widok graficzny wszystkich złączy
+
+Kompletna wiązka: piny, kolory przewodów, cele wewnątrz sterownika i na maszynie (J1–J5 oraz proponowane J6 dla łącza
+przewodowego do modułu 7"). Plik: [schematy/schemat_zlacza_wiazka.svg](schematy/schemat_zlacza_wiazka.svg).
+
+![Wiązka: złącza J1-J6](schematy/schemat_zlacza_wiazka.svg)
 
 ### 7.5 Zbiorcza tabela połączeń (24 przewody)
 
