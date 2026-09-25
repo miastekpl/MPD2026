@@ -6,10 +6,14 @@ funkcjonalnych (ma nadal własny TFT, przyciski i panel WWW).
 
 ```bash
 cd display-module
-pio run            # kompilacja
-pio run -t upload  # wgranie przez USB
+pio run                                  # kompilacja, ekran poziomy 800x480
+pio run -t upload                        # wgranie (poziomo)
+pio run -e sunton7_portrait -t upload    # wgranie wersji PIONOWEJ 480x800
 pio device monitor
 ```
+
+Wersja pionowa (panel z klawiszami fizycznymi obok etykiet wzorców): środowisko `sunton7_portrait`. Jeśli obraz jest odwrócony o 180°,
+zmień `-DUI_ROTATION=1` na `3` w `platformio.ini`.
 
 Pierwsze uruchomienie: **MENU → POŁĄCZENIE WiFi**, hasło AP sterownika (8 znaków HEX z jego ekranu startowego).
 

@@ -14,7 +14,7 @@ Status g_st;
 bool   g_stValid = false;
 bool   g_online = false;
 
-// ---------- układ (piksele) ----------
+// ---------- układ poziomy (piksele); układ pionowy ma stałe w buildMainPortrait() ----------
 static const int TOP_H       = 56;
 static const int COL_W       = 138;
 static const int SLOT_H      = 62;
@@ -166,18 +166,173 @@ static void onMenu(lv_event_t*) { uiOpenMenu(); }
 static void onCoverWifi(lv_event_t*) { uiOpenWifi(); }
 
 // ---------- budowa ekranu ----------
-static lv_obj_t* makeSlot(lv_obj_t* parent, int s, int x, int y) {
-    lv_obj_t* b = uiBtn(parent, "", x, y, COL_W, SLOT_H, C_BTN, onSlotClick,
-                        (void*)(intptr_t)s, FONT_L);
+#if UI_PORTRAIT
+static const lv_font_t* const SLOT_FONT = FONT_M;
+#else
+static const lv_font_t* const SLOT_FONT = FONT_L;
+#endif
+
+static lv_obj_t* makeSlot(lv_obj_t* parent, int s, int x, int y, int w, int h,
+                          int gx, int gy, int gw, int gh) {
+    lv_obj_t* b = uiBtn(parent, "", x, y, w, h, C_BTN, onSlotClick,
+                        (void*)(intptr_t)s, SLOT_FONT);
     lv_obj_t* lbl = lv_obj_get_child(b, 0);
     lv_obj_align(lbl, LV_ALIGN_RIGHT_MID, -6, 0);
     s_slotLbl[s] = lbl;
-    s_slotGlyph[s] = uiGlyph(b, 6, 6, 40, 48);
+    s_slotGlyph[s] = uiGlyph(b, gx, gy, gw, gh);
     s_slotBtn[s] = b;
     return b;
 }
 
-void uiBuildMain() {
+// Etykieta o stałej szerokości, wyrównana do środka
+static lv_obj_t* centerLabel(lv_obj_t* parent, const char* text, int x, int y, int w,
+                             const lv_font_t* font, lv_color_t color) {
+    lv_obj_t* l = uiLabel(parent, text, x, y, font, color);
+    lv_obj_set_width(l, w);
+    lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_CENTER, 0);
+    return l;
+}
+
+#if UI_PORTRAIT
+// ============================================================
+// Układ PIONOWY 480x800: kolumny wzorców przy krawędziach ekranu
+// (fizyczne klawisze S1-S5 i S6-S10 leżą obok etykiet na tej samej wysokości)
+// ============================================================
+static void buildMainPortrait() {
+    const int SW = SCR_W, SH = SCR_H;
+    const int COLW = 108, SLOTH = 106, STEP = 116, Y0 = 106;
+    const int MX = 118, MW = 244;                    // strefa środkowa
+    lv_obj_t* scr = lv_scr_act();
+    lv_obj_set_style_bg_color(scr, C_BG, 0);
+    lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, 0);
+    lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
+
+    // --- pasek górny ---
+    s_lblLink  = uiLabel(scr, LV_SYMBOL_WIFI " ---", 8, 14, FONT_S, C_DIM);
+    s_lblGps   = uiLabel(scr, LV_SYMBOL_GPS " ---", 122, 14, FONT_S, C_DIM);
+    s_barPaint = lv_bar_create(scr);
+    lv_obj_set_pos(s_barPaint, 244, 10);
+    lv_obj_set_size(s_barPaint, 92, 28);
+    lv_bar_set_range(s_barPaint, 0, 100);
+    lv_obj_set_style_bg_color(s_barPaint, C_PANEL, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(s_barPaint, C_GREEN, LV_PART_INDICATOR);
+    lv_obj_set_style_radius(s_barPaint, 6, LV_PART_MAIN);
+    lv_obj_set_style_radius(s_barPaint, 6, LV_PART_INDICATOR);
+    s_lblPaint = lv_label_create(s_barPaint);
+    lv_label_set_text(s_lblPaint, "FARBA --");
+    lv_obj_set_style_text_font(s_lblPaint, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(s_lblPaint, C_TEXT, 0);
+    lv_obj_center(s_lblPaint);
+    uiBtn(scr, LV_SYMBOL_LIST " MENU", SW - 4 - 130, 4, 130, 42, C_BTN, onMenu, nullptr, FONT_M);
+
+    // --- zakładki grup (dotyk; ta sama grupa co fizyczny przycisk GRUPA) ---
+    s_tabAxis = uiBtn(scr, "OS JEZDNI", 6, 54, 228, 42, C_BTN, onTab, (void*)(intptr_t)0, FONT_M);
+    s_tabEdge = uiBtn(scr, "KRAWEDZ", 246, 54, 228, 42, C_BTN, onTab, (void*)(intptr_t)1, FONT_M);
+
+    // --- kolumny wzorców ---
+    for (int i = 0; i < 5; i++)
+        makeSlot(scr, i, 4, Y0 + i * STEP, COLW, SLOTH, 6, 8, 34, SLOTH - 16);
+    for (int j = 0; j < 5; j++)
+        makeSlot(scr, 5 + j, SW - 4 - COLW, Y0 + j * STEP, COLW, SLOTH, 6, 8, 34, SLOTH - 16);
+
+    // --- środek: wzorzec, prędkość, liczniki ---
+    s_lblPattern = centerLabel(scr, "---", MX, 106, MW, FONT_XL, C_YELLOW);
+    s_lblMode = centerLabel(scr, "---", MX, 158, MW, FONT_S, C_TEXT);
+    lv_label_set_long_mode(s_lblMode, LV_LABEL_LONG_DOT);
+    lv_obj_set_height(s_lblMode, 22);
+    s_speed = uiSevenSeg(scr, MX + (MW - 172) / 2, 190, 172, 66);
+    s_lblUnit = centerLabel(scr, "km/h", MX, 262, MW, FONT_M, C_DIM);
+    s_lblDist = centerLabel(scr, "", MX, 292, MW, FONT_S, C_TEXT);
+    s_lblArea = centerLabel(scr, "", MX, 314, MW, FONT_S, C_TEXT);
+    s_lblTime = centerLabel(scr, "", MX, 336, MW, FONT_S, C_TEXT);
+    lv_label_set_recolor(s_lblDist, true);
+    lv_label_set_recolor(s_lblArea, true);
+    lv_label_set_recolor(s_lblTime, true);
+
+    // --- droga ---
+    const int RY = 364, RH = 240;
+    s_road = uiRoadView(scr, MX, RY, MW, RH);
+    s_btnReverse = uiBtn(s_road, LV_SYMBOL_LOOP " ODWROC", 6, 4, 130, 34, C_BTN, onReverse, nullptr, FONT_S);
+    s_lblPending = uiLabel(s_road, "", 6, 42, FONT_S, C_YELLOW);
+    lv_obj_set_width(s_lblPending, MW - 12);
+    s_banner = lv_obj_create(s_road);
+    lv_obj_remove_style_all(s_banner);
+    lv_obj_set_size(s_banner, MW - 16, 58);
+    lv_obj_set_pos(s_banner, 8, 84);
+    lv_obj_set_style_bg_color(s_banner, C_RED, 0);
+    lv_obj_set_style_bg_opa(s_banner, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(s_banner, 8, 0);
+    lv_obj_clear_flag(s_banner, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    s_lblBanner = lv_label_create(s_banner);
+    lv_label_set_text(s_lblBanner, "");
+    lv_label_set_long_mode(s_lblBanner, LV_LABEL_LONG_WRAP);
+    lv_obj_set_width(s_lblBanner, MW - 32);
+    lv_obj_set_style_text_align(s_lblBanner, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_font(s_lblBanner, FONT_S, 0);
+    lv_obj_set_style_text_color(s_lblBanner, C_TEXT, 0);
+    lv_obj_center(s_lblBanner);
+    lv_obj_add_flag(s_banner, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(s_btnReverse, LV_OBJ_FLAG_HIDDEN);
+
+    // --- kapsuły pistoletów ---
+    for (int g = 0; g < NGUNS; g++) {
+        lv_obj_t* p = lv_obj_create(scr);
+        lv_obj_remove_style_all(p);
+        lv_obj_set_pos(p, MX + 2 + g * 41, RY + RH + 6);
+        lv_obj_set_size(p, 38, 28);
+        lv_obj_set_style_bg_color(p, C_PANEL, 0);
+        lv_obj_set_style_bg_opa(p, LV_OPA_COVER, 0);
+        lv_obj_set_style_radius(p, 14, 0);
+        lv_obj_set_style_border_width(p, 2, 0);
+        lv_obj_set_style_border_color(p, C_PANEL, 0);
+        lv_obj_clear_flag(p, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+        char t[8];
+        snprintf(t, sizeof(t), "P%d", g + 1);
+        lv_obj_t* l = lv_label_create(p);
+        lv_label_set_text(l, t);
+        lv_obj_set_style_text_font(l, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_color(l, C_DIM, 0);
+        lv_obj_center(l);
+        s_pill[g] = p;
+    }
+
+    // --- pasek dolny: tryby, START OD PRZERWY, START, STOP ---
+    static const char* modeTxt[3] = {"AUTO", "SEMI", "RECZNY"};
+    for (int m = 0; m < 3; m++) {
+        s_btnMode[m] = uiBtn(scr, modeTxt[m], 4 + m * 96, 694, 92, 44, C_BTN,
+                             onMode, (void*)(intptr_t)m, FONT_S);
+    }
+    s_btnGap = uiBtn(scr, "START OD PRZERWY", 292, 694, 184, 44, C_BTN, onGap, nullptr, FONT_S);
+    s_btnStart = uiBtn(scr, LV_SYMBOL_PLAY " START", 4, 746, 296, 50, C_GREEN, onStart, nullptr, FONT_L);
+    s_btnStop = uiBtn(scr, LV_SYMBOL_STOP " STOP", 306, 746, 170, 50, C_RED, onStop, nullptr, FONT_L);
+
+    // --- nakładka braku łączności ---
+    s_cover = lv_obj_create(scr);
+    lv_obj_remove_style_all(s_cover);
+    lv_obj_set_pos(s_cover, 0, 50);
+    lv_obj_set_size(s_cover, SW, SH - 50);
+    lv_obj_set_style_bg_color(s_cover, C_BG, 0);
+    lv_obj_set_style_bg_opa(s_cover, LV_OPA_90, 0);
+    lv_obj_clear_flag(s_cover, LV_OBJ_FLAG_SCROLLABLE);
+    s_lblCoverTitle = centerLabel(s_cover, "BRAK LACZNOSCI ZE STEROWNIKIEM", 12, 150, SW - 24, FONT_L, C_RED);
+    lv_label_set_long_mode(s_lblCoverTitle, LV_LABEL_LONG_WRAP);
+    s_lblCoverReason = centerLabel(s_cover, "", 12, 290, SW - 24, FONT_M, C_TEXT);
+    lv_label_set_long_mode(s_lblCoverReason, LV_LABEL_LONG_WRAP);
+    lv_obj_t* warn = centerLabel(s_cover, "UZYJ FIZYCZNEGO PRZYCISKU STOP NA STEROWNIKU", 12, 400,
+                                 SW - 24, FONT_M, C_ORANGE);
+    lv_label_set_long_mode(warn, LV_LABEL_LONG_WRAP);
+    uiBtn(s_cover, LV_SYMBOL_WIFI " USTAW POLACZENIE WiFi", 40, 520, SW - 80, 64, C_BTN,
+          onCoverWifi, nullptr, FONT_M);
+
+    s_lastResultSeq = linkResultSeq();
+}
+#endif  // UI_PORTRAIT
+
+// ============================================================
+// Układ POZIOMY 800x480
+// ============================================================
+#if !UI_PORTRAIT
+static void buildMainLandscape() {
     lv_obj_t* scr = lv_scr_act();
     lv_obj_set_style_bg_color(scr, C_BG, 0);
     lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, 0);
@@ -204,8 +359,10 @@ void uiBuildMain() {
     uiBtn(scr, LV_SYMBOL_LIST " MENU", 654, 6, 138, 46, C_BTN, onMenu, nullptr, FONT_M);
 
     // --- kolumny szybkich wzorców ---
-    for (int i = 0; i < 5; i++) makeSlot(scr, i, 6, SLOT_Y0 + i * SLOT_STEP);
-    for (int j = 0; j < 5; j++) makeSlot(scr, 5 + j, 800 - 6 - COL_W, SLOT_Y0 + j * SLOT_STEP);
+    for (int i = 0; i < 5; i++)
+        makeSlot(scr, i, 6, SLOT_Y0 + i * SLOT_STEP, COL_W, SLOT_H, 6, 6, 40, 48);
+    for (int j = 0; j < 5; j++)
+        makeSlot(scr, 5 + j, 800 - 6 - COL_W, SLOT_Y0 + j * SLOT_STEP, COL_W, SLOT_H, 6, 6, 40, 48);
 
     // --- prędkość i wzorzec ---
     s_speed = uiSevenSeg(scr, CX0 + 6, 62, 200, 76);
@@ -303,6 +460,15 @@ void uiBuildMain() {
 
     s_lastResultSeq = linkResultSeq();
 }
+#endif  // !UI_PORTRAIT
+
+void uiBuildMain() {
+#if UI_PORTRAIT
+    buildMainPortrait();
+#else
+    buildMainLandscape();
+#endif
+}
 
 // ---------- odświeżanie ----------
 static void updateTopBar(LinkState ls, const Status& st, bool have) {
@@ -378,7 +544,7 @@ static void updateSlots(const Status& st) {
         setVisible(s_slotGlyph[s], true);
         const char* code = (pat == PAT_CUSTOM_IDX) ? "WLASNY" : PATTERNS[pat].code;
         setLbl(s_slotLbl[s], code);
-        lv_obj_set_style_text_font(s_slotLbl[s], pat == PAT_CUSTOM_IDX ? FONT_S : FONT_L, 0);
+        lv_obj_set_style_text_font(s_slotLbl[s], pat == PAT_CUSTOM_IDX ? FONT_S : SLOT_FONT, 0);
         uiGlyphSet(s_slotGlyph[s], pat, false, st);
 
         bool sel = (pat == st.patternIdx);

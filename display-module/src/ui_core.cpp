@@ -161,14 +161,19 @@ lv_obj_t* uiOverlay(const char* title, OverlayUpdateFn updateFn) {
 
     s_overlay = lv_obj_create(lv_scr_act());
     lv_obj_remove_style_all(s_overlay);
-    lv_obj_set_size(s_overlay, 800, 480);
+    lv_obj_set_size(s_overlay, OV_W, OV_H);
     lv_obj_set_pos(s_overlay, 0, 0);
     lv_obj_set_style_bg_color(s_overlay, C_BG, 0);
     lv_obj_set_style_bg_opa(s_overlay, LV_OPA_COVER, 0);
     lv_obj_clear_flag(s_overlay, LV_OBJ_FLAG_SCROLLABLE);
 
+#if UI_PORTRAIT
+    uiLabel(s_overlay, title, 12, 62, FONT_M, C_YELLOW);
+    uiBtn(s_overlay, "ZAMKNIJ", OV_W - 8 - 140, 6, 140, 48, C_BTN, closeClicked, nullptr, FONT_M);
+#else
     uiLabel(s_overlay, title, 156, 12, FONT_L, C_YELLOW);
     uiBtn(s_overlay, "ZAMKNIJ", 650, 6, 142, 48, C_BTN, closeClicked, nullptr, FONT_M);
+#endif
 
     s_ovFn = updateFn;
     if (updateFn) s_ovTimer = lv_timer_create(ovTimerCb, 250, nullptr);

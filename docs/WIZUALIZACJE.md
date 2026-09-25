@@ -46,8 +46,10 @@ Makieta ekranu 800×480: prędkość 7-segmentowa, widok drogi, 10 wzorców w bo
 - Orientacyjnie ok. 245 × 330 mm.
 - **Zalety:** klawisz i etykieta w jednej linii (najmniejsze ryzyko pomyłki), wąska obudowa, kształt najbardziej
   zbliżony do zdjęcia referencyjnego STiM.
-- **Wady:** interfejs modułu 7" jest dziś poziomy — potrzebny **tryb pionowy UI** (obrót ekranu LVGL + przeprojektowanie
-  układu środka). Elektronika i firmware sterownika bez zmian.
+- **Oprogramowanie:** tryb pionowy jest **zaimplementowany** — środowisko `sunton7_portrait` w `display-module`
+  (`pio run -e sunton7_portrait -t upload`), pełny interfejs 480 × 800 razem ze wszystkimi oknami menu. Elektronika i firmware
+  sterownika bez zmian. Weryfikacja obrotu ekranu i dotyku wymaga sprawdzenia na sprzęcie (patrz `-DUI_ROTATION`).
+- **Wady:** wąski środek (244 px) — mniejsze cyfry prędkości niż w układzie poziomym.
 
 ## Propozycja D — duży grzybek awaryjnego STOP + blok klawiszy 2 × 5
 
@@ -67,7 +69,7 @@ Makieta ekranu 800×480: prędkość 7-segmentowa, widok drogi, 10 wzorców w bo
 | | A kabinowy | B pas pod ekranem | C pionowy | D grzybek + blok |
 |---|-----------|--------------------|-----------|------------------|
 | Przyciski fizyczne (S + GRUPA + START/STOP/SEL/GAP) | 15 | 15 | 15 | 15 (STOP jako grzybek) |
-| Zmiany w oprogramowaniu | brak | wariant UI (etykiety u dołu) | tryb pionowy UI | brak |
+| Zmiany w oprogramowaniu | brak | wariant UI (etykiety u dołu) | **gotowe** (`sunton7_portrait`) | brak |
 | Szerokość / wysokość (orient.) | 340 × 215 mm | 340 × 190 mm | 245 × 330 mm | 340 × 215 mm |
 | Czytelność etykiet obok klawiszy | najlepsza | średnia | najlepsza (ta sama wysokość) | dobra |
 | Dostępność STOP | dobra | dobra | dobra | najlepsza |
@@ -75,7 +77,7 @@ Makieta ekranu 800×480: prędkość 7-segmentowa, widok drogi, 10 wzorców w bo
 
 **Rekomendacja:** zacząć od **A** (nie wymaga żadnych zmian w oprogramowaniu) i rozważyć **grzybek STOP z D** jako
 element bezpieczeństwa niezależnie od wybranego układu. Wariant **C** (pionowy, klawisze obok etykiet) jest
-najbliższy zdjęciu referencyjnemu i ma sens jako osobny etap wymagający pionowego trybu UI.
+najbliższy zdjęciu referencyjnemu, a jego interfejs jest już gotowy w oprogramowaniu (`sunton7_portrait`).
 
 ## Regeneracja grafik
 

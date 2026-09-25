@@ -58,12 +58,25 @@ display-module/
 
 ## 3. Budowanie i wgranie
 
+Dwa środowiska PlatformIO — ten sam kod, różna orientacja interfejsu:
+
+| Środowisko | Ekran | Opis |
+|------------|-------|------|
+| `sunton7` (domyślne) | poziomo 800 × 480 | układ z kolumnami wzorców po bokach ekranu |
+| `sunton7_portrait` | pionowo 480 × 800 | panel pionowy — klawisze fizyczne obok etykiet wzorców ([WIZUALIZACJE.md](WIZUALIZACJE.md), propozycja C) |
+
 ```bash
 cd display-module
-pio run                  # kompilacja (Flash ≈ 19 %, RAM ≈ 15 %)
-pio run -t upload        # wgranie przez USB (CH340)
-pio device monitor       # 115200
+pio run                              # kompilacja poziomo (Flash ≈ 19 %, RAM ≈ 15 %)
+pio run -e sunton7_portrait          # kompilacja pionowo
+pio run -e sunton7_portrait -t upload  # wgranie wersji pionowej przez USB (CH340)
+pio device monitor                   # 115200
 ```
+
+**Orientacja pionowa:** flaga `-DUI_PORTRAIT=1` (ustawiona w środowisku `sunton7_portrait`) zmienia rozdzielczość interfejsu
+na 480 × 800 (`SCR_W`, `SCR_H` w `app_config.h`), włącza obrót panelu (`gfx.setRotation(UI_ROTATION)`) i pionowe układy
+ekranu roboczego oraz wszystkich okien. Jeśli obraz jest odwrócony o 180°, zmień `-DUI_ROTATION=1` na `3` w `platformio.ini`.
+Dotyk korzysta z obrotu LovyanGFX (współrzędne dotyku są przeliczane razem z obrotem obrazu).
 
 Wymagania: Python 3, PlatformIO Core (lub rozszerzenie PlatformIO IDE w VS Code). Pierwsza kompilacja pobiera
 toolchain ESP32 i biblioteki (~1–2 GB).
@@ -117,7 +130,14 @@ Hasło AP sterownika = ostatnie 4 bajty MAC (8 znaków HEX). Moduł zapisuje je 
 
 ### 7.1 Zasady
 
-- Układ 800×480, elementy dotykowe co najmniej ok. 60 px wysokości; paleta wysokokontrastowa (`ui_common.h`).
+- Układ 800×480 (poziomo) lub 480×800 (pionowo, `-DUI_PORTRAIT=1`); elementy dotykowe co najmniej ok. 60 px wysokości;
+  paleta wysokokontrastowa (`ui_common.h`).
+- **Układ pionowy:** kolumny wzorców (5 + 5, szer. 108 px, wys. 106 px, krok 116 px, od y = 106) stoją przy lewej i prawej
+  krawędzi ekranu, więc fizyczny klawisz S1–S10 przy krawędzi leży na tej samej wysokości co etykieta. Zakładki OŚ JEZDNI /
+  KRAWĘDŹ są pod paskiem górnym, środek (244 px) zawiera kod wzorca, prędkość, liczniki, widok drogi i kapsuły pistoletów, na dole
+  tryby, START OD PRZERWY, START i STOP. Okna (menu, wzorce, statystyki, ustawienia, kalibracja, farba, edytor wzorca własnego,
+  WiFi) mają osobne układy pionowe (`#if UI_PORTRAIT`): nagłówek z STOP i ZAMKNIJ w jednym wierszu, tytuł niżej, zawartość od
+  `OV_TOP`.
 - Tekst wyłącznie ASCII (wbudowane czcionki Montserrat nie mają polskich znaków).
 - Jeden ekran roboczy (`ui_main.cpp`) + **nakładki pełnoekranowe** (`uiOverlay()`), z których zawsze widoczny jest
   **STOP** (lewy górny róg, warstwa `lv_layer_top`) i **ZAMKNIJ**.

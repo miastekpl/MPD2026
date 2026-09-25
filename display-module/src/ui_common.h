@@ -5,6 +5,16 @@
 
 #include <lvgl.h>
 #include "model.h"
+#include "app_config.h"
+
+// Początek obszaru zawartości nakładek (pod nagłówkiem) i marginesy
+#if UI_PORTRAIT
+constexpr int OV_TOP = 100;    // nagłówek: przyciski STOP / ZAMKNIJ + tytuł w osobnym wierszu
+#else
+constexpr int OV_TOP = 62;
+#endif
+constexpr int OV_W = SCR_W;
+constexpr int OV_H = SCR_H;
 
 // ---- Paleta (wysoki kontrast, czytelna w słońcu) ----
 #define C_BG       lv_color_hex(0x07142E)

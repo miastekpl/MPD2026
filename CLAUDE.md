@@ -62,7 +62,9 @@ display-module/         # Firmware modułu 7" (osobny projekt PlatformIO)
   src/lgfx_sunton7.h    # Piny i timingi panelu RGB + GT911
 ```
 
-Build modułu 7": `cd display-module && pio run` (upload: `pio run -t upload`).
+Build modułu 7": `cd display-module && pio run` (poziomo 800x480; upload: `pio run -t upload`) lub
+`pio run -e sunton7_portrait` (pionowo 480x800, flaga `UI_PORTRAIT`). Zmiany UI wprowadzaj w obu układach
+(`#if UI_PORTRAIT` w `ui_main.cpp`, `ui_overlays*.cpp`, `ui_core.cpp`) i buduj oba środowiska.
 
 ## Architektura dual-core
 - **Core 1** (Arduino loop): Enkoder, przyciski, joystick, pistolety, wyświetlacz, GPS, buzzer

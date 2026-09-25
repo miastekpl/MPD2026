@@ -54,23 +54,28 @@ void setup() {
     g_settings.load();
 
     gfx.init();
+#if UI_PORTRAIT
+    gfx.setRotation(UI_ROTATION);     // obrót panelu 800x480 do układu pionowego 480x800
+#endif
     gfx.setBrightness(g_settings.brightness);
     gfx.fillScreen(0x000000);
+    Serial.printf("[MPD2026] Ekran: %dx%d (%s)\n", (int)gfx.width(), (int)gfx.height(),
+                  UI_PORTRAIT ? "pionowo" : "poziomo");
 
     lv_init();
 
-    size_t bufBytes = (size_t)800 * BUF_LINES * sizeof(lv_color_t);
+    size_t bufBytes = (size_t)SCR_W * BUF_LINES * sizeof(lv_color_t);
     void* buf = heap_caps_malloc(bufBytes, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     if (!buf) buf = heap_caps_malloc(bufBytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (!buf) {
         Serial.println("[MPD2026] BLAD: brak pamieci na bufor LVGL");
         for (;;) delay(1000);
     }
-    lv_disp_draw_buf_init(&s_drawBuf, buf, nullptr, 800 * BUF_LINES);
+    lv_disp_draw_buf_init(&s_drawBuf, buf, nullptr, SCR_W * BUF_LINES);
 
     lv_disp_drv_init(&s_dispDrv);
-    s_dispDrv.hor_res = 800;
-    s_dispDrv.ver_res = 480;
+    s_dispDrv.hor_res = SCR_W;
+    s_dispDrv.ver_res = SCR_H;
     s_dispDrv.flush_cb = flushCb;
     s_dispDrv.draw_buf = &s_drawBuf;
     lv_disp_drv_register(&s_dispDrv);

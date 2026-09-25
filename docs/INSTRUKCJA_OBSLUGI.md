@@ -88,6 +88,14 @@ Patrz [sekcja 8](#8-kalibracja-enkodera). Bez kalibracji długości kresek i prz
 Ekran jest dotykowy. Wszystkie przyciski są duże (obsługa w rękawicach); ekran jest zoptymalizowany pod
 wysoki kontrast w słońcu.
 
+Moduł jest dostępny w dwóch orientacjach (wybór przy wgrywaniu oprogramowania): **poziomo 800 × 480** (opisany w 3.1)
+oraz **pionowo 480 × 800** (panel pionowy z klawiszami fizycznymi obok etykiet wzorców, propozycja C w
+[WIZUALIZACJE.md](WIZUALIZACJE.md)). W układzie pionowym wszystkie funkcje są takie same; różni się rozmieszczenie:
+u góry pasek stanu i **MENU**, pod nim zakładki **OŚ JEZDNI / KRAWĘDŹ**, po lewej i prawej stronie kolumny wzorców S1–S5 i
+S6–S10 (fizyczne klawisze leżą tuż obok, na tej samej wysokości), w środku kod wzorca, prędkość, liczniki, widok drogi
+i kapsuły pistoletów, na dole AUTO / SEMI / RĘCZNY, START OD PRZERWY, START i STOP. Okna menu wypełniają cały ekran
+(nagłówek: **STOP** po lewej, **ZAMKNIJ** po prawej).
+
 ### 3.1 Ekran roboczy
 
 Makieta graficzna ekranu: [schematy/ekran_roboczy.svg](schematy/ekran_roboczy.svg).

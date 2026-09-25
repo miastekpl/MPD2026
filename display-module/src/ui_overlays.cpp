@@ -27,35 +27,46 @@ static void onPickCard(lv_event_t* e) {
 void uiOpenPicker() {
     lv_obj_t* ov = uiOverlay("WSZYSTKIE WZORCE", nullptr);
 
+#if UI_PORTRAIT
+    // 3 kolumny x 6 rzędów
+    const int cols = 3, cardW = 150, cardH = 104, stepX = 156, stepY = 108, x0 = 8, y0 = OV_TOP;
+    const int gx = 6, gy = 8, gw = 42, gh = 88, tx = 54, nameW = 88;
+    const lv_font_t* codeFont = FONT_M;
+#else
+    // 4 kolumny x 4 rzędy
+    const int cols = 4, cardW = 190, cardH = 98, stepX = 196, stepY = 104, x0 = 8, y0 = OV_TOP;
+    const int gx = 8, gy = 8, gw = 56, gh = 78, tx = 74, nameW = 108;
+    const lv_font_t* codeFont = FONT_L;
+#endif
     for (int i = 0; i < NPAT; i++) {
-        int col = i % 4, row = i / 4;
-        int x = 8 + col * 196;
-        int y = 62 + row * 104;
+        int col = i % cols, row = i / cols;
+        int x = x0 + col * stepX;
+        int y = y0 + row * stepY;
         bool sel = (i == g_st.patternIdx);
         bool custom = (i == PAT_CUSTOM_IDX);
-        lv_obj_t* b = uiBtn(ov, "", x, y, 190, 98, sel ? C_BTN_SEL : C_BTN, onPickCard,
+        lv_obj_t* b = uiBtn(ov, "", x, y, cardW, cardH, sel ? C_BTN_SEL : C_BTN, onPickCard,
                             (void*)(intptr_t)i, FONT_L);
         if (sel) {
             lv_obj_set_style_border_width(b, 5, 0);
             lv_obj_set_style_border_color(b, C_YELLOW, 0);
             lv_obj_set_style_border_opa(b, LV_OPA_COVER, 0);
         }
-        lv_obj_t* g = uiGlyph(b, 8, 8, 56, 78);
+        lv_obj_t* g = uiGlyph(b, gx, gy, gw, gh);
         uiGlyphSet(g, i, false, g_st);
 
         lv_obj_t* code = lv_obj_get_child(b, 0);
         lv_label_set_text(code, custom ? "WLASNY" : PATTERNS[i].code);
-        lv_obj_set_style_text_font(code, custom ? FONT_M : FONT_L, 0);
-        lv_obj_align(code, LV_ALIGN_TOP_LEFT, 74, 10);
+        lv_obj_set_style_text_font(code, custom ? FONT_S : codeFont, 0);
+        lv_obj_align(code, LV_ALIGN_TOP_LEFT, tx, 10);
 
         lv_obj_t* nm = lv_label_create(b);
         lv_label_set_long_mode(nm, LV_LABEL_LONG_WRAP);
-        lv_obj_set_width(nm, 108);
+        lv_obj_set_width(nm, nameW);
         lv_obj_set_style_text_font(nm, FONT_S, 0);
         lv_obj_set_style_text_color(nm, custom && !g_st.customValid ? C_DIM : C_TEXT, 0);
         lv_label_set_text(nm, custom ? (g_st.customValid ? "Wzorzec wlasny" : "(nie zapisany)")
                                      : PATTERNS[i].name);
-        lv_obj_align(nm, LV_ALIGN_TOP_LEFT, 74, 48);
+        lv_obj_align(nm, LV_ALIGN_TOP_LEFT, tx, 44);
     }
 }
 
@@ -89,9 +100,15 @@ void uiOpenMenu() {
         LV_SYMBOL_DIRECTORY "\nWSZYSTKIE WZORCE"
     };
     for (int i = 0; i < 8; i++) {
+#if UI_PORTRAIT
+        int c = i % 2, r = i / 2;
+        uiBtn(ov, names[i], 8 + c * 236, OV_TOP + 8 + r * 160, 228, 150, C_BTN, onMenuItem,
+              (void*)(intptr_t)i, FONT_M);
+#else
         int c = i % 3, r = i / 3;
         uiBtn(ov, names[i], 16 + c * 260, 76 + r * 132, 252, 120, C_BTN, onMenuItem,
               (void*)(intptr_t)i, FONT_M);
+#endif
     }
 }
 
@@ -141,24 +158,38 @@ void uiOpenWifi() {
     lv_obj_t* ov = uiOverlay("POLACZENIE WiFi", wifiUpdate);
     uiSetOverlayCloseHandler(wifiClosed);
 
+#if UI_PORTRAIT
+    lv_obj_t* hint = uiLabel(ov, "Siec: " CTRL_SSID "  Haslo: 8 znakow HEX (ekran startowy sterownika)", 12, OV_TOP,
+                             FONT_S, C_DIM);
+    lv_obj_set_width(hint, OV_W - 24);
+    const int taX = 8, taY = OV_TOP + 50, taW = OV_W - 16;
+    const int btnX = 8, btnY = OV_TOP + 118, btnW = OV_W - 16;
+    const int infoX = 12, infoY = OV_TOP + 188;
+    const int kbY = OV_H - 320, kbH = 320;
+#else
     uiLabel(ov, "Siec: " CTRL_SSID "   Haslo: 8 znakow HEX (ekran startowy sterownika)", 16, 64,
             FONT_S, C_DIM);
-
+    const int taX = 16, taY = 92, taW = 520;
+    const int btnX = 548, btnY = 92, btnW = 236;
+    const int infoX = 16, infoY = 160;
+    const int kbY = 230, kbH = 250;
+#endif
     s_wifiTa = lv_textarea_create(ov);
-    lv_obj_set_pos(s_wifiTa, 16, 92);
-    lv_obj_set_size(s_wifiTa, 520, 60);
+    lv_obj_set_pos(s_wifiTa, taX, taY);
+    lv_obj_set_size(s_wifiTa, taW, 60);
     lv_textarea_set_one_line(s_wifiTa, true);
     lv_textarea_set_max_length(s_wifiTa, 20);
     lv_textarea_set_text(s_wifiTa, g_settings.wifiPass);
     lv_textarea_set_placeholder_text(s_wifiTa, "haslo WiFi");
     lv_obj_set_style_text_font(s_wifiTa, FONT_L, 0);
 
-    uiBtn(ov, "ZAPISZ I POLACZ", 548, 92, 236, 60, C_GREEN, onWifiSave, nullptr, FONT_M);
-    s_wifiInfo = uiLabel(ov, "", 16, 160, FONT_M, C_YELLOW);
+    uiBtn(ov, "ZAPISZ I POLACZ", btnX, btnY, btnW, 60, C_GREEN, onWifiSave, nullptr, FONT_M);
+    s_wifiInfo = uiLabel(ov, "", infoX, infoY, FONT_M, C_YELLOW);
+    lv_obj_set_width(s_wifiInfo, OV_W - 24);
 
     lv_obj_t* kb = lv_keyboard_create(ov);
-    lv_obj_set_size(kb, 800, 250);
-    lv_obj_set_pos(kb, 0, 230);
+    lv_obj_set_size(kb, OV_W, kbH);
+    lv_obj_set_pos(kb, 0, kbY);
     lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_TEXT_UPPER);
     lv_keyboard_set_textarea(kb, s_wifiTa);
     lv_obj_add_event_cb(kb, onKbEvent, LV_EVENT_ALL, nullptr);
@@ -201,10 +232,16 @@ static void infoClosed() { s_infoLbl = nullptr; }
 void uiOpenInfo() {
     lv_obj_t* ov = uiOverlay("INFORMACJE", infoUpdate);
     uiSetOverlayCloseHandler(infoClosed);
+#if UI_PORTRAIT
+    s_infoLbl = uiLabel(ov, "", 12, OV_TOP + 6, FONT_S, C_TEXT);
+    lv_obj_set_width(s_infoLbl, OV_W - 24);
+    lv_obj_set_style_text_line_space(s_infoLbl, 8, 0);
+#else
     s_infoLbl = uiLabel(ov, "", 16, 72, FONT_M, C_TEXT);
-    lv_label_set_recolor(s_infoLbl, true);
     lv_obj_set_width(s_infoLbl, 770);
-    lv_label_set_long_mode(s_infoLbl, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_line_space(s_infoLbl, 12, 0);
+#endif
+    lv_label_set_recolor(s_infoLbl, true);
+    lv_label_set_long_mode(s_infoLbl, LV_LABEL_LONG_WRAP);
     infoUpdate();
 }

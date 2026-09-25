@@ -78,8 +78,13 @@ void uiOpenStats() {
     lv_obj_t* ov = uiOverlay("STATYSTYKI", statsUpdate);
     uiSetOverlayCloseHandler(statsClosed);
     linkWantStats(true);
+#if UI_PORTRAIT
+    s_statLeft = uiLabel(ov, "", 12, OV_TOP, FONT_S, C_TEXT);
+    s_statRight = uiLabel(ov, "", 12, OV_TOP + 290, FONT_S, C_TEXT);
+#else
     s_statLeft = uiLabel(ov, "", 16, 68, FONT_M, C_TEXT);
     s_statRight = uiLabel(ov, "", 420, 68, FONT_M, C_TEXT);
+#endif
     lv_label_set_recolor(s_statLeft, true);
     lv_label_set_recolor(s_statRight, true);
     lv_obj_set_style_text_line_space(s_statLeft, 4, 0);
@@ -165,6 +170,28 @@ void uiOpenSettings() {
     s_vMin = g_st.minSpeed;
     s_setTouchMs = 0;
 
+#if UI_PORTRAIT
+    // Pion: etykieta nad kontrolką, wiersze co 100 px
+    const int rowStep = 100;
+    int y = OV_TOP;
+    uiLabel(ov, "Maks. predkosc malowania [km/h]", 12, y, FONT_M, C_TEXT);
+    s_setMax = makeStepper(ov, 110, y + 30, 0, onSetStep, 150);
+    y += rowStep;
+    uiLabel(ov, "Min. predkosc malowania [km/h]", 12, y, FONT_M, C_TEXT);
+    s_setMin = makeStepper(ov, 110, y + 30, 1, onSetStep, 150);
+    y += rowStep;
+    uiLabel(ov, "Zmiana wzorca w trakcie pracy", 12, y, FONT_M, C_TEXT);
+    s_setSwitch = uiBtn(ov, "", 12, y + 30, 456, 52, C_GREEN, onSetSwitch, nullptr, FONT_M);
+    y += rowStep;
+    uiLabel(ov, "Auto-wznowienie po postoju", 12, y, FONT_M, C_TEXT);
+    s_setResume = uiBtn(ov, "", 12, y + 30, 456, 52, C_GREEN, onSetResume, nullptr, FONT_M);
+    y += rowStep;
+    uiLabel(ov, "Przyciski wzorcow (sterownik)", 12, y, FONT_M, C_TEXT);
+    s_setLayout = uiBtn(ov, "", 12, y + 30, 456, 52, C_BTN, onSetLayout, nullptr, FONT_M);
+    y += rowStep;
+    uiLabel(ov, "Jasnosc ekranu", 12, y, FONT_M, C_TEXT);
+    s_setBri = makeStepper(ov, 110, y + 30, 2, onSetStep, 150);
+#else
     int y = 68;
     uiLabel(ov, "Maks. predkosc malowania [km/h]", 16, y + 14, FONT_M, C_TEXT);
     s_setMax = makeStepper(ov, 470, y, 0, onSetStep, 130);
@@ -183,6 +210,7 @@ void uiOpenSettings() {
     y += 66;
     uiLabel(ov, "Jasnosc ekranu", 16, y + 14, FONT_M, C_TEXT);
     s_setBri = makeStepper(ov, 470, y, 2, onSetStep, 130);
+#endif
     settingsUpdate();
 }
 
@@ -223,6 +251,21 @@ static void calClosed() { s_calInfo = s_calStart = s_calFinish = nullptr; }
 void uiOpenCalibration() {
     lv_obj_t* ov = uiOverlay("KALIBRACJA ENKODERA", calUpdate);
     uiSetOverlayCloseHandler(calClosed);
+#if UI_PORTRAIT
+    lv_obj_t* h = uiLabel(ov,
+        "1. Ustaw maszyne na poczatku odcinka 10 m.\n"
+        "2. Nacisnij START KALIBRACJI.\n"
+        "3. Przejedz dokladnie 10 m.\n"
+        "4. Nacisnij KONIEC KALIBRACJI.",
+        12, OV_TOP, FONT_M, C_DIM);
+    lv_obj_set_width(h, OV_W - 24);
+    lv_obj_set_style_text_line_space(h, 8, 0);
+    s_calInfo = uiLabel(ov, "", 12, OV_TOP + 190, FONT_M, C_YELLOW);
+    lv_obj_set_width(s_calInfo, OV_W - 24);
+    lv_obj_set_style_text_line_space(s_calInfo, 8, 0);
+    s_calStart = uiBtn(ov, "START KALIBRACJI", 12, OV_H - 280, OV_W - 24, 120, C_GREEN, onCalStart, nullptr, FONT_L);
+    s_calFinish = uiBtn(ov, "KONIEC KALIBRACJI", 12, OV_H - 145, OV_W - 24, 120, C_ORANGE, onCalFinish, nullptr, FONT_L);
+#else
     lv_obj_t* h = uiLabel(ov,
         "1. Ustaw maszyne na poczatku odcinka 10 m.\n"
         "2. Nacisnij START KALIBRACJI.\n"
@@ -234,6 +277,7 @@ void uiOpenCalibration() {
     lv_obj_set_style_text_line_space(s_calInfo, 8, 0);
     s_calStart = uiBtn(ov, "START KALIBRACJI", 16, 340, 360, 110, C_GREEN, onCalStart, nullptr, FONT_L);
     s_calFinish = uiBtn(ov, "KONIEC KALIBRACJI", 424, 340, 360, 110, C_ORANGE, onCalFinish, nullptr, FONT_L);
+#endif
     calUpdate();
 }
 
@@ -291,6 +335,22 @@ void uiOpenPaint() {
     linkWantStats(true);
     s_vTank = 100;
     s_paintTouchMs = 0;
+#if UI_PORTRAIT
+    s_paintInfo = uiLabel(ov, "", 12, OV_TOP, FONT_M, C_TEXT);
+    lv_obj_set_width(s_paintInfo, OV_W - 24);
+    lv_obj_set_style_text_line_space(s_paintInfo, 8, 0);
+
+    uiLabel(ov, "Pojemnosc zbiornika", 12, OV_TOP + 150, FONT_M, C_TEXT);
+    s_paintTank = makeStepper(ov, 100, OV_TOP + 182, 0, onPaintStep, 160);
+
+    uiLabel(ov, "Tankowanie - dolej farbe:", 12, OV_TOP + 270, FONT_M, C_DIM);
+    static const int amounts[5] = {10, 25, 50, 100, 0};
+    static const char* names[5] = {"+10 L", "+25 L", "+50 L", "+100 L", "DO PELNA"};
+    for (int i = 0; i < 5; i++) {
+        uiBtn(ov, names[i], 12 + (i % 3) * 156, OV_TOP + 306 + (i / 3) * 112, 148, 100,
+              i == 4 ? C_GREEN : C_BTN, onRefuel, (void*)(intptr_t)amounts[i], FONT_L);
+    }
+#else
     s_paintInfo = uiLabel(ov, "", 16, 72, FONT_M, C_TEXT);
     lv_obj_set_style_text_line_space(s_paintInfo, 8, 0);
 
@@ -304,6 +364,7 @@ void uiOpenPaint() {
         uiBtn(ov, names[i], 16 + i * 156, 320, 148, 100, i == 4 ? C_GREEN : C_BTN, onRefuel,
               (void*)(intptr_t)amounts[i], FONT_L);
     }
+#endif
     paintUpdate();
 }
 
@@ -435,7 +496,45 @@ void uiOpenCustomEditor() {
     lv_obj_t* ov = uiOverlay("WZOR WLASNY", edUpdate);
     uiSetOverlayCloseHandler(edClosed);
     edDefaults();
+    static const char* modeNames[3] = {"WYL", "CIAGLY", "PRZERYW."};
 
+#if UI_PORTRAIT
+    // Pion: 3 przyciski slotów, potem 6 pistoletów po 2 wiersze (tryb / kreska + przerwa)
+    for (int s = 0; s < NSLOTS; s++) {
+        s_edSlotBtn[s] = uiBtn(ov, "", 12 + s * 154, OV_TOP, 148, 40, C_BTN, onEdSlot,
+                               (void*)(intptr_t)s, FONT_S);
+    }
+    for (int g = 0; g < NGUNS; g++) {
+        int y = OV_TOP + 52 + g * 92;
+        char t[8];
+        snprintf(t, sizeof(t), "P%d", g + 1);
+        uiLabel(ov, t, 12, y + 10, FONT_M, C_TEXT);
+        for (int m = 0; m < 3; m++) {
+            s_edMode[g][m] = uiBtn(ov, modeNames[m], 52 + m * 138, y, 132, 44, C_BTN_DIS, onEdMode,
+                                   (void*)(intptr_t)(g * 3 + m), FONT_S);
+        }
+        for (int w = 0; w < 2; w++) {
+            lv_obj_t* box = lv_obj_create(ov);
+            lv_obj_remove_style_all(box);
+            lv_obj_set_pos(box, 12 + w * 234, y + 46);
+            lv_obj_set_size(box, 222, 40);
+            lv_obj_clear_flag(box, LV_OBJ_FLAG_SCROLLABLE);
+            int id = g * 2 + w;
+            uiLabel(box, w == 0 ? "kreska" : "przerwa", 0, 12, FONT_S, C_DIM);
+            uiBtn(box, "-", 62, 0, 44, 40, C_BTN, onEdStep, (void*)(intptr_t)(id * 2), FONT_M);
+            lv_obj_t* v = uiLabel(box, "", 106, 8, FONT_M, C_YELLOW);
+            lv_obj_set_width(v, 70);
+            lv_obj_set_style_text_align(v, LV_TEXT_ALIGN_CENTER, 0);
+            uiBtn(box, "+", 176, 0, 44, 40, C_BTN, onEdStep, (void*)(intptr_t)(id * 2 + 1), FONT_M);
+            s_edBox[g][w] = box;
+            s_edVal[g][w] = v;
+        }
+    }
+    uiBtn(ov, "ZAPISZ", 12, OV_H - 86, 200, 56, C_GREEN, onEdSave, nullptr, FONT_M);
+    uiBtn(ov, "ZAPISZ I UZYJ", 222, OV_H - 86, 246, 56, C_GREEN, onEdSaveUse, nullptr, FONT_M);
+    s_edStatus = uiLabel(ov, "", 12, OV_H - 24, FONT_S, C_YELLOW);
+    lv_obj_set_width(s_edStatus, OV_W - 24);
+#else
     for (int s = 0; s < NSLOTS; s++) {
         s_edSlotBtn[s] = uiBtn(ov, "", 16 + s * 112, 60, 106, 34, C_BTN, onEdSlot,
                                (void*)(intptr_t)s, FONT_S);
@@ -445,7 +544,6 @@ void uiOpenCustomEditor() {
     uiLabel(ov, "KRESKA [m]", 450, 70, FONT_S, C_DIM);
     uiLabel(ov, "PRZERWA [m]", 645, 70, FONT_S, C_DIM);
 
-    static const char* modeNames[3] = {"WYL", "CIAGLY", "PRZERYW."};
     for (int g = 0; g < NGUNS; g++) {
         int y = 100 + g * 50;
         char t[8];
@@ -473,6 +571,7 @@ void uiOpenCustomEditor() {
     }
     uiBtn(ov, "ZAPISZ", 16, 410, 250, 62, C_GREEN, onEdSave, nullptr, FONT_M);
     uiBtn(ov, "ZAPISZ I UZYJ", 276, 410, 300, 62, C_GREEN, onEdSaveUse, nullptr, FONT_M);
+#endif
 
     edRequestSlot(g_st.activeSlot >= 0 && g_st.activeSlot < NSLOTS ? g_st.activeSlot : 0);
     edRefresh();
