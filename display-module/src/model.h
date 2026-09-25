@@ -36,6 +36,14 @@ extern const PatternInfo PATTERNS[NPAT_PREDEF];
 extern const float GUN_LATERAL[NGUNS];   // środek pasa
 extern const float GUN_WIDTH_FR[NGUNS];  // szerokość pasa
 extern const uint8_t GUN_WIDTH_CM[NGUNS];
+// Nominalne położenie środka pasa pistoletu względem osi maszyny [cm] (miniatury wzorców rysowane w skali).
+// P1/P3: linie 12 cm rozsunięte o 12 cm (środki co 24 cm), jak w wzorcach P-3 i P-4.
+extern const int8_t GUN_CENTER_CM[NGUNS];
+// Nominalna odległość środka linii krawędziowej od krawędzi jezdni [cm] (tylko do rysunku).
+constexpr int EDGE_LINE_OFFSET_CM = 25;
+
+// Zapis liczbowy wzorca do podpisu miniatury: modes = "ciagla + 4/2 m", widths = "12+12 cm"
+void patternSpecText(const GunCfg cfg[NGUNS], char* modes, size_t nm, char* widths, size_t nw);
 
 struct Status {
     bool     valid = false;

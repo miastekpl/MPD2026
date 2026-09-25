@@ -150,7 +150,8 @@ Hasło AP sterownika = ostatnie 4 bajty MAC (8 znaków HEX). Moduł zapisuje je 
 |--------|------|
 | 7-segment (`uiSevenSeg`) | Cyfry rysowane prostokątami, wygaszone segmenty jako cień; kolor zależny od alarmów. |
 | Droga (`uiRoadView`) | Perspektywa: `t(d) = (d+1)/((d+1)+3) / normalizacja`, zasięg 22 m do przodu i 1 m wstecz; pasy jako wielokąty (`lv_draw_polygon`). Kolor: namalowane = żółty, plan = ciemnożółty (70 %), pistolet strzelający wg statusu = jasnozielony blok. |
-| Miniatura (`uiGlyph`) | Widok z góry, ok. 10 m cyklu wzorca, do siatki wyboru i przycisków bocznych. |
+| Rysunek wzorca w skali (`uiGlyph`) | Widok z góry **w skali rzeczywistej**: okno poziome 72 cm, szerokości linii proporcjonalne (24 cm = dokładnie 2 × 12 cm), rozstaw pistoletów P1/P3 jak w wzorcach P-3 i P-4 (środki co 24 cm), w pionie **dokładnie 2 pełne cykle** kreska+przerwa najdłuższego pistoletu przerywanego (proporcje długości zachowane). Wzorce krawędziowe (P-6, P-7) mają szare pobocze, linia 25 cm od krawędzi jezdni (nominalnie). Używany w kolumnach wzorców, w siatce „wszystkich wzorców" i jako **duży rysunek przy kodzie aktualnego wzorca** (układ pionowy). Stałe geometrii: `GUN_WIDTH_CM`, `GUN_CENTER_CM`, `EDGE_LINE_OFFSET_CM` w `model.cpp`. |
+| Zapis liczbowy (`patternSpecText`) | Podpis do rysunku: rodzaj i długości (`ciagla`, `4/2 m`) oraz szerokości pistoletów (`12+12 cm`). W układzie pionowym pod kodem wzorca w każdej kolumnie i obok dużego rysunku w środku ekranu. |
 
 ### 7.3 Synchronizacja animacji
 

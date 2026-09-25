@@ -20,54 +20,93 @@
 <rect x="246" y="54" width="228" height="42" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
 <text x="360" y="83" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="middle" font-weight="bold" >KRAWĘDŹ</text>
 <rect x="4" y="106" width="108" height="106" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
-<rect x="12" y="116" width="34" height="86" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
-<rect x="27" y="120" width="4" height="78" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
-<text x="104" y="168" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" fill="#fff" text-anchor="end" font-weight="bold" >P-1a</text>
+<rect x="10" y="114" width="34" height="90" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="24" y="188" width="6" height="14" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="24" y="145" width="6" height="14" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="108" y="132" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="end" font-weight="bold" >P-1a</text>
+<text x="108" y="152" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >4/8 m</text>
+<text x="108" y="167" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >12 cm</text>
 <rect x="4" y="222" width="108" height="106" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
-<rect x="12" y="232" width="34" height="86" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
-<rect x="27" y="236" width="4" height="78" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
-<text x="104" y="284" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" fill="#fff" text-anchor="end" font-weight="bold" >P-1b</text>
+<rect x="10" y="230" width="34" height="90" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="24" y="304" width="6" height="14" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="24" y="261" width="6" height="14" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="108" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="end" font-weight="bold" >P-1b</text>
+<text x="108" y="268" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >2/4 m</text>
+<text x="108" y="283" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >12 cm</text>
 <rect x="4" y="338" width="108" height="106" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
-<rect x="12" y="348" width="34" height="86" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
-<rect x="27" y="352" width="4" height="78" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
-<text x="104" y="400" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" fill="#fff" text-anchor="end" font-weight="bold" >P-1c</text>
+<rect x="10" y="346" width="34" height="90" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="24" y="412" width="6" height="22" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="24" y="369" width="6" height="22" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="108" y="364" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="end" font-weight="bold" >P-1c</text>
+<text x="108" y="384" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >2/2 m</text>
+<text x="108" y="399" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >12 cm</text>
 <rect x="4" y="454" width="108" height="106" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
-<rect x="12" y="464" width="34" height="86" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
-<rect x="27" y="468" width="4" height="78" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
-<text x="104" y="516" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" fill="#fff" text-anchor="end" font-weight="bold" >P-1d</text>
+<rect x="10" y="462" width="34" height="90" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="24" y="528" width="6" height="22" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="24" y="485" width="6" height="22" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="108" y="480" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="end" font-weight="bold" >P-1d</text>
+<text x="108" y="500" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >1/1 m</text>
+<text x="108" y="515" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >12 cm</text>
 <rect x="4" y="570" width="108" height="106" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
-<rect x="12" y="580" width="34" height="86" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
-<rect x="27" y="584" width="4" height="78" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
-<text x="104" y="632" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" fill="#fff" text-anchor="end" font-weight="bold" >P-1e</text>
+<rect x="10" y="578" width="34" height="90" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="21" y="644" width="12" height="22" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="21" y="601" width="12" height="22" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="108" y="596" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="end" font-weight="bold" >P-1e</text>
+<text x="108" y="616" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >1/1 m</text>
+<text x="108" y="631" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >24 cm</text>
 <rect x="368" y="106" width="108" height="106" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
-<rect x="376" y="116" width="34" height="86" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
-<rect x="391" y="120" width="4" height="78" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
-<text x="468" y="168" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" fill="#fff" text-anchor="end" font-weight="bold" >P-2a</text>
+<rect x="374" y="114" width="34" height="90" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="388" y="116" width="6" height="86" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="472" y="132" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="end" font-weight="bold" >P-2a</text>
+<text x="472" y="152" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >ciagla</text>
+<text x="472" y="167" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >12 cm</text>
 <rect x="368" y="222" width="108" height="106" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
-<rect x="376" y="232" width="34" height="86" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
-<rect x="391" y="236" width="4" height="78" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
-<text x="468" y="284" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" fill="#fff" text-anchor="end" font-weight="bold" >P-2b</text>
+<rect x="374" y="230" width="34" height="90" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="385" y="232" width="12" height="86" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="472" y="248" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="end" font-weight="bold" >P-2b</text>
+<text x="472" y="268" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >ciagla</text>
+<text x="472" y="283" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >24 cm</text>
 <rect x="368" y="338" width="108" height="106" rx="10" fill="#2f86ff" stroke="#ffd400" stroke-width="5" />
-<rect x="376" y="348" width="34" height="86" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
-<rect x="391" y="352" width="4" height="78" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
-<text x="468" y="400" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" fill="#fff" text-anchor="end" font-weight="bold" >P-3a</text>
+<rect x="374" y="346" width="34" height="90" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="382" y="348" width="6" height="86" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="394" y="405" width="6" height="29" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="394" y="362" width="6" height="29" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="472" y="364" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="end" font-weight="bold" >P-3a</text>
+<text x="472" y="384" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >ciagla +</text>
+<text x="472" y="399" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >4/2 m</text>
+<text x="472" y="414" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >12+12 cm</text>
 <rect x="368" y="454" width="108" height="106" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
-<rect x="376" y="464" width="34" height="86" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
-<rect x="391" y="468" width="4" height="78" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
-<text x="468" y="516" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" fill="#fff" text-anchor="end" font-weight="bold" >P-3b</text>
+<rect x="374" y="462" width="34" height="90" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="382" y="464" width="6" height="86" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="394" y="528" width="6" height="22" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="394" y="485" width="6" height="22" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="472" y="480" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="end" font-weight="bold" >P-3b</text>
+<text x="472" y="500" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >ciagla +</text>
+<text x="472" y="515" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >1/1 m</text>
+<text x="472" y="530" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >12+12 cm</text>
 <rect x="368" y="570" width="108" height="106" rx="10" fill="#1f52d6" stroke="#5b7fe0" stroke-width="2" />
-<rect x="376" y="580" width="34" height="86" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
-<rect x="391" y="584" width="4" height="78" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
-<text x="468" y="632" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="24" fill="#fff" text-anchor="end" font-weight="bold" >P-4</text>
-<text x="240" y="152" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="40" fill="#ffd400" text-anchor="middle" font-weight="bold" >P-3a</text>
-<text x="240" y="176" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#35f27a" text-anchor="middle" font-weight="normal" >AUTO  MALOWANIE</text>
-<text x="240" y="254" font-size="70" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas, monospace">12.5</text>
-<text x="240" y="284" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#8fa3cc" text-anchor="middle" font-weight="normal" >km/h</text>
-<text x="240" y="316" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="normal" >DYST 1234.5 m</text>
-<text x="240" y="338" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="normal" >POW 148.1 m2</text>
-<text x="240" y="360" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="normal" >CZAS 12:34</text>
-<rect x="118" y="372" width="244" height="232" rx="6" fill="#143a7a" stroke="none" stroke-width="1" />
-<polygon points="128,600 352,600 290,376 190,376" fill="#1b1b1f" stroke="none" stroke-width="1" opacity="1"/>
+<rect x="374" y="578" width="34" height="90" rx="3" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="382" y="580" width="6" height="86" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="394" y="580" width="6" height="86" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="472" y="596" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#fff" text-anchor="end" font-weight="bold" >P-4</text>
+<text x="472" y="616" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >ciagla +</text>
+<text x="472" y="631" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >ciagla</text>
+<text x="472" y="646" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#e9efff" text-anchor="end" font-weight="normal" >12+12 cm</text>
+<rect x="120" y="102" width="66" height="80" rx="4" fill="#1b1b1f" stroke="none" stroke-width="1" />
+<rect x="137" y="104" width="11" height="76" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="159" y="155" width="11" height="25" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<rect x="159" y="117" width="11" height="25" rx="0" fill="#ffd400" stroke="none" stroke-width="1" />
+<text x="196" y="138" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="40" fill="#ffd400" text-anchor="start" font-weight="bold" >P-3a</text>
+<text x="196" y="160" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#e9efff" text-anchor="start" font-weight="normal" >ciagla + 4/2 m</text>
+<text x="196" y="176" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#e9efff" text-anchor="start" font-weight="normal" >12+12 cm</text>
+<text x="240" y="201" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#35f27a" text-anchor="middle" font-weight="normal" >AUTO  MALOWANIE</text>
+<text x="240" y="256" font-size="64" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas, monospace">12.5</text>
+<text x="240" y="290" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#8fa3cc" text-anchor="middle" font-weight="normal" >km/h</text>
+<text x="240" y="312" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="normal" >DYST 1234.5 m</text>
+<text x="240" y="332" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="normal" >POW 148.1 m2</text>
+<text x="240" y="352" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#fff" text-anchor="middle" font-weight="normal" >CZAS 12:34</text>
+<rect x="118" y="364" width="244" height="240" rx="6" fill="#143a7a" stroke="none" stroke-width="1" />
+<polygon points="128,600 352,600 290,368 190,368" fill="#1b1b1f" stroke="none" stroke-width="1" opacity="1"/>
 <polygon points="229,592 251,592 250,548 230,548" fill="#35f27a" stroke="none" stroke-width="1" opacity="1"/>
 <polygon points="231,512 249,512 248,478 232,478" fill="#ffd400" stroke="none" stroke-width="1" opacity="1"/>
 <polygon points="233,444 247,444 246,420 234,420" fill="#ffd400" stroke="none" stroke-width="1" opacity="1"/>

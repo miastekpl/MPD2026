@@ -13,6 +13,14 @@ Makieta ekranu 800×480: prędkość 7-segmentowa, widok drogi, 10 wzorców w bo
 
 ![Ekran roboczy](schematy/ekran_roboczy.svg)
 
+## Rysunki wzorców w skali
+
+Obok kodu każdego wzorca ekran pokazuje jego **dokładny rysunek w skali**: szerokości linii (12 i 24 cm), rozstaw linii
+podwójnych, proporcje kresek i przerw (dwa pełne cykle), a dla wzorców krawędziowych — pobocze. Pod rysunkiem jest zapis
+liczbowy (np. `ciagla + 4/2 m`, `12+12 cm`). Arkusz wszystkich wzorców:
+
+![Wzorce w skali](schematy/wzorce_w_skali.svg)
+
 ## Propozycja A — układ kabinowy 10 + 1 (poziomy, jak STiM)
 
 ![Propozycja A](schematy/panel_A_kabinowy.svg)

@@ -317,6 +317,12 @@ struct GlyphData {
     GunCfg cfg[NGUNS];
 };
 
+// Rysunek wzorca W SKALI (widok z góry, początek wzorca na dole):
+//  - poziomo okno 72 cm; szerokości linii proporcjonalne (24 cm = 2 x 12 cm), rozstaw pistoletów jak w
+//    wzorcach P-3 / P-4 (środki co 24 cm);
+//  - pionowo dokładnie 2 pełne cykle kreska+przerwa najdłuższego pistoletu przerywanego, kreski i przerwy
+//    w proporcji długości wzorca;
+//  - wzorce krawędziowe: po prawej szare pobocze, linia 25 cm od krawędzi jezdni (nominalnie).
 static void glyphDraw(lv_event_t* e) {
     lv_obj_t* o = lv_event_get_target(e);
     GlyphData* d = (GlyphData*)lv_obj_get_user_data(o);
@@ -324,32 +330,58 @@ static void glyphDraw(lv_event_t* e) {
     lv_draw_ctx_t* ctx = lv_event_get_draw_ctx(e);
     lv_area_t a;
     lv_obj_get_coords(o, &a);
-    int W = a.x2 - a.x1 + 1;
-    int H = a.y2 - a.y1 + 1;
+    const int W = a.x2 - a.x1 + 1;
+    const int H = a.y2 - a.y1 + 1;
 
-    // tło jezdni
     fillRect(ctx, a.x1, a.y1, W, H, C_ROAD, LV_OPA_COVER, 3);
 
-    // skala: pokaż ok. 10 m wzorca
-    float pxPerM = H / 10.0f;
+    bool any = false, edgeOnly = true;
+    float maxCycle = 0.0f;
     for (int g = 0; g < NGUNS; g++) {
         const GunCfg& c = d->cfg[g];
         if (c.mode == GM_OFF) continue;
-        int lw = (int)(W * GUN_WIDTH_FR[g] * 1.6f);
-        if (lw < 3) lw = 3;
-        int lx = a.x1 + W / 2 + (int)(GUN_LATERAL[g] * W * 1.1f) - lw / 2;
+        any = true;
+        if (g < 4) edgeOnly = false;
+        if (c.mode == GM_DASH && c.line > 0.0f) {
+            float cyc = c.line + c.gap;
+            if (cyc > maxCycle) maxCycle = cyc;
+        }
+    }
+    if (!any) return;
+
+    const float WIN_CM = 72.0f;
+    const float pxPerCm = W / WIN_CM;
+    int base = (int)floorf(12.0f * pxPerCm + 0.5f);          // szerokość linii 12 cm w pikselach
+    if (base < 2) base = 2;
+    float cx = a.x1 + W / 2.0f;
+    if (edgeOnly) cx -= 8.0f * pxPerCm;                      // linia trochę w lewo od środka okna
+
+    if (edgeOnly) {
+        // pobocze: za krawędzią jezdni (25 cm od środka linii)
+        int ex = (int)(cx + EDGE_LINE_OFFSET_CM * pxPerCm);
+        if (ex < a.x2) fillRect(ctx, ex, a.y1 + 1, a.x2 - ex, H - 2, lv_color_hex(0x59606e), LV_OPA_COVER, 0);
+    }
+
+    const float L = (maxCycle > 0.0f) ? 2.0f * maxCycle : 0.0f;
+    const float pxPerM = (L > 0.0f) ? (H - 4) / L : 0.0f;
+
+    for (int g = 0; g < NGUNS; g++) {
+        const GunCfg& c = d->cfg[g];
+        if (c.mode == GM_OFF) continue;
+        int lw = base * GUN_WIDTH_CM[g] / 12;                // 24 cm = dokładnie 2 x 12 cm
+        float centerCm = edgeOnly ? 0.0f : (float)GUN_CENTER_CM[g];
+        int lx = (int)floorf(cx + centerCm * pxPerCm - lw / 2.0f + 0.5f);
         if (c.mode == GM_CONT) {
             fillRect(ctx, lx, a.y1 + 2, lw, H - 4, C_YELLOW);
-        } else {
+        } else if (c.line > 0.0f && c.gap >= 0.0f && L > 0.0f) {
             float cyc = c.line + c.gap;
-            if (cyc <= 0.01f) continue;
-            for (float p = 0; p < 10.0f; p += cyc) {
+            for (float p = 0.0f; p < L - 0.001f; p += cyc) {
                 float p2 = p + c.line;
-                if (p2 > 10.0f) p2 = 10.0f;
-                int yb = a.y2 - 2 - (int)(p * pxPerM);
-                int yt = a.y2 - 2 - (int)(p2 * pxPerM);
-                if (yb <= yt) continue;
+                if (p2 > L) p2 = L;
+                int yb = a.y2 - 2 - (int)floorf(p * pxPerM + 0.5f);
+                int yt = a.y2 - 2 - (int)floorf(p2 * pxPerM + 0.5f);
                 if (yt < a.y1 + 2) yt = a.y1 + 2;
+                if (yb - yt < 1) continue;
                 fillRect(ctx, lx, yt, lw, yb - yt, C_YELLOW);
             }
         }

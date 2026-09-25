@@ -96,6 +96,13 @@ S6–S10 (fizyczne klawisze leżą tuż obok, na tej samej wysokości), w środk
 i kapsuły pistoletów, na dole AUTO / SEMI / RĘCZNY, START OD PRZERWY, START i STOP. Okna menu wypełniają cały ekran
 (nagłówek: **STOP** po lewej, **ZAMKNIJ** po prawej).
 
+**Rysunki wzorców w układzie pionowym.** Przy kodzie każdego wzorca w kolumnach jest jego **dokładny rysunek w skali**:
+żółte linie na ciemnej jezdni z zachowaniem szerokości (24 cm jest dokładnie dwa razy szersze niż 12 cm), rozstawu linii
+podwójnych oraz proporcji kreski do przerwy (rysunek obejmuje dwa pełne cykle). Wzorce krawędziowe mają szare pobocze po
+prawej stronie. Pod kodem jest zapis liczbowy: `ciagla`, `4/8 m` (kreska/przerwa) i szerokości pistoletów, np. `12+12 cm`.
+Ten sam rysunek, w większej skali, jest w środku ekranu **obok kodu aktualnego wzorca** (uwzględnia odwrócenie P-3a/P-3b
+i wzorzec własny), z zapisem liczbowym pod kodem.
+
 ### 3.1 Ekran roboczy
 
 Makieta graficzna ekranu: [schematy/ekran_roboczy.svg](schematy/ekran_roboczy.svg).

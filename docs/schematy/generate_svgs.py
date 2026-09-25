@@ -64,7 +64,7 @@ class Svg:
 # 1. Schemat elektryczny
 # ---------------------------------------------------------------------------
 def wiring():
-    W, H = 2100, 1400
+    W, H = 2100, 1560
     s = Svg(W, H, "#ffffff")
     s.text(40, 46, "MPD2026 — schemat połączeń elektronicznych", 30, "#0b1f4a", weight="bold")
     s.text(40, 74, "Sterownik Trassar (ESP32-S3 N16R8, firmware 2.52.0) + moduł wyświetlacza 7\" (Sunton ESP32-8048S070C)."
@@ -450,11 +450,84 @@ def panel_B():
     s.save("panel_B_pas_pod_ekranem.svg")
 
 
+# --- wzorce (kopia display-module/src/model.cpp) i rysunek w skali (kopia ui_widgets.cpp: glyphDraw) ---
+OFF, CONT = (0, 0, 0), (1, 0, 0)
+
+
+def DASH(l, g):
+    return (2, l, g)
+
+
+PATS = {
+    "P-1a": [OFF, DASH(4, 8), OFF, OFF, OFF, OFF], "P-1b": [OFF, DASH(2, 4), OFF, OFF, OFF, OFF],
+    "P-1c": [OFF, DASH(2, 2), OFF, OFF, OFF, OFF], "P-1d": [OFF, DASH(1, 1), OFF, OFF, OFF, OFF],
+    "P-1e": [OFF, OFF, OFF, DASH(1, 1), OFF, OFF], "P-2a": [OFF, CONT, OFF, OFF, OFF, OFF],
+    "P-2b": [OFF, OFF, OFF, CONT, OFF, OFF], "P-3a": [CONT, OFF, DASH(4, 2), OFF, OFF, OFF],
+    "P-3b": [CONT, OFF, DASH(1, 1), OFF, OFF, OFF], "P-4": [CONT, OFF, CONT, OFF, OFF, OFF],
+    "P-6": [OFF, OFF, OFF, OFF, DASH(4, 2), OFF], "P-7a": [OFF, OFF, OFF, OFF, OFF, DASH(1, 1)],
+    "P-7b": [OFF, OFF, OFF, OFF, OFF, CONT], "P-7c": [OFF, OFF, OFF, OFF, DASH(1, 1), OFF],
+    "P-7d": [OFF, OFF, OFF, OFF, CONT, OFF],
+    "WŁASNY": [CONT, OFF, OFF, OFF, DASH(3, 2), OFF],
+}
+GUN_W_CM = [12, 12, 12, 24, 12, 24]
+GUN_CENTER_CM = [-12, 0, 12, 0, 30, 30]
+
+
+def fmtg(v):
+    return ("%g" % v)
+
+
+def spec_text(cfg):
+    modes, widths = [], []
+    for g, (m, l, gp) in enumerate(cfg):
+        if m == 0:
+            continue
+        modes.append("ciagla" if m == 1 else f"{fmtg(l)}/{fmtg(gp)} m")
+        widths.append(str(GUN_W_CM[g]))
+    if not modes:
+        return "brak", ""
+    return " + ".join(modes), "+".join(widths) + " cm"
+
+
+def glyph(s, x, y, w, h, cfg, rounded=3):
+    """Rysunek wzorca w skali: okno 72 cm, 2 pełne cykle, pobocze dla wzorców krawędziowych."""
+    s.rect(x, y, w, h, "#1b1b1f", rx=rounded)
+    active = [(g, c) for g, c in enumerate(cfg) if c[0] != 0]
+    if not active:
+        return
+    edge_only = all(g >= 4 for g, _ in active)
+    max_cycle = max([c[1] + c[2] for _, c in active if c[0] == 2 and c[1] > 0], default=0)
+    ppc = w / 72.0
+    base = max(2, int(12 * ppc + 0.5))
+    cx = x + w / 2.0 - (8 * ppc if edge_only else 0)
+    if edge_only:
+        ex = int(cx + 25 * ppc)
+        if ex < x + w:
+            s.rect(ex, y + 1, x + w - ex, h - 2, "#59606e")
+    L = 2.0 * max_cycle
+    ppm = (h - 4) / L if L > 0 else 0
+    for g, (m, l, gp) in active:
+        lw = base * GUN_W_CM[g] // 12
+        centre = 0 if edge_only else GUN_CENTER_CM[g]
+        lx = int(cx + centre * ppc - lw / 2.0 + 0.5)
+        if m == 1:
+            s.rect(lx, y + 2, lw, h - 4, "#ffd400")
+        elif l > 0 and L > 0:
+            cyc = l + gp
+            p = 0.0
+            while p < L - 0.001:
+                p2 = min(p + l, L)
+                yb = int(y + h - 2 - int(p * ppm + 0.5))
+                yt = max(int(y + h - 2 - int(p2 * ppm + 0.5)), y + 2)
+                if yb - yt >= 1:
+                    s.rect(lx, yt, lw, yb - yt, "#ffd400")
+                p += cyc
+
+
 def ui_mock_portrait(s, x, y, scale, group=0):
-    """Makieta ekranu pionowego 480x800: wzorce w kolumnach przy krawędziach (5 + 5)."""
+    """Makieta ekranu pionowego 480x800: wzorce w kolumnach przy krawędziach (5 + 5), rysunki w skali."""
     s.group_open(f"translate({x},{y}) scale({scale})")
     s.rect(0, 0, 480, 800, "#07142e")
-    # pasek górny
     s.text(10, 32, "POŁĄCZONO", 16, "#35f27a", weight="bold")
     s.text(140, 32, "GPS 8 sat", 16, "#35f27a", weight="bold")
     s.rect(240, 10, 96, 28, "#0f2557", rx=6)
@@ -462,7 +535,6 @@ def ui_mock_portrait(s, x, y, scale, group=0):
     s.text(288, 30, "FARBA 72%", 12, "#fff", "middle")
     s.rect(346, 4, 130, 40, "#1f52d6", rx=10)
     s.text(411, 32, "MENU", 18, "#fff", "middle", "bold")
-    # zakładki grup
     s.rect(6, 54, 228, 42, "#2f86ff" if group == 0 else "#1f52d6", "#ffd400" if group == 0 else "#5b7fe0",
            5 if group == 0 else 2, 10)
     s.text(120, 83, "OŚ JEZDNI", 20, "#fff", "middle", "bold")
@@ -484,21 +556,33 @@ def ui_mock_portrait(s, x, y, scale, group=0):
             is_sel = (n == sel)
             s.rect(x0, yy, 108, 106, "#2f86ff" if is_sel else "#1f52d6", "#ffd400" if is_sel else "#5b7fe0",
                    5 if is_sel else 2, 10)
-            s.rect(x0 + 8, yy + 10, 34, 86, "#1b1b1f", rx=3)
-            s.rect(x0 + 23, yy + 14, 4, 78, "#ffd400")
-            s.text(x0 + 100, yy + 62, n, 24 if len(n) < 6 else 15, "#fff", "end", "bold")
-    # środek: wzorzec, prędkość, liczniki
+            glyph(s, x0 + 6, yy + 8, 34, 90, PATS[n])
+            s.text(x0 + 104, yy + 26, n, 20 if len(n) < 6 else 13, "#fff", "end", "bold")
+            m, wd = spec_text(PATS[n])
+            parts = m.split(" + ") if len(m) > 9 else [m]
+            lines = []
+            if len(parts) == 2:
+                lines = [parts[0] + " +", parts[1]]
+            else:
+                lines = [m]
+            lines.append(wd)
+            for k, ln in enumerate(lines):
+                s.text(x0 + 104, yy + 46 + k * 15, ln, 11, "#e9efff", "end")
+    # środek: duży rysunek wzorca + kod + zapis liczbowy + prędkość
     cx = 240
-    s.text(cx, 152, sel, 40, "#ffd400", "middle", "bold")
-    s.text(cx, 176, "AUTO  MALOWANIE", 15, "#35f27a", "middle")
-    s.text(cx, 254, "12.5", 70, "#fff", "middle", "bold", 'font-family="Consolas, monospace"')
-    s.text(cx, 284, "km/h", 20, "#8fa3cc", "middle")
-    s.text(cx, 316, "DYST 1234.5 m", 15, "#fff", "middle")
-    s.text(cx, 338, "POW 148.1 m2", 15, "#fff", "middle")
-    s.text(cx, 360, "CZAS 12:34", 15, "#fff", "middle")
-    # droga
-    s.rect(118, 372, 244, 232, "#143a7a", rx=6)
-    s.polygon([(128, 600), (352, 600), (290, 376), (190, 376)], "#1b1b1f")
+    glyph(s, 120, 102, 66, 80, PATS[sel], 4)
+    s.text(196, 138, sel, 40, "#ffd400", weight="bold")
+    m, wd = spec_text(PATS[sel])
+    s.text(196, 160, m, 12, "#e9efff")
+    s.text(196, 176, wd, 12, "#e9efff")
+    s.text(cx, 201, "AUTO  MALOWANIE", 15, "#35f27a", "middle")
+    s.text(cx, 256, "12.5", 64, "#fff", "middle", "bold", 'font-family="Consolas, monospace"')
+    s.text(cx, 290, "km/h", 20, "#8fa3cc", "middle")
+    s.text(cx, 312, "DYST 1234.5 m", 15, "#fff", "middle")
+    s.text(cx, 332, "POW 148.1 m2", 15, "#fff", "middle")
+    s.text(cx, 352, "CZAS 12:34", 15, "#fff", "middle")
+    s.rect(118, 364, 244, 240, "#143a7a", rx=6)
+    s.polygon([(128, 600), (352, 600), (290, 368), (190, 368)], "#1b1b1f")
     for i, (yy, hh, w) in enumerate([(548, 44, 11), (478, 34, 9), (420, 24, 7), (390, 14, 5)]):
         s.polygon([(cx - w, yy + hh), (cx + w, yy + hh), (cx + w - 1, yy), (cx - w + 1, yy)],
                   "#35f27a" if i == 0 else "#ffd400")
@@ -507,10 +591,9 @@ def ui_mock_portrait(s, x, y, scale, group=0):
         on = g in ((0, 2) if group == 0 else (5,))
         s.rect(120 + g * 41, 610, 38, 28, "#35f27a" if on else "#0f2557", "#ffd400" if g in (0, 2) else "#0f2557", 2, 14)
         s.text(120 + g * 41 + 19, 630, f"P{g + 1}", 13, "#03210f" if on else "#fff", "middle")
-    # pasek dolny
-    for i, (t, c) in enumerate([("AUTO", "#2f86ff"), ("SEMI", "#1f52d6"), ("RĘCZNY", "#1f52d6")]):
+    for i, (tt, c) in enumerate([("AUTO", "#2f86ff"), ("SEMI", "#1f52d6"), ("RĘCZNY", "#1f52d6")]):
         s.rect(4 + i * 96, 694, 92, 44, c, "#ffd400" if i == 0 else "#5b7fe0", 4 if i == 0 else 2, 8)
-        s.text(50 + i * 96, 722, t, 15, "#fff", "middle", "bold")
+        s.text(50 + i * 96, 722, tt, 15, "#fff", "middle", "bold")
     s.rect(292, 694, 184, 44, "#1f52d6", rx=8)
     s.text(384, 722, "START OD PRZERWY", 14, "#fff", "middle")
     s.rect(4, 746, 296, 50, "#1fa34a", rx=10)
@@ -518,6 +601,26 @@ def ui_mock_portrait(s, x, y, scale, group=0):
     s.rect(306, 746, 170, 50, "#d62828", rx=10)
     s.text(391, 780, "■ STOP", 24, "#fff", "middle", "bold")
     s.group_close()
+
+
+def glyph_sheet():
+    """Arkusz wszystkich wzorców rysowanych w skali (kontrola geometrii)."""
+    names = list(PATS.keys())
+    s = Svg(1240, 700, "#f8f9fa")
+    s.text(30, 38, "Rysunki wzorców w skali — 2 pełne cykle, szerokości i rozstaw jak w rzeczywistości", 20, "#0b1f4a", weight="bold")
+    s.text(30, 62, "Miniatura w kolumnie ekranu (34x90 px) i duży rysunek przy kodzie (66x80 px). Okno poziome 72 cm; wzorce krawędziowe z poboczem.",
+           13, "#444")
+    for i, n in enumerate(names):
+        col, row = i % 8, i // 8
+        x0, y0 = 30 + col * 150, 90 + row * 300
+        s.rect(x0 - 8, y0 - 8, 142, 280, "#1f52d6", "#5b7fe0", 2, 10)
+        glyph(s, x0, y0, 66, 160, PATS[n], 4)
+        glyph(s, x0 + 76, y0, 34, 90, PATS[n])
+        s.text(x0 + 4, y0 + 188, n, 22, "#fff", weight="bold")
+        m, wd = spec_text(PATS[n])
+        s.text(x0 + 4, y0 + 212, m, 12, "#e9efff")
+        s.text(x0 + 4, y0 + 230, wd, 12, "#e9efff")
+    s.save("wzorce_w_skali.svg")
 
 
 def panel_C():
@@ -796,3 +899,4 @@ if __name__ == "__main__":
     panel_B()
     panel_C()
     panel_D()
+    glyph_sheet()

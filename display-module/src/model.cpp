@@ -28,6 +28,26 @@ const PatternInfo PATTERNS[NPAT_PREDEF] = {
 const float GUN_LATERAL[NGUNS]  = { -0.075f, 0.0f, 0.075f, 0.0f, 0.40f, 0.40f };
 const float GUN_WIDTH_FR[NGUNS] = {  0.030f, 0.030f, 0.030f, 0.060f, 0.030f, 0.060f };
 const uint8_t GUN_WIDTH_CM[NGUNS] = { 12, 12, 12, 24, 12, 24 };
+const int8_t  GUN_CENTER_CM[NGUNS] = { -12, 0, 12, 0, 30, 30 };
+
+void patternSpecText(const GunCfg cfg[NGUNS], char* modes, size_t nm, char* widths, size_t nw) {
+    modes[0] = 0;
+    widths[0] = 0;
+    size_t lm = 0, lw = 0;
+    int n = 0;
+    for (int g = 0; g < NGUNS; g++) {
+        if (cfg[g].mode == GM_OFF) continue;
+        char tok[24];
+        if (cfg[g].mode == GM_CONT) snprintf(tok, sizeof(tok), "ciagla");
+        else snprintf(tok, sizeof(tok), "%g/%g m", (double)cfg[g].line, (double)cfg[g].gap);
+        lm += snprintf(modes + lm, nm - lm, "%s%s", n ? " + " : "", tok);
+        lw += snprintf(widths + lw, nw - lw, "%s%d", n ? "+" : "", (int)GUN_WIDTH_CM[g]);
+        n++;
+        if (lm >= nm - 1 || lw >= nw - 1) break;
+    }
+    if (n == 0) { snprintf(modes, nm, "brak"); return; }
+    if (lw + 4 < nw) snprintf(widths + lw, nw - lw, " cm");
+}
 
 // ---------- pomocnicze parsowanie ----------
 static float jf(JsonVariantConst v, float def = 0.0f) {

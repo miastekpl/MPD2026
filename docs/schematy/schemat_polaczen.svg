@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1400" viewBox="0 0 2100 1400">
-<rect x="0" y="0" width="2100" height="1400" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1560" viewBox="0 0 2100 1560">
+<rect x="0" y="0" width="2100" height="1560" fill="#ffffff"/>
 <text x="40" y="46" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="30" fill="#0b1f4a" text-anchor="start" font-weight="bold" >MPD2026 — schemat połączeń elektronicznych</text>
 <text x="40" y="74" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#444" text-anchor="start" font-weight="normal" >Sterownik Trassar (ESP32-S3 N16R8, firmware 2.52.0) + moduł wyświetlacza 7" (Sunton ESP32-8048S070C). Numery = GPIO ESP32-S3 (zgodnie z src/config.h).</text>
 <rect x="40" y="100" width="200" height="60" rx="6" fill="#fff3cd" stroke="#b8860b" stroke-width="2" />

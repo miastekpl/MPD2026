@@ -11,3 +11,8 @@ __pycache__
 *.pyc
 .DS_Store
 Thumbs.db
+
+# PDF-y dokumentacji budowane lokalnie (docs/pdf/build_pdfs.py)
+docs/pdf/*.pdf
+docs/pdf/schematy/
+docs/pdf/_tmp/

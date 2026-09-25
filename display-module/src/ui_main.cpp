@@ -39,6 +39,9 @@ static lv_obj_t* s_tabEdge;
 static lv_obj_t* s_slotBtn[10];
 static lv_obj_t* s_slotGlyph[10];
 static lv_obj_t* s_slotLbl[10];
+static lv_obj_t* s_slotSpec[10];   // podpis liczbowy pod kodem (układ pionowy)
+static lv_obj_t* s_bigGlyph;       // duży rysunek aktualnego wzorca (układ pionowy)
+static lv_obj_t* s_lblSpec;        // zapis liczbowy aktualnego wzorca (układ pionowy)
 static bool      s_slotSel[10];
 
 static lv_obj_t* s_speed;
@@ -177,7 +180,20 @@ static lv_obj_t* makeSlot(lv_obj_t* parent, int s, int x, int y, int w, int h,
     lv_obj_t* b = uiBtn(parent, "", x, y, w, h, C_BTN, onSlotClick,
                         (void*)(intptr_t)s, SLOT_FONT);
     lv_obj_t* lbl = lv_obj_get_child(b, 0);
+#if UI_PORTRAIT
+    lv_obj_align(lbl, LV_ALIGN_TOP_RIGHT, -4, 6);
+    lv_obj_t* sp = lv_label_create(b);
+    lv_label_set_text(sp, "");
+    lv_obj_set_width(sp, 62);
+    lv_obj_set_style_text_font(sp, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(sp, C_TEXT, 0);
+    lv_obj_set_style_text_align(sp, LV_TEXT_ALIGN_RIGHT, 0);
+    lv_obj_align(sp, LV_ALIGN_TOP_RIGHT, -4, 34);
+    s_slotSpec[s] = sp;
+#else
     lv_obj_align(lbl, LV_ALIGN_RIGHT_MID, -6, 0);
+    s_slotSpec[s] = nullptr;
+#endif
     s_slotLbl[s] = lbl;
     s_slotGlyph[s] = uiGlyph(b, gx, gy, gw, gh);
     s_slotBtn[s] = b;
@@ -236,15 +252,21 @@ static void buildMainPortrait() {
         makeSlot(scr, 5 + j, SW - 4 - COLW, Y0 + j * STEP, COLW, SLOTH, 6, 8, 34, SLOTH - 16);
 
     // --- środek: wzorzec, prędkość, liczniki ---
-    s_lblPattern = centerLabel(scr, "---", MX, 106, MW, FONT_XL, C_YELLOW);
-    s_lblMode = centerLabel(scr, "---", MX, 158, MW, FONT_S, C_TEXT);
+    // duży rysunek aktualnego wzorca (w skali) obok kodu i zapisu liczbowego
+    s_bigGlyph = uiGlyph(scr, MX + 2, 102, 66, 80);
+    s_lblPattern = uiLabel(scr, "---", MX + 76, 100, FONT_XL, C_YELLOW);
+    lv_obj_set_width(s_lblPattern, MW - 78);
+    s_lblSpec = uiLabel(scr, "", MX + 76, 148, &lv_font_montserrat_12, C_TEXT);
+    lv_obj_set_width(s_lblSpec, MW - 78);
+    lv_obj_set_style_text_line_space(s_lblSpec, 2, 0);
+    s_lblMode = centerLabel(scr, "---", MX, 184, MW, FONT_S, C_TEXT);
     lv_label_set_long_mode(s_lblMode, LV_LABEL_LONG_DOT);
     lv_obj_set_height(s_lblMode, 22);
-    s_speed = uiSevenSeg(scr, MX + (MW - 172) / 2, 190, 172, 66);
-    s_lblUnit = centerLabel(scr, "km/h", MX, 262, MW, FONT_M, C_DIM);
-    s_lblDist = centerLabel(scr, "", MX, 292, MW, FONT_S, C_TEXT);
-    s_lblArea = centerLabel(scr, "", MX, 314, MW, FONT_S, C_TEXT);
-    s_lblTime = centerLabel(scr, "", MX, 336, MW, FONT_S, C_TEXT);
+    s_speed = uiSevenSeg(scr, MX + (MW - 172) / 2, 208, 172, 60);
+    s_lblUnit = centerLabel(scr, "km/h", MX, 270, MW, FONT_M, C_DIM);
+    s_lblDist = centerLabel(scr, "", MX, 298, MW, FONT_S, C_TEXT);
+    s_lblArea = centerLabel(scr, "", MX, 318, MW, FONT_S, C_TEXT);
+    s_lblTime = centerLabel(scr, "", MX, 338, MW, FONT_S, C_TEXT);
     lv_label_set_recolor(s_lblDist, true);
     lv_label_set_recolor(s_lblArea, true);
     lv_label_set_recolor(s_lblTime, true);
@@ -535,6 +557,7 @@ static void updateSlots(const Status& st) {
 
         if (!used) {
             setLbl(s_slotLbl[s], "");
+            if (s_slotSpec[s]) setLbl(s_slotSpec[s], "");
             setVisible(s_slotGlyph[s], false);
             uiBtnSetColor(btn, C_BTN_DIS);
             lv_obj_set_style_border_width(btn, 2, 0);
@@ -546,6 +569,15 @@ static void updateSlots(const Status& st) {
         setLbl(s_slotLbl[s], code);
         lv_obj_set_style_text_font(s_slotLbl[s], pat == PAT_CUSTOM_IDX ? FONT_S : SLOT_FONT, 0);
         uiGlyphSet(s_slotGlyph[s], pat, false, st);
+        if (s_slotSpec[s]) {
+            GunCfg cfg[NGUNS];
+            for (int g = 0; g < NGUNS; g++) cfg[g] = patternGun(pat, false, g, st);
+            char m[48], w[24], txt[80];
+            patternSpecText(cfg, m, sizeof(m), w, sizeof(w));
+            if (pat == PAT_CUSTOM_IDX && !st.customValid) snprintf(txt, sizeof(txt), "nie zapisany");
+            else snprintf(txt, sizeof(txt), "%s\n%s", m, w);
+            setLbl(s_slotSpec[s], txt);
+        }
 
         bool sel = (pat == st.patternIdx);
         s_slotSel[s] = sel;
@@ -683,6 +715,17 @@ static void mainTick(lv_timer_t*) {
     // --- wzorzec / tryb ---
     snprintf(buf, sizeof(buf), "%s%s", st.patternCode, st.reversed ? " <>" : "");
     setLbl(s_lblPattern, buf);
+#if UI_PORTRAIT
+    uiGlyphSet(s_bigGlyph, st.patternIdx, st.reversed, st);
+    {
+        GunCfg cfg[NGUNS];
+        for (int g = 0; g < NGUNS; g++) cfg[g] = effectiveGun(st, g);
+        char m[48], w[24], sp[80];
+        patternSpecText(cfg, m, sizeof(m), w, sizeof(w));
+        snprintf(sp, sizeof(sp), "%s\n%s", m, w);
+        setLbl(s_lblSpec, sp);
+    }
+#endif
     const char* gapTxt = st.gapStart ? "  (od przerwy)" : "";
     if (st.mode == MM_SEMI && st.state != MS_IDLE && st.state != MS_STOPPED)
         snprintf(buf, sizeof(buf), "%s #%d  %s%s", modeName(st.mode), st.semiSegment, stateName(st.state), gapTxt);
