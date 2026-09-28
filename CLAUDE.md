@@ -8,6 +8,24 @@ Repozytorium zawiera dwa firmware'y i aplikację:
   Nie steruje pistoletami; używa istniejącego API (WebSocket :81 + `POST /api/control`).
 - **Aplikacja Android** (`android-app/`).
 
+**Architektura docelowa (kod sterownika zaimplementowany, projekt ekranu w DGUS Designer jeszcze nie zbudowany, nic nie sprawdzone na
+sprzęcie):** jeden duży ekran — **wyświetlacz inteligentny DWIN DGUS** (np. `DMG10600T070_09WTC`) podłączony **bezpośrednio** do
+sterownika przez UART (bez pośredniczącego ESP32, bez RS-485); sterownik ESP32-S3 = master (logika, stan, menu, dane), ekran renderuje
+sam wg projektu z DGUS Designer i odsyła kody dotyku. Bez małego ekranu ILI9341 i joysticka, karta SD osobnym modułem.
+Architektura i protokół: `docs/ARCHITEKTURA_TERMINAL.md`; specyfikacja stron/VP do zbudowania w DGUS Designer: `docs/EKRAN_DGUS.md`.
+**Dwa warianty sterownika muszą się kompilować zawsze:** `pio run -e esp32s3` (przejściowy: ILI9341 + joystick) i
+`pio run -e esp32s3_terminal` (docelowy: `HAS_SMALL_TFT=0 HAS_JOYSTICK=0 HAS_DGUS_LINK=1`). Moduł 7" (`display-module/`) to od tej
+architektury **osobny, niezależny wariant WiFi** (`sunton7`, `sunton7_portrait`) — nie bierze udziału w wariancie DGUS.
+Kod dotyczący ILI9341/joysticka owijaj `#if HAS_SMALL_TFT` / `#if HAS_JOYSTICK`, kod łącza `#if HAS_DGUS_LINK`. Ekran DGUS niczym nie
+steruje — tylko prosi sterownik; wszystkie polecenia idą przez `executeControl()` (`src/control_api.cpp`), zdarzenia dotyku przez
+`menu.handleEvent()` lub bezpośrednio przez `executeControl()` (patrz `dgus_link.cpp::handleTouchEvent()`).
+Nowy ekran serwisowy = handler w `menu_handlers.cpp` **oraz** wypełnienie pól w `dgus_pages.cpp::fillDgusPage()` **oraz** wpis w
+`docs/EKRAN_DGUS.md` (i wersja ILI9341 w `display_screens_*.cpp`).
+
+**Role ekranów (wariant przejściowy):** duży ekran 7" (`display-module/`) = ekran **roboczy** operatora; mały ekran ILI9341 sterownika (`src/display_*`) =
+ekran **techniczny / serwisowy / awaryjny** (POST, QR/hasło WiFi, menu serwisowe, SETUP) i nośnik slotu karty SD. Nie usuwaj
+funkcji małego ekranu — moduł 7" nie ma części funkcji serwisowych (czyszczenie dysz, reset etapu/liczników, eksport, factory reset).
+
 **Zasada pracy:** to repozytorium (MPD2026) jest rozwojową kopią `Trassar_251v3`. Repozytorium
 `miastekpl/Trassar_251v3` pozostaje niezmienioną referencją — nowe zmiany zapisujemy wyłącznie tutaj.
 Zmiany w sterowniku mają być **addytywne** (nie usuwać funkcjonalności). Dokumentacja: `docs/`
@@ -45,6 +63,12 @@ src/                    # Cały kod źródłowy (.cpp + .h w jednym katalogu)
   joystick.cpp/.h       # Joystick analogowy KY-023
   pattern_buttons.cpp/.h # Przyciski wzorców (MCP23017 I2C): układ klasyczny 15 lub soft-key 10 + GRUPA
   pattern_layout.h      # Czysta logika: grupy OŚ/KRAWĘDŹ i mapowanie soft-key (kopia w display-module/src/model.cpp!)
+  control_api.cpp/.h    # executeControl(): wszystkie polecenia sterowania (HTTP /api/control i ekran DGUS)
+  dgus/                 # WSZYSTKO związane z ekranem DGUS, w jednym miejscu (jedyny podkatalog w src/)
+    dgus_link.cpp/.h     # łącze z ekranem DGUS (UART1 GPIO 9/10), ping/utrata łącza, polityka utraty, martwy człowiek (tylko HAS_DGUS_LINK)
+    dgus_pages.cpp/.h    # dane dla ekranu: status roboczy, soft-key S1-S10, pola stron serwisowych (tylko HAS_DGUS_LINK)
+    dgus_map.h           # mapa adresów VP / stron / kodów zdarzeń — jedyne źródło prawdy, też specyfikacja do DGUS Designer
+shared/dgus_protocol.h  # ramka DGUS (5A A5, VP, odczyt/zapis) — zgodna z dokumentacją DWIN; wspólna dla sterownika i testów (bez zależności od Arduino)
   rtc_handler.cpp/.h    # Zegar RTC DS1307
   gps_handler.cpp/.h    # GPS NEO-6M (UART2)
   gps_track.cpp/.h      # Zapis trasy GPS (GPX na SD, bufor PSRAM)
@@ -53,8 +77,8 @@ src/                    # Cały kod źródłowy (.cpp + .h w jednym katalogu)
   nvs_backup.cpp/.h     # Backup/restore NVS na kartę SD
 data/                   # Zasoby LittleFS (panel WWW)
 docs/                   # Dokumentacja
-display-module/         # Firmware modułu 7" (osobny projekt PlatformIO)
-  platformio.ini        # espressif32@6.3.1, LovyanGFX + LVGL 8.3 + WebSockets + ArduinoJson
+display-module/         # Firmware modułu 7" (osobny projekt PlatformIO) — TYLKO wariant WiFi, niezależny od architektury DGUS
+  platformio.ini        # espressif32@6.3.1, LovyanGFX + LVGL 8.3 + WebSockets + ArduinoJson; env sunton7, sunton7_portrait
   src/main.cpp          # LovyanGFX + LVGL + dotyk, start zadań
   src/link.cpp/.h       # WiFi STA + WebSocket + HTTP + kolejka poleceń (zadanie FreeRTOS, Core 0)
   src/model.cpp/.h      # Status/StatsData, parsery JSON, tabela wzorców (kopia patterns.cpp!)
@@ -85,7 +109,7 @@ Build modułu 7": `cd display-module && pio run` (poziomo 800x480; upload: `pio 
 - Stałe/define: UPPER_SNAKE_CASE
 - Piny GPIO: `PIN_` prefix
 - Enumy: `STATE_`, `MODE_`, `SCREEN_`, `GUN_`, `PAT_` prefiksy
-- Brak katalogu include/ — wszystkie headery w src/
+- Brak katalogu include/ — wszystkie headery w src/ (jedyny wyjątek: src/dgus/ grupuje cały kod ekranu DGUS)
 - Headery: `#pragma once`
 
 ## Globalny stan
@@ -108,3 +132,5 @@ Build modułu 7": `cd display-module && pio run` (poziomo 800x480; upload: `pio 
 - Pole `patDist` w `/api/status` (dystans od startu wzorca) służy modułowi 7" do synchronizacji animacji; nie usuwać
 - Tabela `PATTERNS` w `display-module/src/model.cpp` musi być zgodna z `src/patterns.cpp`
 - Tekst UI modułu 7" wyłącznie ASCII (czcionki wbudowane LVGL nie mają polskich znaków)
+- Zmiana `enum ButtonEvent` (`src/button_handler.h`) wymaga też aktualizacji `src/dgus/dgus_map.h` (kody 1-7 muszą być identyczne) i `docs/EKRAN_DGUS.md`
+- Zmiana adresu/rozmiaru pola w `src/dgus/dgus_map.h` wymaga aktualizacji projektu w DGUS Designer (VP muszą się zgadzać bit w bit) — patrz `docs/EKRAN_DGUS.md`

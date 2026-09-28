@@ -6,9 +6,17 @@
 (UART 3,3 V przez konwertery) w jednym kablu z zasilaniem**, z WiFi jako łączem zapasowym i dla telefonów/tabletów.
 Nie polecam natomiast wciskania wszystkiego w jeden ESP32 (patrz [niżej](#dlaczego-nie-jedna-płytka)).
 
-> **Status:** to **propozycja projektowa**. Łącze przewodowe **nie jest jeszcze zaimplementowane** w oprogramowaniu —
-> obecnie moduł 7" pracuje przez WiFi ([MODUL_WYSWIETLACZA.md](MODUL_WYSWIETLACZA.md)). Schemat elektryczny:
-> [schemat_lacze_rs485.svg](schematy/schemat_lacze_rs485.svg), wiązka: [schemat_zlacza_wiazka.svg](schematy/schemat_zlacza_wiazka.svg) (złącze J6).
+> **Aktualizacja (decyzja ostateczna):** zamiast RS-485 do drugiego ESP32, duży ekran to **wyświetlacz inteligentny DWIN DGUS**
+> podłączony **bezpośrednio** do sterownika UART-em (4 przewody: 5 V, GND, TX, RX — bez konwerterów RS-485, bez drugiego ESP32).
+> Pełny opis: [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md), specyfikacja ekranu: [EKRAN_DGUS.md](EKRAN_DGUS.md).
+> **Piny sterownika: GPIO 9 (TX) i 10 (RX, przez dzielnik napięcia)** — tak jak niżej w tym dokumencie; piny 19/20 opisane w dalszej
+> części dotyczą wcześniejszej, odrzuconej propozycji (wariant przejściowy z zachowanym ILI9341).
+>
+> **Ten dokument (analiza RS-485) pozostaje jako materiał pomocniczy** dla przypadku, gdy ekran trzeba by zamontować daleko od
+> sterownika (długi przewód) — wtedy warto podnieść sygnał UART do RS-485 przez 2 konwertery MAX3485. **W standardowej, zintegrowanej
+> obudowie (patrz [WIZUALIZACJE.md](WIZUALIZACJE.md)) połączenie jest bezpośrednie, bez RS-485.** Zaimplementowany protokół to nie
+> autorska ramka opisana niżej, tylko **standardowy protokół DGUS** (`shared/dgus_protocol.h`, `src/dgus/dgus_link.cpp`) — opisuje go
+> [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md), rozdz. 4. Schemat elektryczny RS-485 (opcja): [schemat_lacze_rs485.svg](schematy/schemat_lacze_rs485.svg).
 
 ![Łącze RS-485](schematy/schemat_lacze_rs485.svg)
 

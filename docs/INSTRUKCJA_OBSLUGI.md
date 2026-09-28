@@ -1,7 +1,7 @@
 # MPD2026 — Instrukcja obsługi
 
-**Komputer pokładowy malowarki pasów drogowych** — sterownik Trassar (firmware 2.52.0) i moduł
-wyświetlacza 7" (display-module 0.1.0).
+**Komputer pokładowy malowarki pasów drogowych** — sterownik Trassar (firmware 2.53.0) i moduł
+wyświetlacza 7" (display-module 0.2.0).
 
 ## Spis treści
 
@@ -25,12 +25,27 @@ wyświetlacza 7" (display-module 0.1.0).
 
 ## 1. Zasada działania i podział urządzeń
 
-System składa się z **dwóch urządzeń**:
+System składa się z **dwóch urządzeń** i ma **dwa ekrany o różnych rolach**:
 
 | Urządzenie | Rola | Ważne |
 |------------|------|-------|
-| **Sterownik** (ESP32-S3, mały ekran 2,8", przyciski fizyczne) | Steruje 6 pistoletami, mierzy dystans i prędkość, zapisuje raporty. **Jedyne urządzenie sterujące pistoletami.** | Działa samodzielnie, także bez modułu 7". |
-| **Moduł wyświetlacza 7"** (ekran dotykowy 800×480) | Duży, czytelny panel operatora: podgląd na żywo, wybór wzorców, tryby, START/STOP, ustawienia. | Łączy się ze sterownikiem przez WiFi. Nie steruje pistoletami bezpośrednio. |
+| **Sterownik** (ESP32-S3, przyciski fizyczne, **mały ekran 2,8" — techniczny / serwisowy**) | Steruje 6 pistoletami, mierzy dystans i prędkość, zapisuje raporty. **Jedyne urządzenie sterujące pistoletami.** | Działa samodzielnie, także bez modułu 7". |
+| **Moduł wyświetlacza 7"** (ekran dotykowy — **duży ekran roboczy**) | Panel operatora na całą zmianę: podgląd na żywo, wybór wzorców, tryby, START/STOP, ustawienia. | Łączy się ze sterownikiem przez WiFi. Nie steruje pistoletami bezpośrednio. |
+
+**Podział ról ekranów:**
+
+| | **Duży ekran 7"** (praca) | **Mały ekran 2,8"** (technika / serwis) |
+|---|---|---|
+| Kiedy | cała zmiana w terenie | uruchomienie, diagnostyka, serwis, awarie |
+| Zawartość | wzorce z rysunkami w skali, prędkość, droga, pistolety, liczniki, alarmy, farba, statystyki, kalibracja, wzorzec własny, ustawienia | POST (SD, RTC, MCP), QR i hasło WiFi, menu serwisowe (czyszczenie dysz, pomiar dystansu, reset etapu/liczników, eksport, factory reset, tryb nocny), SETUP, karta SD |
+| Gdy nie działa | praca dalej z panelu fizycznego | brak diagnostyki startowej; praca robocza możliwa z modułu 7" |
+
+Mały ekran nie jest drugim ekranem roboczym — operator pracuje na dużym. Rysunek całego układu (oba ekrany i wszystkie
+przyciski): [schematy/komputer_kompletny.svg](schematy/komputer_kompletny.svg), opis w [WIZUALIZACJE.md](WIZUALIZACJE.md).
+
+> **Dwa warianty sprzętowe.** Powyższy opis (dwa ekrany, WiFi) dotyczy wariantu **przejściowego**. W wariancie **docelowym** jest jeden duży
+> ekran, sterownik bez małego ekranu i joysticka, a duży ekran to wyświetlacz inteligentny DWIN DGUS podłączony bezpośrednio (bez WiFi,
+> bez drugiego ESP32) — opis w [sekcji 4.5](#45-wariant-docelowy-jeden-duży-ekran-dwin-dgus-sterownik-bez-małego-ekranu).
 
 Trzeci sposób obsługi to **panel WWW** (telefon/laptop, `http://192.168.4.1`) — pełny opis w [API_WWW.md](API_WWW.md).
 
@@ -262,7 +277,9 @@ tryb nocny, tryb DEMO. Pełna obsługa w [sekcji 4](#4-sterownik--panel-fizyczny
 
 ## 4. Sterownik — panel fizyczny
 
-Sterownik ma własny ekran 2,8" (320×240) i przyciski. Działa niezależnie od modułu 7".
+Sterownik ma własny **techniczny / serwisowy ekran 2,8" (320×240)** i przyciski. Działa niezależnie od modułu 7". W pracy
+codziennej operator korzysta z dużego ekranu 7"; mały ekran służy do uruchomienia, diagnostyki, serwisu i pracy awaryjnej
+oraz mieści slot karty SD.
 
 ### 4.1 Przyciski
 
@@ -337,6 +354,39 @@ START/START długo w menu przełącza **tryb nocny** (bursztynowa paleta).
 | 9 | Reset liczników | zeruje wszystkie liczniki oprócz kalibracji |
 | 10 | Tankowanie farby | uzupełnienie zbiornika |
 | 11 | Factory reset | przywrócenie ustawień fabrycznych (kasuje NVS) |
+
+### 4.5 Wariant docelowy: jeden duży ekran (DWIN DGUS), sterownik bez małego ekranu
+
+W wariancie docelowym ([ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md)) **nie ma małego ekranu ILI9341 ani joysticka** —
+wszystkie funkcje z tabeli 4.4 są na dużym ekranie. Duży ekran to **wyświetlacz inteligentny DWIN DGUS** (np. 7" `DMG10600T070_09WTC`)
+podłączony **bezpośrednio** do sterownika przewodem UART (bez WiFi, bez hasła, bez drugiego ESP32).
+Panel ma **14 przycisków fizycznych**: S1–S10, GRUPA, START, STOP, GAP; SELEKTOR (odwracanie P-3a/P-3b) jest opcjonalny — to samo można zrobić
+dotykiem na ekranie. Joystick usunięty.
+
+> **Uwaga:** kod sterownika jest gotowy, ale **projekt ekranu (strony, przyciski) trzeba dopiero zbudować** w narzędziu producenta
+> (DGUS Designer) według specyfikacji [docs/EKRAN_DGUS.md](EKRAN_DGUS.md) — nic z tego nie było jeszcze uruchamiane na sprzęcie.
+> Przed użyciem w terenie wykonaj próby z ARCHITEKTURA_TERMINAL.md, rozdz. 11.
+
+**Wejście do serwisu:** ekran roboczy → przycisk **SERWIS** → ekran menu serwisowego z 11 pozycjami (dotknij wprost wybraną pozycję —
+kalibracja, pomiar dystansu, raporty, czyszczenie dysz, statystyki, wzorzec własny, eksport, reset etapu, reset liczników, tankowanie,
+factory reset). Na każdym ekranie serwisowym: przycisk **WYJDŹ** (powrót) i fizyczny **STOP** działają zawsze, niezależnie od strony.
+
+**Czyszczenie dysz (test z „martwym człowiekiem"):**
+1. Z menu serwisowego dotknij *Czyszczenie dysz* (tylko gdy maszyna jest w stanie GOTOWY/ZATRZYMANY — inaczej sygnał błędu).
+2. Wybierz wzorzec (NASTĘPNY / POPRZEDNI); ekran pokazuje, które dysze zostaną otwarte.
+3. **Trzymaj** duży przycisk *TRZYMAJ = PSIKAJ* — dysze wybranego wzorca otwierają się. **Puść — zamykają się.**
+4. Dysze zamkną się także po **odłączeniu ekranu** lub jego zawieszeniu (twardy limit bezpieczeństwa w sterowniku, niezależny od
+   ekranu). Można też, jak dotąd, trzymać fizyczny START na sterowniku.
+
+**Resety i factory reset:** wymagają przytrzymania odpowiedniego przycisku (jak dotąd fizyczny START przytrzymany) — sama
+wielostopniowa nawigacja (menu → pozycja → potwierdzenie) jest już zabezpieczeniem przed przypadkowym dotknięciem.
+
+**Utrata ekranu podczas malowania:** sterownik wykrywa brak łącza po ok. 1,2 s, **włącza sygnał dźwiękowy** i zapisuje zdarzenie w logu.
+Domyślnie **malowanie trwa dalej** (użyj fizycznego STOP, aby zatrzymać). Poleceniem `POST /api/control action=set_term_policy` (panel WWW/API)
+można wybrać **AUTO-PAUZA** (sterownik sam wstrzymuje malowanie). Po powrocie łącza wznowienie robi operator.
+
+**Start:** ekran startowy pokazuje SSID i hasło WiFi (dla telefonu), adres i wyniki testu (SD, RTC, GPS, przyciski, enkoder);
+naciśnij **START** (na ekranie lub fizycznie), aby przejść do pracy.
 
 ---
 
@@ -683,8 +733,8 @@ zobaczysz, że strona i wzorzec zmieniły się tak samo.
 
 | Parametr | Wartość |
 |----------|---------|
-| Sterownik | ESP32-S3 N16R8 (16 MB Flash, 8 MB PSRAM), firmware 2.52.0 |
-| Wyświetlacz sterownika | ILI9341 2,8", 320×240 |
+| Sterownik | ESP32-S3 N16R8 (16 MB Flash, 8 MB PSRAM), firmware 2.53.0 |
+| Ekran serwisowy sterownika | ILI9341 2,8", 320×240 (techniczny / awaryjny, slot karty SD) |
 | Moduł wyświetlacza | Sunton ESP32-8048S070C, 7", 800×480, dotyk pojemnościowy |
 | Pistolety | 6 (P1–P6), przekaźniki, logika HIGH = ON |
 | Wzorce | 16 (15 normowych + własny, 3 sloty) |

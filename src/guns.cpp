@@ -86,4 +86,15 @@ void GunController::beginEmergencyStop() {
     // button_handler dalej generuje EVT_STOP_SHORT/LONG dla menu.
     attachInterrupt(digitalPinToInterrupt(PIN_BTN_STOP), emergencyStopISR, FALLING);
     DBG_PRINTLN("[GUNS] Sprzetowy STOP awaryjny (ISR) aktywny na PIN_BTN_STOP");
+
+#if HAS_ESTOP
+    // Ten sam ISR na PIN_ESTOP_STATUS — obrona w glab. Rzeczywiste ciecie zasilania
+    // pistoletow/pomp robi grzybek E-STOP sprzetowo (tor zasilania), ale gdyby z jakiegos
+    // powodu przekazniki mimo to zostaly wysterowane, ten ISR i tak zeruje je programowo
+    // w mikrosekundy po RISING (petla NC otwarta = zadzialanie, patrz config.h).
+    // Wymaga wczesniejszego pinMode(PIN_ESTOP_STATUS, INPUT_PULLUP) — patrz estop.cpp begin(),
+    // wolane w main.cpp PRZED tym wywolaniem.
+    attachInterrupt(digitalPinToInterrupt(PIN_ESTOP_STATUS), emergencyStopISR, RISING);
+    DBG_PRINTLN("[GUNS] Sprzetowy STOP awaryjny (ISR) aktywny takze na PIN_ESTOP_STATUS");
+#endif
 }

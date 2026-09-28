@@ -18,7 +18,8 @@ enum BuzzerSignal : uint8_t {
     BUZ_ERROR,             // Blad (brak SD, RTC niedostepny)
     BUZ_PATTERN_CHANGE,    // Zmiana wzorca przyciskiem MCP23017
     BUZ_SD_WARNING,        // Ostrzezenie: brak karty SD przy starcie malowania
-    BUZ_AUTO_PAUSE         // Auto-pauza przy zatrzymaniu
+    BUZ_AUTO_PAUSE,        // Auto-pauza przy zatrzymaniu
+    BUZ_ESTOP              // STOP awaryjny aktywny (petla otwarta) - powtarzany co ESTOP_BUZZ_REPEAT_MS
 };
 
 // Pojedynczy krok sekwencji tonowej

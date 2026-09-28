@@ -53,6 +53,10 @@ public:
     void saveButtonLayout(uint8_t layout);
     uint8_t loadButtonLayout();
 
+    // Polityka utraty terminala podczas malowania: 0 = kontynuuj + alarm (domyslnie), 1 = auto-pauza
+    void saveTermLossPolicy(uint8_t policy);
+    uint8_t loadTermLossPolicy();
+
     // Motogodziny (MTH) - calkowity czas pracy silnika
     void saveMTH(uint32_t totalSec);
     uint32_t loadMTH();

@@ -5,7 +5,10 @@
 // ============================================================
 
 #include "menu.h"
+#if HAS_SMALL_TFT
 #include "display_manager.h"
+#endif
+#include "dgus/dgus_link.h"
 #include "patterns.h"
 #include "encoder_distance.h"
 #include "painting_engine.h"
@@ -55,7 +58,9 @@ void MenuSystem::goToScreen(ScreenID screen) {
     lastScreenChangeMs = millis();
     // Blokuj osie joysticka dopoki nie wroci do centrum —
     // zapobiega szumowi ADC2 (WiFi) generujacemu falszywe zdarzenia na nowym ekranie
+#if HAS_JOYSTICK
     joystick.requireCenter();
+#endif
 }
 
 // ============ Dyspozycja zdarzeń ============
@@ -106,7 +111,9 @@ void MenuSystem::update() {
 
     // --- Logika ciagla: czyszczenie dysz ---
     if (curScreen == SCREEN_NOZZLE_CLEAN) {
-        bool held = buttons.isStartHeld();
+        // Fizyczny START albo przycisk "martwego czlowieka" na terminalu (wygasa po 250 ms
+        // bez ramki hold oraz przy utracie lacza — dysze zamykaja sie same).
+        bool held = buttons.isStartHeld() || dgusLink.isHoldActive();
         const PatternDef& pat = patternMgr.getPattern((PatternID)nozzlePatternIdx);
         for (int i = 0; i < NUM_GUNS; i++) {
             bool active = (pat.guns[i].mode != GUN_OFF);
@@ -116,6 +123,10 @@ void MenuSystem::update() {
         g_state.displayNeedsUpdate = true;
     }
 
+#if !HAS_SMALL_TFT
+    // Wariant bez ILI9341: ekrany opisuje dgus_pages.cpp, wysyla je dgus_link.cpp
+    return;
+#else
     // --- Renderowanie ---
     STATE_LOCK();
     bool needsUpdate = g_state.displayNeedsUpdate;
@@ -358,4 +369,5 @@ void MenuSystem::update() {
 
     // Zwolnij mutex SPI po renderowaniu TFT
     SD_UNLOCK();
+#endif  // HAS_SMALL_TFT
 }

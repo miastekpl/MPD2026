@@ -1,6 +1,6 @@
 # MPD2026 — API sterownika (HTTP + WebSocket)
 
-**Firmware sterownika:** 2.52.0 (MPD2026). Z API korzystają: panel WWW, aplikacja Android, **moduł wyświetlacza 7"**
+**Firmware sterownika:** 2.53.0 (MPD2026). Z API korzystają: panel WWW, aplikacja Android, **moduł wyświetlacza 7"**
 oraz dowolny klient (curl, skrypty).
 
 ## 1. Informacje ogólne
@@ -55,7 +55,7 @@ Wszystkie wartości liczbowe (`speed`, `distance`, `area`, `ppm`, `gpsLat`, …)
   "customGuns": [["P2", 12, 3.0, 2.0], ["P5", 12, 0, 0]],
   "speed": 6.4, "distance": 152.3, "area": 18.28, "elapsed": 96,
   "patDist": 152.3,
-  "firmware": "2.52.0", "freeHeap": 245760, "minFreeHeap": 210000,
+  "firmware": "2.53.0", "freeHeap": 245760, "minFreeHeap": 210000,
   "uptime": 3600, "clients": 2, "webStackHWM": 2048, "littleFs": true,
   "calibrated": true, "ppm": 100.0, "calibrating": false, "calPulses": 0,
   "maxSpeed": 15.0, "minSpeed": 3.0, "overspeed": false, "lowSpeed": false,
@@ -102,6 +102,11 @@ Wszystkie wartości liczbowe (`speed`, `distance`, `area`, `ppm`, `gpsLat`, …)
 | `gpxRec`, `gpxPts` | bool, int | zapis trasy GPS |
 | `paintLevelL`, `paintLevelPct` | number, int | poziom farby w zbiorniku |
 | `gunAnomalyDetected`, `gunAnomaly` | bool, bool[6] | detekcja anomalii pistoletów |
+| `screen`, `menuIndex` | int | aktualny ekran sterownika (`ScreenID`: 0 HOME, 1 PAINTING, 2 SERVICE_MENU …) i pozycja menu |
+| `night` | bool | tryb nocny (terminal przyciemnia ekran) |
+| `termOk`, `termLost`, `termPolicy` | bool, bool, int | *tylko `esp32s3_terminal`:* łącze z terminalem żywe / alarm utraty / polityka utraty (0 kontynuuj, 1 auto-pauza) |
+
+Pola `night` i `termOk/termLost/termPolicy` dodano w wersji 2.53.0; nazwa "term" jest historyczna — dotyczy ekranu DGUS (patrz [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md)), który dostaje te same dane osobnymi zapisami VP przez UART, nie przez to API.
 
 `patDist` jest dodane w MPD2026; starsze sterowniki go nie zwracają (klient powinien przyjąć rezerwę).
 
@@ -150,7 +155,8 @@ jest chwilowo zablokowany (klient powinien ponowić); HTTP 400 przy braku `actio
 | `activate_slot` | 0–2 | aktywuj zapisany slot |
 | `get_slot_config` | `slot`=0–2 | zwraca `{"guns":[{"mode":0..2,"ln":..,"gp":..}, ...],"valid":bool}` (odpowiedź JSON, nie `result`) |
 | `send_event` | 1–7 | wirtualny przycisk fizyczny (kolejka do Core 1): 1 START krótko, 2 START długo, 3 STOP krótko, 4 STOP długo, 5 SELEKTOR krótko, 6 SELEKTOR długo, 7 GAP |
-| `set_screen` | 0–`SCREEN_STATS_EXPORT` | przejście do ekranu TFT sterownika |
+| `set_screen` | 0–`SCREEN_STATS_EXPORT` | przejście do ekranu sterownika (na terminalu: sceny serwisowe). `SCREEN_NOZZLE_CLEAN` (6) tylko gdy stan GOTOWY/ZATRZYMANY |
+| `set_term_policy` | 0 / 1 | *tylko `esp32s3_terminal`:* polityka utraty terminala podczas malowania: 0 = kontynuuj + alarm, 1 = auto-pauza; zapis NVS |
 
 ### save_custom_pattern
 

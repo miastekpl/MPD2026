@@ -26,10 +26,15 @@ constexpr int SCR_W = 800;
 constexpr int SCR_H = 480;
 #endif
 
+// Ten moduł (Sunton ESP32-8048S070C) jest teraz WYŁĄCZNIE wariantem WiFi ("gruby klient").
+// Wariant docelowy dużego ekranu to sterownik + wyświetlacz inteligentny DWIN DGUS
+// (DMG10600T070_09WTC) na łączu UART bez pośredniczącego ESP32 — patrz src/dgus_link.cpp
+// w projekcie sterownika i docs/ARCHITEKTURA_TERMINAL.md. Ten katalog nie bierze w tym udziału.
+
 // Brak ramek statusu dłużej niż to = utrata łączności
 #define LINK_STALE_MS    2500
 
-#define DISPLAY_FW_VERSION "0.1.0"
+#define DISPLAY_FW_VERSION "0.1.1"
 
 // Tempo odświeżania animacji drogi [ms]
 #define ANIM_PERIOD_MS   33

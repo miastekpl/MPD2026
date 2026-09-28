@@ -14,7 +14,7 @@ public:
     bool isOn(GunID gun) const;
     bool getState(int index) const;
 
-    // Sprzetowy STOP awaryjny — ISR na PIN_BTN_STOP
+    // Sprzetowy STOP awaryjny — ISR na PIN_BTN_STOP (i, gdy HAS_ESTOP, na PIN_ESTOP_STATUS)
     void beginEmergencyStop();
     static void IRAM_ATTR emergencyStopISR();
     volatile bool emergencyStopTriggered = false;  // Flaga do obslugi w loop()

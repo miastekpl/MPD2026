@@ -11,6 +11,59 @@ Wersjonowanie zgodne z [Semantic Versioning](https://semver.org/lang/pl/).
 
 Repozytorium MPD2026 powstało jako kopia `Trassar_251v3` (firmware 2.52.0, commit bazowy `24e12c5`).
 
+### Dodano — architektura docelowa: ekran inteligentny DWIN DGUS (sterownik 2.53.0)
+Duży ekran podłączony **bezpośrednio** do sterownika (bez pośredniczącego ESP32, bez RS-485) — wyświetlacz inteligentny
+DWIN DGUS (np. `DMG10600T070_09WTC`, 7" 1024×600) renderujący samodzielnie wg projektu z DGUS Designer.
+**Kod sterownika kompiluje się i ma testy protokołu (zweryfikowane ręcznie względem dokumentacji DWIN); projekt ekranu
+w DGUS Designer jeszcze nie zbudowany; nic nie było uruchamiane na sprzęcie.**
+
+*(Wcześniejsza koncepcja z tej samej sesji — cienki terminal LVGL na drugim ESP32 przez RS-485 — została zastąpiona
+tym podejściem przed jakimkolwiek commitem; `display-module/` wraca do bycia tylko wariantem WiFi, bez zmian.)*
+
+- **Protokół DGUS** (`shared/dgus_protocol.h`): ramka `5A A5 <BC> <CMD> ...` zgodna z oficjalną dokumentacją DWIN
+  ("T5L_DGUSII Application Development Guide"), zapis/odczyt VP (0x82/0x83), przełączanie strony (VP 0x0084);
+  testy hostowe w `test/test_dgus_protocol` z przykładami 1:1 z dokumentacji producenta.
+- **Sterownik:** `src/dgus/` — nowy podkatalog grupujący cały kod ekranu DGUS (jedyny wyjątek od płaskiej struktury
+  `src/`): `dgus_link.*` (UART1 GPIO 9/10, nieblokujący, Core 1; ping co 700 ms do wykrywania utraty łącza — DGUS
+  nie wysyła własnego heartbeatu), `dgus_pages.*` (dane dla ekranu roboczego, kolumn S1–S10 i stron serwisowych),
+  `dgus_map.h` (mapa VP/stron/kodów zdarzeń — też specyfikacja do DGUS Designer), środowisko **`esp32s3_terminal`**
+  (bez ILI9341, z joystickiem i statusem E-STOP, flagi `HAS_SMALL_TFT`/`HAS_JOYSTICK`/`HAS_DGUS_LINK`/`HAS_ESTOP`).
+- **Pełny zestaw danych na ekranie roboczym** (nie tylko podstawowy status): **anomalia pistoletów** (zbiorczo +
+  per pistolet, jak dawny czerwony baner LVGL), **stan kalibracji enkodera** i impulsy/metr, **pełne dane GPS**
+  (pozycja, prędkość, HDOP, zapis i przepełnienie bufora trasy GPX — nie tylko liczba satelitów jak wcześniej),
+  **odczyt czujnika temperatury** DS18B20 (opcjonalny sprzęt), ważność zapisanego wzorca WŁASNY (do wyszarzenia
+  kafelka), podstawowa diagnostyka systemu (wolna pamięć, czas pracy, liczba klientów WiFi). Ekran startowy (POST)
+  rozszerzony do 10 pozycji (dodano temperaturę i wersję firmware). Pilot przewodowy (J4) i pedał (J5) nie mają
+  osobnej reprezentacji — są elektrycznie równoległe do przycisków fizycznych.
+- **Bezpieczeństwo:** czyszczenie dysz z ekranu z „martwym człowiekiem" (kody 90/naciśnięto, 91/puszczono +
+  twardy limit 8 s); polityka utraty ekranu podczas malowania (kontynuuj + alarm / auto-pauza, NVS, akcja
+  `set_term_policy`); **wejście do czyszczenia dysz zablokowane podczas malowania/pauzy** (dotyczy też `set_screen`
+  z WWW) — jedyna zmiana zachowania wariantu przejściowego.
+- **Joystick KY-023 przywrócony w `esp32s3_terminal`** (GPIO 19/20/46, `HAS_JOYSTICK=1`) — nawiguje po menu
+  równolegle z dotykiem ekranu: generuje ten sam `enum ButtonEvent` co kody dotyku 1–7 i trafia do tej samej
+  funkcji `menu.handleEvent()`. Kod (`src/joystick.cpp`) istniał już wcześniej dla wariantu przejściowego, po
+  prostu był wyłączony flagą dla `esp32s3_terminal` — nie wymagał zmian.
+- **STOP awaryjny (E-STOP)** — nowy moduł `src/estop.h/.cpp` (`HAS_ESTOP=1` dla `esp32s3_terminal`, GPIO 21).
+  Rzeczywiste cięcie zasilania pistoletów/pomp jest **sprzętowe** (grzybek, styk NC, w torze zasilania modułu
+  przekaźników — nie zależy od firmware); GPIO 21 tylko odczytuje status pętli (fail-safe: zerwany przewód = jak
+  zadziałanie). Obrona w głąb: ten sam ISR co fizyczny STOP (`guns.cpp::emergencyStopISR`) dołączony też do tego
+  pinu, zeruje przekaźniki programowo w mikrosekundy po zboczu. `estop.cpp::update()` (odszumione, w `loop()`)
+  wymusza `STATE_STOPPED` (`paintEngine.requestStop()`), alarm dźwiękowy (`BUZ_ESTOP`, co 1,5 s) i log zdarzeń.
+  Wznowienie malowania (`action=start`, dotyk i WWW) jest zablokowane, dopóki operator nie potwierdzi ustąpienia
+  STOP-u (`action=ack_estop` / kod dotyku 41, `KEY_ESTOP_ACK`) — nowe pola `VP_ESTOP_TRIGGERED`/`VP_ESTOP_AWAIT_ACK`
+  wysyłane niezależnie od aktywnej strony ekranu, więc alarm może być widoczny na każdym ekranie DGUS.
+- **Budżet pinów `esp32s3_terminal` bardzo się zawęził** przez powyższe dwie zmiany: **27 zajętych, 1 wolny
+  (GPIO 14, + GPIO 40 bez SELEKTORA)** — poprzednio 23 zajęte / 6 wolnych.
+- **Status i API:** pola `night`, `termOk`, `termLost`, `termPolicy` w `/api/status`; akcja `set_term_policy`.
+- **Nowa dokumentacja:** `docs/EKRAN_DGUS.md` (pełna specyfikacja: numeracja stron, mapa VP, pola każdego ekranu
+  serwisowego, tabela kodów zdarzeń dotyku — do ręcznego zbudowania w DGUS Designer), przepisane
+  `docs/ARCHITEKTURA_TERMINAL.md`, zaktualizowane `SCHEMAT_PODLACZEN.md` (nowy schemat
+  `schematy/schemat_polaczen_docelowy.svg`), `INSTRUKCJA_OBSLUGI.md`, `LACZE_PRZEWODOWE.md` (RS-485 jako opcja
+  pomocnicza dla długich przewodów, nie domyślne połączenie).
+- **Wizualizacja obudowy** z pionowym ekranem (wzorzec STiM), w **dwóch wersjach** (grupa OŚ / grupa KRAWĘDŹ na ekranie):
+  `docs/schematy/obudowa_pionowa_os.svg`, `docs/schematy/obudowa_pionowa_krawedz.svg` (widok z przodu, przekrój,
+  3/4, spód, wnętrze, tabela wycięć; przycisk GRUPA pokazuje aktywną stronę) — pod ekran DGUS (bez drugiego ESP32/MAX3485).
+
 ### Dodano
 - **Moduł wyświetlacza 7"** (`display-module/`, wersja 0.1.0) — Sunton ESP32-8048S070C (ESP32-S3, 800×480, GT911), LVGL 8.3.
   - Klient WiFi sterownika: WebSocket `:81` (status) + `POST /api/control` (polecenia), fallback HTTP, kolejka poleceń z priorytetem STOP i ponawianiem.
@@ -23,6 +76,8 @@ Repozytorium MPD2026 powstało jako kopia `Trassar_251v3` (firmware 2.52.0, comm
   - `src/pattern_buttons.*` — układ klasyczny (15, domyślny, bez zmian) lub soft-key; grupa automatycznie podąża za wybranym wzorcem; przycisk GRUPA na GPB2 (krótki ton 1,8 kHz).
   - API: pola `patGroup`, `patBtnLayout` w statusie; polecenia `set_pattern_group`, `set_pattern_layout` (zapis układu w NVS).
   - Moduł 7": przełącznik OŚ/KRAWĘDŹ w pasku górnym, kolumny S1–S10 pokazują wzorce grupy, ustawienie układu przycisków w MENU → USTAWIENIA, „WSZYSTKIE WZORCE" w MENU. Zastąpiło to wcześniejsze „ulubione" wzorce.
+- **Projekt architektury docelowej** (`docs/ARCHITEKTURA_TERMINAL.md`, `schematy/architektura_terminal.svg`): jeden duży ekran; sterownik ESP32-S3 = master (logika, stan, menu, dane), moduł 7" = cienki terminal graficzny (sceny + dotyk) na łączu RS-485; usunięcie ILI9341 i joysticka/SELEKTORA, osobny moduł SD; nowy bilans pinów (22 zajęte, 7 wolnych: 14, 15, 19, 20, 21, 40, 46), protokół ramek z CRC i heartbeatem, szablony scen, martwa ręka dla testu dysz, 8 etapów migracji, decyzje D1–D7. **Tylko projekt — kod w etapach.**
+- **Dokumentacja:** jednoznaczny podział ról ekranów (duży 7" = roboczy; mały ILI9341 = techniczny/serwisowy/awaryjny + karta SD) w README, instrukcjach, schemacie i CLAUDE.md; nowa wizualizacja **`komputer_kompletny.svg`** — komputer z dwoma ekranami, wszystkimi przyciskami (15 + opcje), panelem złączy J1–J6 i legendą.
 - **Moduł 7": rysunki wzorców w skali** — miniatury w kolumnach, siatce i **duży rysunek przy kodzie aktualnego wzorca** (układ pionowy): szerokości linii 12/24 cm w proporcji, rozstaw P1/P3 jak w P-3/P-4, dokładnie 2 pełne cykle kreska+przerwa, pobocze dla wzorców krawędziowych; zapis liczbowy (`ciagla + 4/2 m`, `12+12 cm`). Arkusz wzorców: `docs/schematy/wzorce_w_skali.svg`. PDF-y dokumentacji budowane lokalnie (`docs/pdf/build_pdfs.py`), niewersjonowane.
 - **Moduł 7": interfejs pionowy 480×800** (środowisko `sunton7_portrait`, flaga `-DUI_PORTRAIT=1`): kolumny wzorców przy krawędziach ekranu (fizyczne klawisze S1–S10 obok etykiet), zakładki OŚ JEZDNI / KRAWĘDŹ, pionowe układy wszystkich okien (menu, wszystkie wzorce, statystyki, ustawienia, kalibracja, farba, edytor wzorca własnego, WiFi, informacje), obrót panelu `-DUI_ROTATION`. Wersja pozioma bez zmian (środowisko `sunton7`).
 - **Dokumentacja:** `docs/INSTRUKCJA_TERENOWA.md` (rozbudowana instrukcja pracy w terenie: procedury, farba i zasięgi, awarie, konserwacja, karty do wydruku), `docs/LACZE_PRZEWODOWE.md` (analiza i projekt łącza przewodowego RS-485 zamiast WiFi — propozycja, niezaimplementowane) oraz nowe schematy SVG: wiązka złączy J1–J6 (`schemat_zlacza_wiazka.svg`) i łącze RS-485 (`schemat_lacze_rs485.svg`).

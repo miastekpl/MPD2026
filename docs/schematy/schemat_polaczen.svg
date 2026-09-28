@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1560" viewBox="0 0 2100 1560">
 <rect x="0" y="0" width="2100" height="1560" fill="#ffffff"/>
 <text x="40" y="46" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="30" fill="#0b1f4a" text-anchor="start" font-weight="bold" >MPD2026 — schemat połączeń elektronicznych</text>
-<text x="40" y="74" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#444" text-anchor="start" font-weight="normal" >Sterownik Trassar (ESP32-S3 N16R8, firmware 2.52.0) + moduł wyświetlacza 7" (Sunton ESP32-8048S070C). Numery = GPIO ESP32-S3 (zgodnie z src/config.h).</text>
+<text x="40" y="74" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#444" text-anchor="start" font-weight="normal" >Sterownik Trassar (ESP32-S3 N16R8, firmware 2.53.0) + moduł wyświetlacza 7" (Sunton ESP32-8048S070C). Numery = GPIO ESP32-S3 (zgodnie z src/config.h).</text>
 <rect x="40" y="100" width="200" height="60" rx="6" fill="#fff3cd" stroke="#b8860b" stroke-width="2" />
 <text x="140" y="126" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="middle" font-weight="bold" >Akumulator / instalacja</text>
 <text x="140" y="146" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="middle" font-weight="normal" >maszyny 12 V / 24 V DC</text>
@@ -25,7 +25,7 @@
 <text x="1038.0" y="170" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#c1121f" text-anchor="start" font-weight="normal" >5 V (VBUS)</text>
 <text x="1030.0" y="1108" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="middle" font-weight="normal" >3V3 (regulator) -&gt; TFT, SD, GPS, MCP23017, joystick, enkoder    GND: masa wspólna</text>
 <rect x="120" y="260" width="380" height="302" rx="8" fill="#f1f8e9" stroke="#33691e" stroke-width="2" />
-<text x="310.0" y="282" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >ILI9341 2,8" TFT + karta SD</text>
+<text x="310.0" y="282" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >ILI9341 2,8" (ekran serwisowy) + karta SD</text>
 <text x="310.0" y="300" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal" >SPI 27 MHz, zasilanie 3V3, kabel ekranowany &lt;= 20 cm</text>
 <text x="490" y="315" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >CS</text>
 <line x1="500" y1="310" x2="800" y2="310" stroke="#6a1b9a" stroke-width="1.8"/>

@@ -227,6 +227,16 @@ uint8_t StorageManager::loadButtonLayout() {
     return prefs.getUChar("pat_btn_lay", 0);
 }
 
+void StorageManager::saveTermLossPolicy(uint8_t policy) {
+    NvsSession s(false);
+    prefs.putUChar("term_loss", policy);
+}
+
+uint8_t StorageManager::loadTermLossPolicy() {
+    NvsSession s(true);
+    return prefs.getUChar("term_loss", 0);
+}
+
 void StorageManager::saveMTH(uint32_t totalSec) {
     NvsSession s(false);
     prefs.putUInt("mth_sec", totalSec);

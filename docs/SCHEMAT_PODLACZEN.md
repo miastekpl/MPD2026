@@ -1,6 +1,6 @@
 # MPD2026 — Schemat połączeń i dokumentacja sprzętowa
 
-**Dotyczy:** sterownik Trassar (firmware 2.52.0) + moduł wyświetlacza 7" (display-module 0.1.0)
+**Dotyczy:** sterownik Trassar (firmware 2.53.0) + moduł wyświetlacza 7" (display-module 0.2.0)
 **Źródło prawdy dla pinów:** `src/config.h`, `platformio.ini`, `src/temp_sensor.h`, `display-module/src/lgfx_sunton7.h`
 
 > Diagramy oznaczone `mermaid` renderują się automatycznie na GitHub (w VS Code wymagają rozszerzenia
@@ -27,6 +27,14 @@
 System składa się z **dwóch urządzeń** połączonych bezprzewodowo. Sterownik jest jedynym urządzeniem
 sterującym pistoletami; moduł 7" jest panelem operatora (nie ma żadnego przewodowego połączenia sygnałowego
 ze sterownikiem — tylko zasilanie).
+
+> **Architektura docelowa:** jeden duży ekran — wyświetlacz inteligentny DWIN DGUS podłączony **bezpośrednio** do sterownika (UART,
+> bez WiFi, bez drugiego ESP32), bez ILI9341 — [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md) i [EKRAN_DGUS.md](EKRAN_DGUS.md)
+> (nowy bilans pinów: 27 zajęte, 1 wolny). Poniższy opis (rozdz. 1-2, 4.1, 5) dotyczy wariantu przejściowego; wariant docelowy: rozdz. 3.2.
+
+**Role ekranów:** **duży ekran 7"** (moduł Sunton) to ekran **roboczy** operatora; **mały ekran ILI9341 2,8"** sterownika
+jest ekranem **technicznym / serwisowym / awaryjnym** i mieści slot karty SD. Widok kompletny (oba ekrany, wszystkie
+przyciski, panel złączy): [schematy/komputer_kompletny.svg](schematy/komputer_kompletny.svg).
 
 ```mermaid
 flowchart LR
@@ -94,7 +102,7 @@ Szczegóły API: [API_WWW.md](API_WWW.md). Moduł 7": [MODUL_WYSWIETLACZA.md](MO
 | # | Komponent | Model | Ilość | Uwagi |
 |---|-----------|-------|-------|-------|
 | 1 | Mikrokontroler | ESP32-S3 N16R8 DevKitC-1 | 1 | 16 MB Flash, 8 MB Octal PSRAM, USB-C |
-| 2 | Wyświetlacz | ILI9341 2.8" TFT SPI 240×320 (z SD i Touch) | 1 | Slot MicroSD na module |
+| 2 | Ekran serwisowy (techniczny / awaryjny) | ILI9341 2.8" TFT SPI 240×320 (z SD i Touch) | 1 | Slot MicroSD na module — karta SD sterownika; dostęp do slotu z boku obudowy |
 | 3 | Karta pamięci | MicroSD FAT32, min. 1 GB, klasa 4+ | 1 | Raporty, trasy, backup NVS |
 | 4 | Zegar RTC | DS1307 AT24C32 (moduł z gniazdem CR2032) | 1 | I2C 0x68, zasilanie 5 V |
 | 5 | Bateria RTC | CR2032 | 1 | |
@@ -201,6 +209,28 @@ Szczegóły API: [API_WWW.md](API_WWW.md). Moduł 7": [MODUL_WYSWIETLACZA.md](MO
                         │  └────────┘  │
                         └──────────────┘
 ```
+
+### 3.2 Wariant docelowy (`esp32s3_terminal`) — zmiany w mapie GPIO
+
+Sterownik bez ekranu ILI9341; duży ekran to wyświetlacz inteligentny DWIN DGUS podłączony
+**bezpośrednio** przez UART (bez pośredniczącego ESP32) — patrz [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md).
+Joystick **zostaje** — nawiguje po menu równolegle z dotykiem ekranu (te same zdarzenia, patrz
+ARCHITEKTURA_TERMINAL.md rozdz. 6). Doszedł też status pętli STOP-u awaryjnego (E-STOP, rozdz. 7).
+
+| Funkcja | Wariant przejściowy (`esp32s3`) | **Wariant docelowy (`esp32s3_terminal`)** |
+|---------|----------------------------------|--------------------------------------------|
+| ILI9341: DC / CS / RST / BL / Touch CS | 9 / 10 / 14 / 21 / 15 | **usunięte** (14 wolny; 21 zajęty przez status E-STOP; 15 zajęty przez DS18B20) |
+| **UART1 do ekranu DGUS** | — | **TX = 9, RX = 10** (RX przez dzielnik napięcia — ekran ma wyjście 5 V) |
+| Karta SD: MOSI / SCK / MISO / CS | 11 / 12 / 13 / 16 (wspólnie z ILI9341) | 11 / 12 / 13 / 16 (**osobny moduł SD**) |
+| Joystick VRx / VRy / SW | 19 / 20 / 46 | **bez zmian** (19, 20, 46 — nawigacja menu) |
+| Status pętli STOP awaryjnego (E-STOP) | — | **nowy: GPIO 21** (INPUT_PULLUP; cięcie zasilania jest sprzętowe, patrz ARCHITEKTURA_TERMINAL.md rozdz. 7) |
+| SELEKTOR | 40 | **opcjonalny** (jeśli pominięty: 40 wolny; odwracanie P-3a/b także dotykiem na ekranie) |
+| Czujnik temperatury DS18B20 (opcjonalny, OneWire) | 15 | 15 (**pin zawsze zajęty w firmware, niezależnie od montażu czujnika**) |
+| Pozostałe (przekaźniki, enkoder, GAP, buzzer, I2C, START/STOP, GPS) | bez zmian | bez zmian |
+| **Zajęte / wolne** | — | **27 zajęte, 1 wolny: GPIO 14** (+ GPIO 40 wolny tylko bez SELEKTORA) |
+
+Pełny schemat tego wariantu (wszystkie połączenia): [schematy/schemat_polaczen_docelowy.svg](schematy/schemat_polaczen_docelowy.svg).
+Piny 9/10 są w wariancie przejściowym pinami SPI ekranu — flaga `HAS_DGUS_LINK=1` wymaga `HAS_SMALL_TFT=0` (kompilator zgłasza `#error` przy kolizji).
 
 ---
 
@@ -459,13 +489,21 @@ Interfejs panelu zajmuje niemal wszystkie GPIO ESP32-S3 (stąd wybór architektu
 Parametry taktowania panelu: PCLK 12 MHz; HSYNC front/pulse/back = 8/2/43; VSYNC front/pulse/back = 8/2/12.
 Zestaw ustawiony pod stabilną pracę z aktywnym WiFi i PSRAM (bez migotania).
 
-### 5.2b Łącze przewodowe zamiast WiFi (propozycja)
+### 5.2b Łącze z ekranem DWIN DGUS (wariant docelowy — zaimplementowane w kodzie)
 
-Zamiast łączności radiowej moduł 7" można połączyć ze sterownikiem kablem (RS-485, złącze M12, zasilanie w tym samym kablu).
-Analiza, piny (moduł 7": GPIO 17/18; sterownik: GPIO 19/20), protokół i plan wdrożenia: [LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md);
-schemat: [schematy/schemat_lacze_rs485.svg](schematy/schemat_lacze_rs485.svg). **Nie jest jeszcze zaimplementowane w oprogramowaniu.**
+Zamiast łączności radiowej duży ekran to **wyświetlacz inteligentny DWIN DGUS** (np. `DMG10600T070_09WTC`) podłączony
+**bezpośrednio** do sterownika kablem UART (115 200 baud 8N1, 4 przewody: 5 V, GND, TX, RX) — **bez pośredniczącego
+ESP32 i bez RS-485**. **Piny sterownika: GPIO 9 (TX) / GPIO 10 (RX, przez dzielnik napięcia — ekran ma wyjście 5 V,
+ESP32 toleruje max ~3,6 V).** Protokół i firmware: [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md); specyfikacja
+projektu ekranu: [EKRAN_DGUS.md](EKRAN_DGUS.md); pełny schemat: [schematy/schemat_polaczen_docelowy.svg](schematy/schemat_polaczen_docelowy.svg).
+**Kod sterownika się kompiluje i ma testy protokołu na hoście, ale nic nie było uruchomione na sprzęcie** — projekt
+ekranu w DGUS Designer trzeba dopiero zbudować.
 
-![Łącze RS-485](schematy/schemat_lacze_rs485.svg)
+Dla bardzo długich przewodów (ekran montowany daleko od sterownika) rozważ podniesienie sygnału do RS-485 (2×
+konwerter MAX3485) — analiza warstwy fizycznej: [LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md),
+schemat: [schematy/schemat_lacze_rs485.svg](schematy/schemat_lacze_rs485.svg). To opcja, nie domyślne połączenie.
+
+![Schemat połączeń — wariant docelowy](schematy/schemat_polaczen_docelowy.svg)
 
 ### 5.3 Montaż
 
@@ -750,4 +788,4 @@ Moduł wyświetlacza 7" **nie jest elementem bezpieczeństwa**: jego przycisk ST
 
 ---
 
-*MPD2026 — dokumentacja sprzętowa. Sterownik: ESP32-S3 N16R8, firmware 2.52.0. Moduł 7": Sunton ESP32-8048S070C.*
+*MPD2026 — dokumentacja sprzętowa. Sterownik: ESP32-S3 N16R8, firmware 2.53.0. Moduł 7": Sunton ESP32-8048S070C.*

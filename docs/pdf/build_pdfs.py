@@ -31,6 +31,8 @@ DOCUMENTS = [
     (DOCS / "INSTRUKCJA_OBSLUGI.md", "01_Instrukcja_obslugi.pdf", "Instrukcja obsługi"),
     (DOCS / "INSTRUKCJA_TERENOWA.md", "02_Instrukcja_terenowa.pdf", "Instrukcja obsługi w terenie"),
     (DOCS / "SCHEMAT_PODLACZEN.md", "03_Schemat_polaczen.pdf", "Schemat połączeń i dokumentacja sprzętowa"),
+    (DOCS / "ARCHITEKTURA_TERMINAL.md", "03a_Architektura_docelowa.pdf", "Architektura docelowa"),
+    (DOCS / "EKRAN_DGUS.md", "03b_Ekran_DGUS.pdf", "Specyfikacja ekranu DWIN DGUS"),
     (DOCS / "WIZUALIZACJE.md", "04_Wizualizacje_panelu.pdf", "Wizualizacje panelu"),
     (DOCS / "MODUL_WYSWIETLACZA.md", "05_Modul_wyswietlacza.pdf", "Moduł wyświetlacza 7\""),
     (DOCS / "LACZE_PRZEWODOWE.md", "06_Lacze_przewodowe.pdf", "Łącze przewodowe RS-485"),
@@ -41,9 +43,14 @@ DOCUMENTS = [
 ]
 
 SVGS = [
-    ("schemat_polaczen.svg", "Schemat polaczen elektronicznych"),
+    ("architektura_terminal.svg", "Architektura docelowa"),
+    ("obudowa_pionowa_os.svg", "Obudowa z pionowym ekranem - grupa OS"),
+    ("obudowa_pionowa_krawedz.svg", "Obudowa z pionowym ekranem - grupa KRAWEDZ"),
+    ("komputer_kompletny.svg", "Komputer kompletny - dwa ekrany i przyciski"),
+    ("schemat_polaczen.svg", "Schemat polaczen elektronicznych (wariant przejsciowy)"),
+    ("schemat_polaczen_docelowy.svg", "Schemat polaczen elektronicznych (wariant docelowy, ekran DGUS)"),
     ("schemat_zlacza_wiazka.svg", "Wiazka okablowania - zlacza J1-J6"),
-    ("schemat_lacze_rs485.svg", "Lacze przewodowe RS-485"),
+    ("schemat_lacze_rs485.svg", "Lacze przewodowe RS-485 (opcja dla dlugich przewodow)"),
     ("wzorce_w_skali.svg", "Rysunki wzorcow w skali"),
     ("ekran_roboczy.svg", "Makieta ekranu roboczego"),
     ("panel_A_kabinowy.svg", "Propozycja A - kabinowy"),
@@ -225,7 +232,12 @@ def main():
         print("PDF:", pdf_name, "(mermaid)" if has_mermaid else "")
         print_pdf(html_path, raw, mermaid=has_mermaid)
         final = OUT / pdf_name
-        add_footer(raw, final, f"MPD2026 — {title}")
+        try:
+            add_footer(raw, final, f"MPD2026 — {title}")
+        except PermissionError:
+            final = OUT / (pdf_name[:-4] + "_NOWY.pdf")
+            print("  UWAGA: plik", pdf_name, "jest otwarty w innym programie — zapisano jako", final.name)
+            add_footer(raw, final, f"MPD2026 — {title}")
         built.append((title, final))
 
     for name, title in SVGS:
@@ -256,8 +268,14 @@ def main():
         merged.add_outline_item(title, start)
     merged.add_metadata({"/Title": "MPD2026 - kompletna dokumentacja", "/Author": "miastekpl/MPD2026"})
     complete = OUT / "MPD2026_Dokumentacja_komplet.pdf"
-    with open(complete, "wb") as f:
-        merged.write(f)
+    try:
+        with open(complete, "wb") as f:
+            merged.write(f)
+    except PermissionError:
+        complete = OUT / "MPD2026_Dokumentacja_komplet_NOWY.pdf"
+        print("  UWAGA: komplet jest otwarty w innym programie — zapisano jako", complete.name)
+        with open(complete, "wb") as f:
+            merged.write(f)
     print("KOMPLET:", complete.name, len(merged.pages), "stron")
 
     shutil.rmtree(TMP, ignore_errors=True)

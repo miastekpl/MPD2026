@@ -5,7 +5,9 @@
 // ============================================================
 
 #include "menu.h"
+#if HAS_SMALL_TFT
 #include "display_manager.h"
+#endif
 #include "rtc_handler.h"
 #include "patterns.h"
 #include "encoder_distance.h"
@@ -307,7 +309,14 @@ void MenuSystem::handleServiceMenu(ButtonEvent e) {
                 case 3: {
                     STATE_LOCK();
                     PatternID cp = g_state.currentPattern;
+                    MachineState nozzleMs = g_state.machineState;
                     STATE_UNLOCK();
+                    // Czyszczenie dysz steruje pistoletami wprost — tylko gdy maszyna nie maluje
+                    // (z panelu fizycznego i tak wchodzi sie tu po zatrzymaniu; blokada chroni sciezke WWW/terminal).
+                    if (nozzleMs == STATE_PAINTING || nozzleMs == STATE_PAUSED) {
+                        buzzer.play(BUZ_ERROR);
+                        break;
+                    }
                     nozzlePatternIdx = (int)cp;
                     if (nozzlePatternIdx >= PatternManager::PREDEFINED_PAT_COUNT)
                         nozzlePatternIdx = 0;
@@ -367,7 +376,9 @@ void MenuSystem::handleServiceMenu(ButtonEvent e) {
             g_state.forceFullRedraw = true;
             g_state.displayNeedsUpdate = true;
             STATE_UNLOCK();
+#if HAS_SMALL_TFT
             display.applyNightMode(nm);
+#endif
             storage.saveNightMode(nm);
             buzzer.beep(1500, 60);
             DBG_PRINTF("[MENU] Tryb nocny: %s\n", nm ? "ON" : "OFF");

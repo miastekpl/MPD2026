@@ -1,6 +1,6 @@
 #pragma once
 // ============================================================
-// TrassarV3 - Konfiguracja sprzętowa v2.52.0  [SAFETY PATCH]
+// TrassarV3 - Konfiguracja sprzętowa v2.53.0  [SAFETY PATCH + ekran DGUS]
 // Komputer pokładowy malowarki pasów drogowych
 // ============================================================
 
@@ -9,7 +9,7 @@
 // ============ WERSJA FIRMWARE ============
 // FW_VERSION definiowane w platformio.ini (build_flags) — jedno zrodlo prawdy
 #ifndef FW_VERSION
-  #define FW_VERSION    "2.52.0"
+  #define FW_VERSION    "2.53.0"
 #endif
 #define FW_NAME         "TrassarV3"
 #define FW_DATE         __DATE__
@@ -22,6 +22,48 @@
 #define WEB_SERVER_PORT 80
 #define WS_PORT         81       // WebSocket port (push status updates)
 #define WS_BROADCAST_MS 500      // Interwał broadcastu WebSocket [ms]
+
+// ============ WARIANTY SPRZETOWE (flagi kompilacji, patrz platformio.ini) ============
+//  esp32s3          : wariant przejsciowy = maly ekran ILI9341 + joystick, bez ekranu DGUS
+//  esp32s3_terminal : wariant docelowy    = sterownik bez ekranu ILI9341, duzy ekran to
+//                      inteligentny wyswietlacz DWIN DGUS (UART, bez posredniczacego ESP32)
+//                      - patrz src/dgus/dgus_link.h. Joystick (nawigacja menu, GPIO 19/20/46)
+//                      i status STOP-u awaryjnego (GPIO 21) sa tu WLACZONE (HAS_JOYSTICK=1,
+//                      HAS_ESTOP=1) - patrz docs/ARCHITEKTURA_TERMINAL.md rozdz. 3.1 i 9.
+#ifndef HAS_SMALL_TFT
+  #define HAS_SMALL_TFT   1    // 1 = ILI9341 (+ TFT_eSPI) na SPI 9/10/11/12/13/14/21
+#endif
+#ifndef HAS_JOYSTICK
+  #define HAS_JOYSTICK    1    // 1 = joystick KY-023 (GPIO 19/20/46)
+#endif
+#ifndef HAS_DGUS_LINK
+  #define HAS_DGUS_LINK   0    // 1 = lacze UART z ekranem DWIN DGUS (GPIO 9/10, wymaga HAS_SMALL_TFT=0)
+#endif
+#if HAS_DGUS_LINK && HAS_SMALL_TFT
+  #error "HAS_DGUS_LINK=1 wymaga HAS_SMALL_TFT=0 (GPIO 9/10 to piny SPI wyswietlacza ILI9341)"
+#endif
+#ifndef HAS_ESTOP
+  #define HAS_ESTOP       0    // 1 = monitorowanie statusu sprzetowego STOP-u awaryjnego (GPIO 21)
+#endif
+
+// ============ Lacze z ekranem DWIN DGUS (UART, bezposrednio, bez konwertera RS-485) ============
+#define PIN_DGUS_TX        9    // UART1 TX -> RX ekranu DGUS (bezposrednio, poziomy 3,3 V)
+#define PIN_DGUS_RX       10    // UART1 RX <- TX ekranu DGUS (PRZEZ DZIELNIK/LEVEL-SHIFTER! TX ekranu to 5 V)
+
+// ============ STOP awaryjny (E-STOP) — status sprzetowego odciecia zasilania ============
+// Rzeczywiste ciecie pradu pistoletow/pomp NASTEPUJE SPRZETOWO: grzybek E-STOP (styk NC)
+// jest wpiety W TOR ZASILANIA modulu przekaznikow (nie jest to samo, co zwykly przycisk
+// PIN_BTN_STOP powyzej — ten tylko generuje zdarzenie menu). Firmware NIE steruje ciecia,
+// jedynie je OBSERWUJE — do UI/logow/buzzera — i dodatkowo (obrona w glab, jak przy
+// PIN_BTN_STOP — patrz guns.cpp beginEmergencyStop()) natychmiast zeruje przekazniki
+// programowo przez ten sam ISR.
+// Okablowanie: petla NC (grzybek + ew. koncowki bezpieczenstwa) miedzy GPIO a GND,
+// INPUT_PULLUP. Petla zamknieta (stan normalny) = LOW. Petla otwarta (wcisniety grzybek
+// LUB przerwany przewod) = HIGH = zadzialanie. Zerwany przewod jest wiec interpretowany
+// jako zadzialanie STOP-u (fail-safe), a nie jako "wszystko OK".
+#define PIN_ESTOP_STATUS  21    // Status petli E-STOP (INPUT_PULLUP; HIGH = zadzialal/przewod przerwany)
+#define ESTOP_DEBOUNCE_MS      50    // Ile ms stabilnego odczytu wymagane do potwierdzenia zmiany stanu
+#define ESTOP_BUZZ_REPEAT_MS 1500    // Powtarzaj alarm dzwiekowy co 1.5s dopoki STOP aktywny
 
 // ============ ILI9341 Display (SPI) ============
 // Piny SPI zdefiniowane w platformio.ini (build_flags TFT_eSPI)

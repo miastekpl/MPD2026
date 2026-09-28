@@ -1,6 +1,9 @@
 #pragma once
 #include "config.h"
 #include "button_handler.h"
+#if HAS_DGUS_LINK
+#include "dgus/dgus_pages.h"
+#endif
 
 class MenuSystem {
 public:
@@ -70,5 +73,28 @@ private:
 public:
     // Timestamp ostatniej zmiany ekranu (cooldown dla joysticka)
     unsigned long lastScreenChangeMs = 0;
+
+#if HAS_DGUS_LINK
+    // Wariant z ekranem DGUS: zamiast rysowac na ILI9341 sterownik wypelnia generyczne
+    // pola wartosci biezacego ekranu serwisowego (etykiety/przyciski sa statyczne,
+    // narysowane w DGUS Designer) — patrz dgus_pages.cpp i docs/ARCHITEKTURA_TERMINAL.md.
+    // Zwraca false dla ekranow roboczych (HOME/PAINTING) — te ekran DGUS pokazuje
+    // sam na podstawie bloku statusu (DgusHomeStatus), bez tej funkcji.
+    bool fillDgusPage(DgusPageData& d);
+
+    // Ekran informacyjny (POST, dane WiFi) ustawiany przez main.cpp na czas startu
+    void infoBegin(const char* title, const char* message);
+    void infoRow(const char* label, const char* value);
+#endif
+
+private:
+#if HAS_DGUS_LINK
+    static const int INFO_ROWS = 10;
+    char infoTitle[24] = {};
+    char infoMsg[72] = {};
+    char infoLabel[INFO_ROWS][20] = {};
+    char infoValue[INFO_ROWS][48] = {};
+    int  infoCount = 0;
+#endif
 };
 extern MenuSystem menu;

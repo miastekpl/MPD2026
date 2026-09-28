@@ -24,6 +24,8 @@
 #include "gps_track.h"
 #include "paint_consumption.h"
 #include "event_log.h"
+#include "control_api.h"
+#include "dgus/dgus_link.h"
 #include <SD.h>
 
 TrassarWebServer webServer;
@@ -394,6 +396,18 @@ void TrassarWebServer::handleStatus() {
 // ============================================================
 // POST /api/control - Sterowanie maszyna
 // ============================================================
+namespace {
+// Argumenty polecenia z formularza HTTP
+class HttpFormArgs : public ControlArgs {
+public:
+    explicit HttpFormArgs(WebServer& s) : srv(s) {}
+    bool   has(const char* key) const override { return srv.hasArg(key); }
+    String get(const char* key) const override { return srv.arg(key); }
+private:
+    WebServer& srv;
+};
+}  // namespace
+
 void TrassarWebServer::handleControl() {
     core0AliveMs = millis();
 
@@ -402,290 +416,10 @@ void TrassarWebServer::handleControl() {
         return;
     }
 
-    String action = server.arg("action");
-    String result = "ok";
-
-    // Atomowy snapshot stanu (wymagany do decyzji o akcji)
-    // Fix #25/#30: Trylock — jesli Core 1 trzyma mutex, zwroc blad zamiast blokowac.
-    // Fix #30: 1000→200ms — krotszy timeout zapobiega zagłodzeniu Core 0 WDT
-    // podczas ciezkich operacji Core 1 (NVS write w stop(), display update).
-    if (!STATE_TRYLOCK(200)) {
-        server.send(503, "application/json", "{\"error\":\"serwer zajety — sprobuj ponownie\"}");
-        return;
-    }
-    MachineState snapState = g_state.machineState;
-    ScreenID snapScreen = g_state.currentScreen;
-    STATE_UNLOCK();
-
-    if (action == "start") {
-        // Jesli ekran QR startowy jest aktywny — zamknij go zamiast startowac malowanie
-        if (snapScreen == SCREEN_POST) {
-            if (STATE_TRYLOCK(500)) { g_state.qrDismissed = true; STATE_UNLOCK(); }
-        } else if (snapState == STATE_PAUSED) {
-            paintEngine.resume();
-        } else if (snapState == STATE_IDLE || snapState == STATE_STOPPED) {
-            paintEngine.start();
-        }
-    } else if (action == "start_from_gap") {
-        paintEngine.startFromGap();
-    } else if (action == "pause") {
-        paintEngine.pause();
-    } else if (action == "stop") {
-        // Fix #30: Nie wywoluj stop() na Core 0 — ciężkie I/O (NVS/SD, 800ms-2.5s)
-        // blokowalo WDT. Zamiast tego requestStop() natychmiast wylacza pistolety
-        // i zmienia stan, a Core 1 wykonuje zapis danych w nastepnym update().
-        paintEngine.requestStop();
-    } else if (action == "set_pattern") {
-        if (server.hasArg("value")) {
-            int val = server.arg("value").toInt();
-            if (val >= 0 && val < PAT_COUNT) {
-                paintEngine.setPattern((PatternID)val);
-            } else {
-                result = "nieprawidlowy wzorzec";
-            }
-        } else {
-            result = "brak parametru value";
-        }
-    } else if (action == "toggle_reverse") {
-        paintEngine.toggleReverse();
-    } else if (action == "cal_start") {
-        encoderDist.startCalibration();
-    } else if (action == "cal_finish") {
-        encoderDist.finishCalibration();
-    } else if (action == "set_max_speed") {
-        if (server.hasArg("value")) {
-            float val = server.arg("value").toFloat();
-            // Fix #8: walidacja NaN/Inf + cross-check z minSpeed
-            if (isnan(val) || isinf(val)) {
-                result = "nieprawidlowa wartosc";
-            } else if (val >= 5.0f && val <= 30.0f) {
-                if (val <= paintEngine.getMinSpeed()) {
-                    result = "maxSpeed musi byc > minSpeed";
-                } else {
-                    paintEngine.setMaxSpeed(val);
-                    storage.saveMaxSpeed(val);
-                }
-            } else {
-                result = "zakres 5-30 km/h";
-            }
-        } else {
-            result = "brak parametru value";
-        }
-    } else if (action == "set_min_speed") {
-        if (server.hasArg("value")) {
-            float val = server.arg("value").toFloat();
-            // Fix #8: walidacja NaN/Inf + cross-check z maxSpeed
-            if (isnan(val) || isinf(val)) {
-                result = "nieprawidlowa wartosc";
-            } else if (val >= 0.0f && val <= 10.0f) {
-                if (val >= paintEngine.getMaxSpeed()) {
-                    result = "minSpeed musi byc < maxSpeed";
-                } else {
-                    paintEngine.setMinSpeed(val);
-                    storage.saveMinSpeed(val);
-                }
-            } else {
-                result = "zakres 0-10 km/h";
-            }
-        } else {
-            result = "brak parametru value";
-        }
-    } else if (action == "set_mode") {
-        if (server.hasArg("value")) {
-            int val = server.arg("value").toInt();
-            if (val >= 0 && val <= 3) {
-                // Nie zmieniaj trybu podczas malowania — niebezpieczne
-                if (STATE_TRYLOCK(200)) {
-                    MachineState modeState = g_state.machineState;
-                    if (modeState == STATE_IDLE || modeState == STATE_STOPPED) {
-                        MachineMode newMode = (MachineMode)val;
-                        g_state.machineMode = newMode;
-                        STATE_UNLOCK();
-                        storage.saveMode(newMode);
-                        DBG_PRINTF("[WWW] Tryb pracy: %d\n", val);
-                    } else {
-                        STATE_UNLOCK();
-                        result = "nie mozna zmienic trybu podczas malowania";
-                    }
-                } else {
-                    result = "serwer zajety — sprobuj ponownie";
-                }
-            } else {
-                result = "nieprawidlowy tryb (0-3)";
-            }
-        } else {
-            result = "brak parametru value";
-        }
-    } else if (action == "save_custom_pattern") {
-        // Parametry: g0..g5, ln0..ln5, gp0..gp5, slot (0-2)
-        CustomPatternCfg cfg = {};
-        cfg.structVersion = CUSTOM_PAT_STRUCT_VER;
-        cfg.valid = true;
-        bool validationError = false;
-        for (int i = 0; i < NUM_GUNS; i++) {
-            String gKey = "g" + String(i);
-            String lKey = "ln" + String(i);
-            String pKey = "gp" + String(i);
-            if (server.hasArg(gKey)) {
-                int gm = server.arg(gKey).toInt();
-                if (gm < 0 || gm > 2) gm = 0;
-                cfg.gunModes[i] = (uint8_t)gm;
-            }
-            float ln = 4.0f, gp = 8.0f;
-            if (server.hasArg(lKey)) ln = server.arg(lKey).toFloat();
-            if (server.hasArg(pKey)) gp = server.arg(pKey).toFloat();
-            // Walidacja: odrzuc NaN/Inf i wartosci spoza zakresu
-            if (isnan(ln) || isinf(ln) || isnan(gp) || isinf(gp)) {
-                validationError = true;
-                break;
-            }
-            if (ln < 0.1f) ln = 0.1f;
-            if (ln > 50.0f) ln = 50.0f;
-            if (gp < 0.1f) gp = 0.1f;
-            if (gp > 50.0f) gp = 50.0f;
-            cfg.lineLen[i] = ln;
-            cfg.gapLen[i] = gp;
-        }
-        if (validationError) {
-            server.send(400, "application/json", "{\"error\":\"nieprawidlowe wartosci lineLen/gapLen\"}");
-            return;
-        }
-        int slot = 0;
-        if (server.hasArg("slot")) {
-            slot = server.arg("slot").toInt();
-            if (slot < 0 || slot >= NUM_CUSTOM_SLOTS) slot = 0;
-        }
-        patternMgr.saveSlot(slot, cfg);
-        patternMgr.activateSlot(slot);
-        DBG_PRINTF("[WWW] Wzorzec wlasny slot %d zapisany\n", slot);
-    } else if (action == "activate_slot") {
-        if (server.hasArg("value")) {
-            int slot = server.arg("value").toInt();
-            if (slot >= 0 && slot < NUM_CUSTOM_SLOTS && patternMgr.isSlotValid(slot)) {
-                patternMgr.activateSlot(slot);
-            } else {
-                result = "slot pusty lub nieprawidlowy";
-            }
-        }
-    } else if (action == "get_slot_config") {
-        int slot = 0;
-        if (server.hasArg("slot")) {
-            slot = server.arg("slot").toInt();
-            if (slot < 0 || slot >= NUM_CUSTOM_SLOTS) slot = 0;
-        }
-        CustomPatternCfg cfg = patternMgr.loadSlot(slot);
-        JsonDocument slotDoc;
-        JsonArray guns = slotDoc["guns"].to<JsonArray>();
-        for (int i = 0; i < NUM_GUNS; i++) {
-            JsonObject g = guns.add<JsonObject>();
-            g["mode"] = cfg.gunModes[i];
-            g["ln"]   = serialized(String(cfg.lineLen[i], 1));
-            g["gp"]   = serialized(String(cfg.gapLen[i], 1));
-        }
-        slotDoc["valid"] = cfg.valid;
-        String resp;
-        serializeJson(slotDoc, resp);
-        server.send(200, "application/json", resp);
-        return;
-    } else if (action == "semi_next_line") {
-        paintEngine.semiNextLine();
-    } else if (action == "send_event") {
-        // Wirtualne przyciski z panelu www — kolejkowanie zdarzenia do Core 1.
-        // NIE wywoluj menu.handleEvent() bezposrednio z Core 0 — race condition
-        // z obsluga przyciskow/joysticka w loop() na Core 1.
-        if (server.hasArg("value")) {
-            int val = server.arg("value").toInt();
-            if (val > 0 && val <= (int)EVT_GAP_START) {
-                if (STATE_TRYLOCK(500)) {
-                    g_state.pendingWebEvent = (ButtonEvent)val;
-                    STATE_UNLOCK();
-                }
-                DBG_PRINTF("[WWW] Event kolejkowany: %d\n", val);
-            } else {
-                result = "nieprawidlowy event";
-            }
-        } else {
-            result = "brak parametru value";
-        }
-    } else if (action == "set_screen") {
-        if (server.hasArg("value")) {
-            int val = server.arg("value").toInt();
-            if (val >= 0 && val <= (int)SCREEN_STATS_EXPORT) {
-                menu.goToScreen((ScreenID)val);
-                DBG_PRINTF("[WWW] Ekran: %d\n", val);
-            } else {
-                result = "nieprawidlowy ekran";
-            }
-        } else {
-            result = "brak parametru value";
-        }
-    } else if (action == "set_switch_mode") {
-        if (server.hasArg("value")) {
-            int val = server.arg("value").toInt();
-            bool smart = (val == 0);  // 0=smart, 1=instant
-            paintEngine.setSmartSwitch(smart);
-            storage.saveSwitchMode(smart);
-            DBG_PRINTF("[WWW] Tryb przelaczania: %s\n", smart ? "SMART" : "INSTANT");
-        }
-    } else if (action == "set_pattern_group") {
-        if (server.hasArg("value")) {
-            int val = server.arg("value").toInt();
-            if (val == 0 || val == 1) patternButtons.setGroup((uint8_t)val);
-            else result = "grupa 0 (os) lub 1 (krawedz)";
-        } else {
-            result = "brak parametru value";
-        }
-    } else if (action == "set_pattern_layout") {
-        if (server.hasArg("value")) {
-            int val = server.arg("value").toInt();
-            if (val == 0 || val == 1) patternButtons.setLayout((uint8_t)val);
-            else result = "uklad 0 (klasyczny) lub 1 (soft-key)";
-        } else {
-            result = "brak parametru value";
-        }
-    } else if (action == "set_tank_capacity") {
-        if (server.hasArg("value")) {
-            float val = server.arg("value").toFloat();
-            if (val >= 1.0f && val <= 1000.0f) {
-                paintConsumption.setTankCapacity(val);
-                storage.saveTankCapacity(val);
-            } else {
-                result = "zakres 1-1000 litrow";
-            }
-        }
-    } else if (action == "set_paint_rate") {
-        if (server.hasArg("value")) {
-            float val = server.arg("value").toFloat();
-            if (val >= 0.1f && val <= 5.0f) {
-                paintConsumption.setConsumptionRate(val);
-                storage.saveConsumptionRate(val);
-            } else {
-                result = "zakres 0.1-5.0 l/m2";
-            }
-        }
-    } else if (action == "set_auto_resume") {
-        if (server.hasArg("value")) {
-            bool en = (server.arg("value").toInt() != 0);
-            paintEngine.setAutoResumeEnabled(en);
-            storage.saveAutoResume(en);
-        }
-    } else if (action == "refuel") {
-        if (server.hasArg("value")) {
-            float val = server.arg("value").toFloat();
-            if (val >= 1.0f && val <= 1000.0f) {
-                paintConsumption.refuel(val);
-                DBG_PRINTF("[WWW] Tankowanie: +%.0f L, poziom: %.1f L\n",
-                              val, paintConsumption.getCurrentLevel());
-            } else {
-                result = "zakres 1-1000 litrow";
-            }
-        }
-    } else {
-        result = "nieznana akcja";
-    }
-
-    if (STATE_TRYLOCK(500)) { g_state.displayNeedsUpdate = true; STATE_UNLOCK(); }
-    server.send(200, "application/json", "{\"result\":\"" + result + "\"}");
+    // Cala logika polecen: control_api.cpp (wspolna z laczem terminala)
+    HttpFormArgs args(server);
+    ControlResult res = executeControl(server.arg("action"), args);
+    server.send(res.httpCode, "application/json", res.body);
 }
 
 // ============================================================
@@ -981,6 +715,14 @@ String TrassarWebServer::getStateJson() {
         for (int i = 0; i < NUM_GUNS; i++) snapAnomalyAlert[i] = gunAnomaly.alert[i];
         STATE_UNLOCK();
     }
+
+    // Tryb nocny (terminal przyciemnia ekran) i stan lacza terminala
+    doc["night"] = g_state.nightMode;
+#if HAS_DGUS_LINK
+    doc["termOk"] = dgusLink.isLinkUp();
+    doc["termPolicy"] = (int)dgusLink.getLossPolicy();
+    doc["termLost"] = dgusLink.isLossAlarm();
+#endif
 
     doc["gunAnomalyDetected"] = snapAnomalyDetected;
     JsonArray anomArr = doc["gunAnomaly"].to<JsonArray>();

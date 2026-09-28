@@ -79,6 +79,16 @@ static const BuzzerStep SEQ_AUTO_PAUSE[] = {
     {1000, 150}
 };
 
+// STOP awaryjny: glosny, pilny potrojny wysoki ton (odrozniajacy sie od reszty sygnalow) —
+// wolany co ESTOP_BUZZ_REPEAT_MS dopoki petla E-STOP pozostaje otwarta (patrz estop.cpp)
+static const BuzzerStep SEQ_ESTOP[] = {
+    {3500, 120},
+    {0,     60},
+    {3500, 120},
+    {0,     60},
+    {3500, 120}
+};
+
 // ============ Implementacja ============
 
 void BuzzerController::begin() {
@@ -140,6 +150,9 @@ void BuzzerController::play(BuzzerSignal signal) {
             break;
         case BUZ_AUTO_PAUSE:
             startSequence(SEQ_AUTO_PAUSE, sizeof(SEQ_AUTO_PAUSE) / sizeof(BuzzerStep));
+            break;
+        case BUZ_ESTOP:
+            startSequence(SEQ_ESTOP, sizeof(SEQ_ESTOP) / sizeof(BuzzerStep));
             break;
         default:
             break;

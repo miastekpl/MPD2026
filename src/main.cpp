@@ -13,7 +13,10 @@
 
 #include "config.h"
 #include "sys_log.h"
+#if HAS_SMALL_TFT
 #include "display_manager.h"
+#endif
+#include "dgus/dgus_link.h"
 #include "button_handler.h"
 #include "rtc_handler.h"
 #include "web_server.h"
@@ -29,6 +32,7 @@
 #include "gps_handler.h"
 #include "gps_track.h"
 #include "joystick.h"
+#include "estop.h"
 #include "event_log.h"
 #include "nvs_backup.h"
 #include "pattern_buttons.h"
@@ -199,8 +203,13 @@ void setup() {
     pinMode(PIN_SD_CS, OUTPUT);
     digitalWrite(PIN_SD_CS, HIGH);
 
+#if HAS_SMALL_TFT
     DBG_PRINTLN("[INIT] Wyswietlacz ILI9341...");
     display.begin();
+#else
+    // Wariant docelowy: duzy ekran to inteligentny wyswietlacz DGUS na laczu UART (dgus_link)
+    g_state.nightMode = storage.loadNightMode();
+#endif
 
     // 2b. Buzzer
     DBG_PRINTLN("[INIT] Buzzer...");
@@ -225,13 +234,22 @@ void setup() {
     buttons.begin();
 
     // 5b. Joystick KY-023
+#if HAS_JOYSTICK
     DBG_PRINTLN("[INIT] Joystick KY-023...");
     joystick.begin();
+#endif
+
+    // 5c. Status petli STOP-u awaryjnego (musi byc PRZED guns.beginEmergencyStop() —
+    // ta funkcja ustawia pinMode(PIN_ESTOP_STATUS, ...) zanim guns dolaczy tam ISR)
+#if HAS_ESTOP
+    DBG_PRINTLN("[INIT] Status petli E-STOP...");
+    estop.begin();
+#endif
 
     // 6. Pistolety (przekaźniki)
     DBG_PRINTLN("[INIT] Pistolety P1-P6...");
     guns.begin();
-    guns.beginEmergencyStop();  // Sprzetowy STOP awaryjny (ISR na PIN_BTN_STOP)
+    guns.beginEmergencyStop();  // Sprzetowy STOP awaryjny (ISR na PIN_BTN_STOP i, gdy HAS_ESTOP, PIN_ESTOP_STATUS)
 
     // Fix #11 (KRYTYCZNE): Rejestracja handlera shutdown — pistolety OFF przed resetem
     esp_register_shutdown_handler(shutdownGunsHandler);
@@ -300,6 +318,7 @@ void setup() {
     DBG_PRINTLN("[INIT] WiFi AP + serwer WWW...");
     webServer.begin();
 
+#if HAS_SMALL_TFT
     // ======== POST (Power-On Self-Test) ========
     {
         DisplayManager::PostResult post;
@@ -360,6 +379,57 @@ void setup() {
         }
         buzzer.beep(1500, 80);
     }
+#else
+    // ======== POST + dane WiFi na ekranie DGUS ========
+    // Jeden ekran informacyjny (SCREEN_POST): wyniki testu i dane WiFi. Czekamy na START
+    // (fizyczny, z ekranu dotykowego albo z panelu WWW) — tak jak w wariancie z ILI9341.
+    {
+        dgusLink.begin();
+
+        char ip[24];
+        strlcpy(ip, webServer.getIPAddress().c_str(), sizeof(ip));
+        menu.infoBegin("START TRASSAR", "Nacisnij START, aby przejsc do pracy");
+        menu.infoRow("WiFi (SSID, dla telefonu)", WIFI_AP_SSID);
+        menu.infoRow("Haslo WiFi", webServer.getPassword());
+        menu.infoRow("Adres", ip);
+        menu.infoRow("Karta SD", reportLogger.isReady() ? "OK" : "BRAK");
+        menu.infoRow("Zegar RTC", rtcModule.isRunning() ? "OK" : "BLAD");
+        menu.infoRow("GPS", gpsHandler.hasFix() ? "FIX" : "brak fix");
+        menu.infoRow("Przyciski MCP", patternButtons.isReady() ? "OK" : "BLAD");
+        menu.infoRow("Enkoder", encoderDist.isCalibrated() ? "skalibrowany" : "NIESKALIBROWANY");
+        {
+            char tbuf[16];
+            if (tempSensor.isAvailable()) snprintf(tbuf, sizeof(tbuf), "%.1f C", tempSensor.getTemperature());
+            else strlcpy(tbuf, "brak czujnika", sizeof(tbuf));
+            menu.infoRow("Temperatura", tbuf);
+        }
+        menu.infoRow("Firmware", FW_VERSION);
+
+        g_state.currentScreen = SCREEN_POST;
+        buzzer.beep(2000, 100);
+
+        // dgusLink.update() dostaje kody START (1/2) z ekranu i sam woła menu.handleEvent(),
+        // ktore w handlePost() przechodzi na SCREEN_HOME — pętla czeka wiec po prostu na
+        // zmianę ekranu (albo na "start" z panelu WWW, ktory ustawia qrDismissed).
+        bool wait = true;
+        while (wait) {
+            esp_task_wdt_reset();
+            buttons.update();
+            ButtonEvent pe = buttons.getEvent();
+            if (pe != EVT_NONE) menu.handleEvent(pe);
+            dgusLink.update();
+            STATE_LOCK();
+            if (g_state.currentScreen != SCREEN_POST) wait = false;
+            if (g_state.qrDismissed) {
+                g_state.qrDismissed = false;
+                wait = false;
+            }
+            STATE_UNLOCK();
+            delay(5);
+        }
+        buzzer.beep(1500, 80);
+    }
+#endif
 
     // Wyrzuc szum enkodera nazbierany podczas inicjalizacji
     encoderDist.resetDistance();
@@ -470,6 +540,7 @@ void loop() {
         }
     }
 
+#if HAS_JOYSTICK
     // 1b. Odczyt joysticka KY-023
     // requireCenter() w goToScreen() blokuje osie dopoki joystick nie wroci
     // do centrum — eliminuje falszywe zdarzenia z szumu ADC2 (WiFi)
@@ -501,6 +572,21 @@ void loop() {
             menu.handleEvent(joyEvent);
         }
     }
+
+#endif  // HAS_JOYSTICK
+
+#if HAS_ESTOP
+    // 1b1. Status petli STOP-u awaryjnego (odszumiony odczyt, log/buzzer/wymuszenie STOPPED —
+    // rzeczywiste ciecie zasilania jest juz sprzetowe, patrz estop.h)
+    estop.update();
+#endif
+
+#if HAS_DGUS_LINK
+    // 1b2. Lacze z ekranem DGUS: ramki RX/TX, zdarzenia dotyku i odswiezanie stanu.
+    // Zdarzenia z ekranu przechodza dokladnie ta sama sciezke co przyciski fizyczne
+    // (menu.handleEvent) badz panel WWW (executeControl) - patrz dgus_link.cpp.
+    dgusLink.update();
+#endif
 
     // 1c. Odczyt przycisków wzorców (MCP23017 I2C)
     patternButtons.update();

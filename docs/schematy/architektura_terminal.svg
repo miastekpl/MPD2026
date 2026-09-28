@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1250" viewBox="0 0 2000 1250">
+<rect x="0" y="0" width="2000" height="1250" fill="#ffffff"/>
+<text x="40" y="46" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="26" fill="#0b1f4a" text-anchor="start" font-weight="bold" >Docelowa architektura MPD2026 — jeden mikrokontroler, ekran inteligentny DWIN DGUS</text>
+<text x="40" y="72" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#444" text-anchor="start" font-weight="normal" >Cała logika, stan, menu i zapis danych w JEDYNYM mikrokontrolerze (sterownik ESP32-S3). Duży ekran DGUS ma WŁASNY procesor i sam renderuje interfejs wg projektu z DGUS Designer — to nie jest nasz firmware ani drugi ESP32. Bez małego ekranu ILI9341, bez RS-485. Joystick zostaje (nawigacja menu równolegle z dotykiem).</text>
+<rect x="60" y="110" width="900" height="900" rx="14" fill="#e8f0fe" stroke="#0b1f4a" stroke-width="3" />
+<text x="510" y="146" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="20" fill="#0b1f4a" text-anchor="middle" font-weight="bold" >STEROWNIK Trassar — ESP32-S3 N16R8 (JEDYNY mikrokontroler)</text>
+<text x="510" y="170" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#0b1f4a" text-anchor="middle" font-weight="normal" >jedyne źródło prawdy: stan maszyny, logika, menu, ustawienia, dane</text>
+<rect x="90" y="200" width="400" height="330" rx="10" fill="#fff" stroke="#1b5e20" stroke-width="2.5" />
+<text x="290" y="228" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#1b5e20" text-anchor="middle" font-weight="bold" >Core 1 — logika maszyny (bez zmian)</text>
+<text x="110" y="258" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• silnik malowania, wzorce, tryby</text>
+<text x="110" y="288" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• sterowanie 6 pistoletami, keepalive 300 ms</text>
+<text x="110" y="318" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• enkoder → dystans / prędkość</text>
+<text x="110" y="348" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• przyciski, ISR awaryjnego STOP</text>
+<text x="110" y="378" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• zabezpieczenia, alarmy, anomalie pistoletów</text>
+<text x="110" y="408" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• statystyki, farba, kalibracja</text>
+<text x="110" y="438" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• dgus_link.cpp: ramki UART do ekranu (nieblokujące)</text>
+<rect x="520" y="200" width="410" height="330" rx="10" fill="#fff" stroke="#0d47a1" stroke-width="2.5" />
+<text x="725" y="228" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#0d47a1" text-anchor="middle" font-weight="bold" >Core 0 — panel WWW (bez zmian)</text>
+<text x="540" y="258" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• serwer HTTP :80 + WebSocket :81</text>
+<text x="540" y="288" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• executeControl() — wspólne dla WWW i ekranu</text>
+<text x="540" y="318" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• panel WWW dla telefonu/laptopa</text>
+<text x="540" y="348" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• raporty CSV, GPX, GeoJSON</text>
+<text x="540" y="378" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• QR i hasło WiFi (na ekranie startowym)</text>
+<rect x="90" y="560" width="400" height="110" rx="10" fill="#fff" stroke="#4a148c" stroke-width="2" />
+<text x="290" y="588" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#4a148c" text-anchor="middle" font-weight="bold" >WiFi AP (bez zmian)</text>
+<text x="110" y="614" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• panel WWW i API dla telefonu / tabletu</text>
+<text x="110" y="638" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#b71c1c" text-anchor="start" font-weight="normal" >• ekran DGUS NIE korzysta z WiFi (UART)</text>
+<rect x="520" y="560" width="410" height="110" rx="10" fill="#fff" stroke="#e65100" stroke-width="2" />
+<text x="725" y="588" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#e65100" text-anchor="middle" font-weight="bold" >Dane i pamięć</text>
+<text x="540" y="614" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• NVS: ustawienia, kalibracja, statystyki</text>
+<text x="540" y="638" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• karta SD (osobny moduł): raporty, GPX, log</text>
+<rect x="90" y="700" width="840" height="460" rx="10" fill="#f8fbff" stroke="#0b1f4a" stroke-width="2" />
+<text x="510" y="728" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#0b1f4a" text-anchor="middle" font-weight="bold" >Piny sterownika po zmianach (27 zajęte, 1 wolny)</text>
+<text x="110" y="758" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="start" font-weight="normal" >Przekaźniki P1–P6</text>
+<text x="910" y="758" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="end" font-weight="normal" >GPIO 41, 42, 1, 2, 3, 4</text>
+<line x1="105" y1="767" x2="915" y2="767" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="788" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="start" font-weight="normal" >Enkoder CLK / DT / GAP</text>
+<text x="910" y="788" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="end" font-weight="normal" >GPIO 5, 6, 7</text>
+<line x1="105" y1="797" x2="915" y2="797" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="818" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="start" font-weight="normal" >Buzzer</text>
+<text x="910" y="818" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="end" font-weight="normal" >GPIO 8</text>
+<line x1="105" y1="827" x2="915" y2="827" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="848" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#c1121f" text-anchor="start" font-weight="bold" >UART DO EKRANU DGUS (bezpośrednio!)</text>
+<text x="910" y="848" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#c1121f" text-anchor="end" font-weight="bold" >TX = GPIO 9, RX = GPIO 10</text>
+<line x1="105" y1="857" x2="915" y2="857" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="878" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="start" font-weight="normal" >Karta SD (SPI, osobny moduł)</text>
+<text x="910" y="878" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="end" font-weight="normal" >MOSI 11, SCK 12, MISO 13, CS 16</text>
+<line x1="105" y1="887" x2="915" y2="887" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="908" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="start" font-weight="normal" >Czujnik temperatury DS18B20 (opcjonalny)</text>
+<text x="910" y="908" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="end" font-weight="normal" >GPIO 15 (OneWire)</text>
+<line x1="105" y1="917" x2="915" y2="917" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="938" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="start" font-weight="normal" >I2C: RTC DS1307 + MCP23017 (S1–S10, GRUPA)</text>
+<text x="910" y="938" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="end" font-weight="normal" >SDA 17, SCL 18</text>
+<line x1="105" y1="947" x2="915" y2="947" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="968" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="start" font-weight="normal" >Joystick KY-023 (nawigacja menu)</text>
+<text x="910" y="968" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="end" font-weight="normal" >GPIO 19 (VRx), 20 (VRy), 46 (SW)</text>
+<line x1="105" y1="977" x2="915" y2="977" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="998" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#c1121f" text-anchor="start" font-weight="bold" >STOP awaryjny — status pętli (cięcie sprzętowe)</text>
+<text x="910" y="998" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#c1121f" text-anchor="end" font-weight="bold" >GPIO 21</text>
+<line x1="105" y1="1007" x2="915" y2="1007" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="1028" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="start" font-weight="normal" >START / STOP (ISR awaryjny)</text>
+<text x="910" y="1028" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="end" font-weight="normal" >GPIO 38, 39</text>
+<line x1="105" y1="1037" x2="915" y2="1037" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="1058" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="start" font-weight="normal" >GPS NEO-6M (UART2)</text>
+<text x="910" y="1058" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="end" font-weight="normal" >RX 47, TX 48</text>
+<line x1="105" y1="1067" x2="915" y2="1067" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="1088" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#1b5e20" text-anchor="start" font-weight="bold" >WOLNE</text>
+<text x="910" y="1088" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#1b5e20" text-anchor="end" font-weight="bold" >GPIO 14 (+40 bez SELEKTORA)</text>
+<line x1="105" y1="1097" x2="915" y2="1097" stroke="#dde6f5" stroke-width="1"/>
+<text x="110" y="1118" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="start" font-weight="normal" >Specjalne (unikać)</text>
+<text x="910" y="1118" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#111" text-anchor="end" font-weight="normal" >GPIO 0, 45 (rozruch), 43/44 (USB), 26–37 (Flash/PSRAM)</text>
+<line x1="105" y1="1127" x2="915" y2="1127" stroke="#dde6f5" stroke-width="1"/>
+<rect x="1010" y="260" width="300" height="220" rx="12" fill="#fff8e1" stroke="#e65100" stroke-width="3" />
+<text x="1160" y="294" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" fill="#e65100" text-anchor="middle" font-weight="bold" >UART BEZPOŚREDNI</text>
+<text x="1160" y="320" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#333" text-anchor="middle" font-weight="normal" >115 200 baud, 8N1, 4 przewody</text>
+<text x="1160" y="344" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#333" text-anchor="middle" font-weight="normal" >5 V, GND, TX, RX</text>
+<text x="1160" y="368" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#b71c1c" text-anchor="middle" font-weight="bold" >BEZ RS-485, BEZ konwerterów</text>
+<text x="1160" y="396" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#333" text-anchor="middle" font-weight="normal" >TX ekranu (5 V) → dzielnik</text>
+<text x="1160" y="416" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#333" text-anchor="middle" font-weight="normal" >napięcia → RX sterownika</text>
+<text x="1160" y="440" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="middle" font-weight="bold" >protokół DGUS (5A A5 …)</text>
+<text x="1160" y="460" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="middle" font-weight="normal" >zgodny z dokumentacją DWIN</text>
+<line x1="960" y1="380" x2="1010" y2="380" stroke="#e65100" stroke-width="4"/>
+<line x1="1310" y1="380" x2="1360" y2="380" stroke="#e65100" stroke-width="4"/>
+<rect x="1360" y="110" width="580" height="640" rx="14" fill="#ede7f6" stroke="#311b92" stroke-width="3" />
+<text x="1650" y="146" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="19" fill="#311b92" text-anchor="middle" font-weight="bold" >WYŚWIETLACZ INTELIGENTNY DWIN DGUS 7"</text>
+<text x="1650" y="170" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#311b92" text-anchor="middle" font-weight="normal" >np. DMG10600T070_09WTC — WŁASNY procesor, renderuje sam</text>
+<rect x="1390" y="200" width="520" height="260" rx="10" fill="#fff" stroke="#311b92" stroke-width="2.5" />
+<text x="1650" y="228" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#311b92" text-anchor="middle" font-weight="bold" >Projekt w DGUS Designer (nie nasz kod!)</text>
+<text x="1410" y="258" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• strony (Page ID = ScreenID sterownika)</text>
+<text x="1410" y="288" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• statyczne etykiety, tła, przyciski, ikony</text>
+<text x="1410" y="318" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• sterownik wysyła TYLKO wartości (VP)</text>
+<text x="1410" y="348" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• dotyk → kod zdarzenia (VP_TOUCH_EVENT)</text>
+<text x="1410" y="378" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• żaden przycisk nie zmienia strony lokalnie</text>
+<rect x="1390" y="480" width="520" height="130" rx="10" fill="#fff" stroke="#311b92" stroke-width="2" />
+<text x="1650" y="508" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#311b92" text-anchor="middle" font-weight="bold" >Sprzęt ekranu</text>
+<text x="1410" y="536" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• 7" IPS 1024×600, dotyk pojemnościowy</text>
+<text x="1410" y="560" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• zasilanie 5 V osobnym bezpiecznikiem</text>
+<text x="1410" y="584" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• brak WiFi, brak karty SD, brak ESP32</text>
+<rect x="1390" y="630" width="520" height="100" rx="10" fill="#fff3e0" stroke="#e65100" stroke-width="2" />
+<text x="1650" y="656" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#b71c1c" text-anchor="middle" font-weight="bold" >Zasada bezpieczeństwa</text>
+<text x="1410" y="680" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• ekran niczym nie steruje — tylko prosi sterownik</text>
+<text x="1410" y="704" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• fizyczny STOP (panel, pilot, pedał) działa niezależnie</text>
+<rect x="1010" y="520" width="300" height="190" rx="10" fill="#fce4ec" stroke="#880e4f" stroke-width="2" />
+<text x="1160" y="550" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="16" fill="#880e4f" text-anchor="middle" font-weight="bold" >Przyciski fizyczne</text>
+<text x="1030" y="586" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#222" text-anchor="start" font-weight="normal" >• S1–S10 + GRUPA (MCP23017)</text>
+<text x="1030" y="612" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#222" text-anchor="start" font-weight="normal" >• START, STOP, GAP (GPIO)</text>
+<text x="1030" y="638" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#222" text-anchor="start" font-weight="normal" >• joystick KY-023 (nawigacja menu)</text>
+<text x="1030" y="664" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#222" text-anchor="start" font-weight="normal" >• grzybek E-STOP (cięcie sprzętowe, GPIO 21=status)</text>
+<text x="1030" y="690" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12.5" fill="#222" text-anchor="start" font-weight="normal" >• pilot J4, pedał J5</text>
+<line x1="960" y1="615" x2="1010" y2="615" stroke="#880e4f" stroke-width="3"/>
+<rect x="1010" y="750" width="300" height="130" rx="10" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2" />
+<text x="1160" y="780" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#1b5e20" text-anchor="middle" font-weight="bold" >Wykonawcze i pomiarowe</text>
+<text x="1030" y="808" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• 6 przekaźników → zawory</text>
+<text x="1030" y="836" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• enkoder, GPS, buzzer, DS18B20</text>
+<rect x="1360" y="780" width="580" height="100" rx="10" fill="#f3e5f5" stroke="#4a148c" stroke-width="2" />
+<text x="1650" y="806" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#4a148c" text-anchor="middle" font-weight="bold" >Telefon / tablet (opcjonalnie)</text>
+<text x="1380" y="832" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• WiFi sterownika: panel WWW, raporty, API</text>
+<text x="1380" y="856" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#222" text-anchor="start" font-weight="normal" >• równolegle do ekranu DGUS, niezależnie od niego</text>
+<text x="40" y="1200" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="normal" >Ekran DGUS renderuje LOKALNIE ze swojej własnej pamięci obrazów — sterownik przesyła tylko liczby i teksty (adresy VP), nie piksele. To dlatego łącze 115 200 baud wystarcza mimo dużego ekranu.</text>
+<text x="40" y="1223" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#b71c1c" text-anchor="start" font-weight="normal" >Stan: kod sterownika zaimplementowany i skompilowany; projekt ekranu w DGUS Designer jeszcze NIE zbudowany; nic nie uruchamiane na sprzęcie — patrz ARCHITEKTURA_TERMINAL.md, rozdz. 11.</text>
+</svg>

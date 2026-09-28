@@ -18,6 +18,10 @@ public:
     int getConnectedClients();
     bool isLittleFsReady() const { return littleFsReady; }
 
+    // JSON statusu/statystyk (uzywane tez przez lacze terminala, Core 1)
+    String statusJson() { return getStateJson(); }
+    String statsJson()  { return getStatsJson(); }
+
     // Haslo WiFi (generowane z MAC adresu)
     const char* getPassword() const { return wifiPassword; }
 

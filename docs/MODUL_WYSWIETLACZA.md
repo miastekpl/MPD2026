@@ -1,13 +1,18 @@
 # Moduł wyświetlacza 7" — dokumentacja techniczna
 
-Projekt: `display-module/` · wersja 0.1.0 · płytka **Sunton ESP32-8048S070C** (ESP32-S3, 800×480 RGB, GT911)
+Projekt: `display-module/` · wersja 0.1.1 · płytka **Sunton ESP32-8048S070C** (ESP32-S3, 800×480 RGB, GT911)
 Framework: Arduino (PlatformIO, `espressif32@6.3.1`), grafika: **LVGL 8.3** + **LovyanGFX 1.1.x**
 
 Opis dla operatora: [INSTRUKCJA_OBSLUGI.md](INSTRUKCJA_OBSLUGI.md), rozdz. 3. Schemat i piny: [SCHEMAT_PODLACZEN.md](SCHEMAT_PODLACZEN.md), rozdz. 5.
 
 ## 1. Koncepcja
 
-Moduł jest **klientem WiFi** sterownika Trassar i wyłącznie panelem operatora. **Nie steruje pistoletami** i nie
+> **Ten moduł to wariant WiFi ("gruby klient").** Wariant docelowy dużego ekranu — wyświetlacz inteligentny DWIN DGUS podłączony
+> bezpośrednio do sterownika (bez WiFi, bez drugiego ESP32) — opisuje [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md). Ten
+> dokument dotyczy wyłącznie modułu Sunton 7" jako alternatywy działającej przez WiFi.
+
+Moduł jest **dużym ekranem roboczym**; **mały ekran ILI9341 sterownika** pozostaje ekranem technicznym / serwisowym / awaryjnym
+(POST, hasło WiFi, menu serwisowe, karta SD). Moduł jest **klientem WiFi** sterownika Trassar i wyłącznie panelem operatora. **Nie steruje pistoletami** i nie
 jest elementem bezpieczeństwa. Wynika to z dwóch decyzji:
 
 1. **Sprzęt** — panel RGB 800×480 zajmuje niemal wszystkie GPIO ESP32-S3, więc nie da się go dołączyć do płyty

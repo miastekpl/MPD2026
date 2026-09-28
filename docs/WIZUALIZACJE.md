@@ -7,6 +7,72 @@ Wszystkie propozycje mają tę samą elektronikę: 10 przycisków wzorców **S1�
 [SCHEMAT_PODLACZEN.md](SCHEMAT_PODLACZEN.md) sekcja 4.3), fizyczne **START, STOP, SELEKTOR, GAP** oraz ekran dotykowy 7".
 Etykiety wzorców widnieją na ekranie obok przycisków; wzorce są podzielone na **OŚ** (10) i **KRAWĘDŹ** (5 + własny).
 
+## Obudowa docelowa — pionowy ekran, wzorzec STiM (jeden duży ekran)
+
+Wizualizacja obudowy komputera w architekturze docelowej ([ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md)): jeden ekran 7" w pionie
+(wyświetlacz inteligentny DWIN DGUS, podłączony bezpośrednio 4 przewodami — bez RS-485, bez drugiego ESP32), jasna obudowa, **granatowe
+klawisze w kształcie strzałek** przy etykietach wzorców (S1–S5 z lewej, S6–S10 z prawej, każdy na wysokości „swojego" wzorca), pod ekranem
+GRUPA / SELEKTOR / GAP oraz duże START i STOP. Każdy rysunek zawiera widok z przodu, przekrój boczny, widok 3/4, panel złączy J1–J6 od
+dołu, rozmieszczenie wnętrza oraz tabelę wycięć — kompletny zestaw wszystkich podzespołów.
+
+Dostępne są **dwie wersje**, różniące się tylko tym, co w danej chwili pokazuje ekran i przycisk GRUPA (klawisze S1–S10 fizycznie się nie
+zmieniają — to ten sam sprzęt, zmienia się tylko aktywna strona wzorców):
+
+**Wersja OŚ JEZDNI** (S1–S5 = P-1a…P-1e, S6–S10 = P-2a, P-2b, P-3a, P-3b, P-4):
+
+![Obudowa pionowa — grupa OŚ](schematy/obudowa_pionowa_os.svg)
+
+**Wersja KRAWĘDŹ** (S1–S5 = P-6, P-7a…P-7d, S6 = WŁASNY, S7–S10 nieużywane w tej grupie):
+
+![Obudowa pionowa — grupa KRAWĘDŹ](schematy/obudowa_pionowa_krawedz.svg)
+
+| Parametr | Wartość (orientacyjnie) |
+|----------|--------------------------|
+| Wymiary korpusu | ok. **172 × 250 × 62 mm** (szer. × wys. × głęb.) |
+| Ekran | 7" pionowo: okno 94 × 160 mm, obszar aktywny 86 × 154 mm; wyświetlacz DGUS (np. `DMG10600T070_09WTC`) ok. 100 × 165 mm |
+| Klawisze S1–S10 | 10 × 25 × 20,4 mm, skok 22,4 mm = odstęp etykiet wzorców na ekranie |
+| Dolna grupa | GRUPA, SELEKTOR, GAP 44 × 14 mm; START 92 × 34 mm; STOP 54 × 34 mm |
+| Złącza (spód) | J1 5 V, J2 zawory, J3 enkoder, J4 pilot, J5 pedał, J6 wyprowadzenie UART ekranu (opcja, gdy ekran montowany osobno) |
+| Mocowanie | VESA 75 (4 × M5) z tyłu; slot microSD z boku; odpowietrznik M12 |
+
+W tej wizualizacji z panelu zniknął mały ekran ILI9341 (joystick **zostaje** — nawiguje po menu równolegle z dotykiem,
+patrz [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md) rozdz. 6 — rysunek panelu go nie pokazuje, bo montowany jest
+wewnątrz obudowy, nie na płycie czołowej). **SELEKTOR** (GPIO 40) jest narysowany jako **opcjonalny** przycisk
+odwracania P-3a/b — firmware nadal go obsługuje, a odwracanie jest też dostępne dotykiem na ekranie, więc można go pominąć (wtedy GPIO 40 jest wolny;
+patrz mapa pinów w [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md), rozdz. 3).
+Wymiary i rozmieszczenie wnętrza są **orientacyjne** — do weryfikacji na prototypie i rzeczywistych modułach (m.in. dotyk przez szybę).
+
+Grzybek **STOP awaryjnego (E-STOP)** jest zamontowany w **prawej ścianie bocznej** obudowy (widok „WIDOK Z PRAWEJ
+STRONY", pozycja 11 w tabeli wycięć) — styk NC, wpięty w tor zasilania modułu przekaźników (tnie prąd sprzętowo,
+niezależnie od firmware); status pętli trafia na GPIO 21 (patrz [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md)
+rozdz. 7). Umiejscowienie z boku (nie na płycie czołowej) zostawia okno ekranu i pas klawiszy nienaruszone.
+
+## Komputer kompletny — dwa ekrany i wszystkie przyciski
+
+> **Wariant przejściowy.** Docelowo (patrz [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md)) zostaje **jeden duży ekran**, bez małego ILI9341
+> i bez joysticka/SELEKTORA (14 przycisków na panelu). Poniższy widok obowiązuje do czasu przeniesienia funkcji serwisowych na duży ekran.
+
+Widok rekomendowanego układu (panel pionowy, propozycja C) z **dwoma ekranami** o różnych rolach, wszystkimi przyciskami
+fizycznymi oraz panelem złączy od dołu. Numery elementów odpowiadają legendzie na rysunku.
+
+![Komputer kompletny](schematy/komputer_kompletny.svg)
+
+| Element | Rola |
+|---------|------|
+| **Duży ekran 7" (dotykowy)** | ekran **roboczy**: wzorce z rysunkami w skali, prędkość, droga, liczniki, alarmy, farba, statystyki, menu |
+| **Mały ekran 2,8" ILI9341** | ekran **techniczny / serwisowy / awaryjny**: POST, QR i hasło WiFi, menu serwisowe, czyszczenie dysz, SETUP; **slot karty microSD** (dostęp z boku) |
+| **S1–S10** (kolumny przy dużym ekranie) | wybór wzorca; każdy klawisz obok etykiety na tej samej wysokości (MCP23017) |
+| **GRUPA** | przełącza OŚ ⇄ KRAWĘDŹ |
+| **START / STOP** | start-pauza-wznów (RĘCZNY: trzymaj = strzelaj); STOP z przerwaniem awaryjnym (GPIO 38 / 39) |
+| **SELEKTOR, GAP** | odwrócenie P-3a/b i nawigacja w menu / Smart-Instant; start od przerwy (GPIO 40 / 7) |
+| **Joystick KY-023** (opcja) | nawigacja w menu serwisowym małego ekranu |
+| **Grzybek STOP** (opcja) | styk NO równolegle do STOP — dodatkowe zabezpieczenie |
+| **Buzzer** | sygnały i alarmy (GPIO 8) |
+| **Panel złączy J1–J6** | zasilanie, zawory, enkoder, pilot (4 przyciski), pedał (2 pedały), łącze do modułu 7" (opcja) |
+
+Na panelu jest **15 przycisków fizycznych** (10 + GRUPA + START + STOP + SELEKTOR + GAP); pilot J4 i pedał J5 działają równolegle.
+Mały ekran można zamontować z boku lub wewnątrz obudowy, o ile slot karty SD pozostaje dostępny.
+
 ## Ekran roboczy (moduł 7")
 
 Makieta ekranu 800×480: prędkość 7-segmentowa, widok drogi, 10 wzorców w bocznych kolumnach, zakładki OŚ / KRAWĘDŹ.
@@ -67,10 +133,13 @@ liczbowy (np. `ciagla + 4/2 m`, `12+12 cm`). Arkusz wszystkich wzorców:
 - Orientacyjnie ok. 340 × 215 mm.
 - **Zalety:** najlepsza widoczność i dostępność STOP, klawisze wzorców zgrupowane.
 - **Wady:** większa obudowa; klawisze są dalej od etykiet na ekranie (ekran można przesunąć w stronę bloku klawiszy).
-- **Uwaga elektryczna:** firmware traktuje zwarcie GPIO 39 do GND jako naciśnięcie STOP (zbocze opadające). Grzybek
-  podłączaj **stykiem NO równolegle do przycisku STOP** (jak pilot J4 i pedał J5). Grzybek zatrzaskowy pozostawałby
-  w stanie „wciśnięty" — zachowanie przy trwale zwartym STOP (blokada START) wymaga sprawdzenia na sprzęcie, zanim
-  zastosujesz zatrzask.
+- **Uwaga elektryczna (zaktualizowane):** ten rysunek powstał, zanim STOP awaryjny miał docelowy projekt — opisywał
+  grzybek jako zwykły styk NO równolegle do GPIO 39 (jak pilot J4/pedał J5). **Docelowe rozwiązanie jest inne i
+  bezpieczniejsze:** grzybek (styk NC, zatrzaskowy) tnie zasilanie pistoletów/pomp **sprzętowo**, w torze zasilania
+  modułu przekaźników — nie przez GPIO 39 — a osobna pętla statusu idzie na GPIO 21 (patrz
+  [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md) rozdz. 7 i [schemat_polaczen_docelowy.svg](schematy/schemat_polaczen_docelowy.svg)).
+  Zatrzask grzybka jest tu zaletą, nie problemem: firmware wymaga jawnego potwierdzenia operatora (`ack_estop`)
+  zanim pozwoli wznowić malowanie, więc trwałe zwarcie pętli nie blokuje niczego poza samym wznowieniem.
 
 ## Porównanie
 

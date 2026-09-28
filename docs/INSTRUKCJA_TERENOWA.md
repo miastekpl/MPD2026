@@ -127,6 +127,9 @@ Przy małej ekipie funkcje można łączyć, ale **osoba prowadząca maszynę ni
 
 Wykonuj **na miejscu prac, na utwardzonym podłożu, poza ruchem**. Oczekiwany wynik każdego kroku jest w prawej kolumnie.
 
+> **Dwa ekrany:** kroki 3–5 i 11 wykonujesz na **małym ekranie sterownika** (techniczny/serwisowy: POST, hasło WiFi, czyszczenie
+> dysz). Od kroku 6 i w całej pracy w terenie obsługujesz **duży ekran 7"** (roboczy).
+
 | # | Czynność | Oczekiwany wynik |
 |---|----------|------------------|
 | 1 | Oględziny maszyny: kable, złącza, wycieki, mocowanie pistoletów, koło pomiarowe | brak uszkodzeń, wycieków |
