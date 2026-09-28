@@ -12,6 +12,17 @@ public:
     void update();   // renderowanie + ciagle sterowanie (np. czyszczenie dysz)
     void goToScreen(ScreenID screen);
 
+    // Aktualnie przegladany wzorzec na ekranie czyszczenia dysz (do pokazania
+    // w panelu WWW/Sunton — patrz web_server.cpp "nozzlePatternIdx" i menu_handlers.cpp)
+    int getNozzlePatternIdx() const { return nozzlePatternIdx; }
+
+    // Pomiar dystansu z alarmem (SCREEN_DISTANCE_METER) - gettery/setter dla panelu WWW/Sunton
+    bool  isDistMeterMeasuring() const { return distMeasuring; }
+    float getDistMeterValue() const { return distMeterValue; }
+    float getDistMeterTarget() const { return distMeterTarget; }
+    bool  isDistMeterReached() const { return distMeterReached; }
+    void  setDistMeterTarget(float meters);   // control_api.cpp "set_dist_target"
+
 private:
     void handleHomeScreen(ButtonEvent e);
     void handlePaintingScreen(ButtonEvent e);
@@ -33,10 +44,14 @@ private:
 
     static const int SERVICE_MENU_ITEMS = 11;  // 6 + lifetime + custom_pat + export + factory_reset + tankowanie
 
-    // Pomiar dystansu
+    // Pomiar dystansu (+ alarm przy zadanym celu, patrz config.h DIST_METER_*)
     bool distMeasuring = false;
     float distMeterValue = 0;
     float distMeterLast = 0;
+    float distMeterTarget = 50.0f;   // cel [m], krok 0.1 m; 0 = alarm wylaczony
+    bool distMeterReached = false;   // zatrzask: cel osiagniety/przekroczony (do ZERUJ)
+    uint32_t distMeterWarnBeepMs = 0;
+    uint32_t distMeterHoldMs = 0;
 
     // Czyszczenie dysz - wybrany wzorzec
     int nozzlePatternIdx = 0;

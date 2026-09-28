@@ -160,6 +160,18 @@ bool parseStatus(const char* json, size_t len, Status& o) {
     o.uptime  = doc["uptime"] | 0;
     o.clients = doc["clients"] | 0;
 
+    o.estopTriggered = doc["estopTriggered"] | false;
+    o.estopAwaitAck  = doc["estopAwaitAck"] | false;
+
+    o.screen           = doc["screen"] | -1;
+    o.nozzlePatternIdx = doc["nozzlePatternIdx"] | 0;
+
+    o.distMeasuring   = doc["distMeasuring"] | false;
+    o.distMeterValue  = jf(doc["distMeterValue"]);
+    o.distMeterTarget = jf(doc["distMeterTarget"], 50.0f);
+    o.distMeterReached = doc["distMeterReached"] | false;
+    o.distMeterWarning = doc["distMeterWarning"] | false;
+
     o.valid = true;
     return true;
 }

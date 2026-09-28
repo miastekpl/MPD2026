@@ -148,6 +148,21 @@
 #define GUN_RELAY_STUCK_CHECK_MS   5000   // Interwał sprawdzania zablokowanych przekaznikow [ms]
 #define GUN_RELAY_MAX_CONT_ON_MS  60000   // Max ciagly czas ON bez cyklowania = podejrzenie zablokowania [ms]
 
+// ============ Pomiar dystansu z alarmem (SCREEN_DISTANCE_METER) ============
+// Zadany cel [m] ustawiany co do 0.1 m (patrz menu.h setDistMeterTarget()). Strefa
+// ostrzegawcza: ostatnie DIST_METER_WARN_MARGIN_M metrow przed celem - miganie
+// (Sunton/WWW) + cykliczny sygnal. Po osiagnieciu/przekroczeniu celu: zatrzask (do
+// czasu ZERUJ) - ekran na zielono z napisem STOP, staly ton buzzera.
+#define DIST_METER_WARN_MARGIN_M     2.0f   // odleglosc od celu, w ktorej zaczyna sie ostrzeganie [m]
+#define DIST_METER_WARN_BEEP_MS       500   // odstep miedzy sygnalami w strefie ostrzegawczej [ms]
+#define DIST_METER_HOLD_REASSERT_MS  1000   // odswiezanie stalego tonu po osiagnieciu celu [ms]
+
+// ============ Czyszczenie dysz — "martwy czlowiek" (wspolne dla ekranu DGUS i panelu WWW/Sunton) ============
+// Twardy limit przytrzymania na wypadek zgubienia ramki/pakietu zwolnienia - dysze zamykaja sie
+// same, nawet jesli nigdy nie przyjdzie sygnal "puszczono". Uzywane przez dgus_link.cpp
+// (KEY_NOZZLE_HOLD_ON/OFF) i control_api.cpp (akcje nozzle_hold_on/off, patrz g_state.wwwNozzleHoldOn).
+#define NOZZLE_HOLD_MAX_MS  8000
+
 // ============ Farba — ostrzezenie o niskim poziomie ============
 #define LOW_PAINT_WARNING_PCT     15     // Ostrzezenie (zolty) ponizej 15% zbiornika
 #define LOW_PAINT_CRITICAL_PCT     5     // Alarm (czerwony) ponizej 5% zbiornika
@@ -340,6 +355,11 @@ struct SystemState {
 
     uint8_t pendingWebEvent = 0;     // Zdarzenie z panelu WWW (Core 0 -> Core 1)
     bool qrDismissed = false;        // Flaga zamkniecia ekranu QR z panelu WWW
+
+    // "Martwy czlowiek" czyszczenia dysz z panelu WWW/Sunton (odpowiednik dgusLink.isHoldActive()
+    // dla ekranu DGUS) - patrz control_api.cpp akcje nozzle_hold_on/off i menu.cpp update().
+    bool wwwNozzleHoldOn = false;
+    uint32_t wwwNozzleHoldSetMs = 0;
 };
 
 // ============ Pre-alokowany bufor SD (wspoldzielony) ============

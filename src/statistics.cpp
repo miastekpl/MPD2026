@@ -6,6 +6,9 @@
 #include "statistics.h"
 #include "storage.h"
 #include "paint_consumption.h"
+#include "report_logger.h"
+#include "rtc_handler.h"
+#include <SD.h>
 
 StatisticsManager stats;
 
@@ -189,4 +192,38 @@ uint32_t StatisticsManager::getMTHSeconds() const {
         total += (millis() - mthStartMs) / 1000;
     }
     return total;
+}
+
+bool StatisticsManager::exportLifetimeCsv() {
+    if (!reportLogger.isReady()) return false;
+    if (!SD_LOCK()) return false;
+
+    if (!SD.exists("/stats")) {
+        SD.mkdir("/stats");
+    }
+    File f = SD.open("/stats/lifetime_stats.csv", FILE_WRITE);
+    if (!f) {
+        SD_UNLOCK();
+        return false;
+    }
+
+    f.println("parametr,wartosc");
+    char buf[64];
+    snprintf(buf, sizeof(buf), "dystans_m,%.1f", getLifetimeDistance());
+    f.println(buf);
+    snprintf(buf, sizeof(buf), "powierzchnia_m2,%.2f", getLifetimeArea());
+    f.println(buf);
+    snprintf(buf, sizeof(buf), "czas_malowania_s,%u", getLifetimePaintTimeSec());
+    f.println(buf);
+    snprintf(buf, sizeof(buf), "motogodziny_s,%u", getMTHSeconds());
+    f.println(buf);
+    for (int i = 0; i < NUM_GUNS; i++) {
+        snprintf(buf, sizeof(buf), "strzaly_P%d,%u", i + 1, getGunShotCount(i));
+        f.println(buf);
+    }
+    snprintf(buf, sizeof(buf), "data_eksportu,%s", rtcModule.getDateTimeStr());
+    f.println(buf);
+    f.close();
+    SD_UNLOCK();
+    return true;
 }

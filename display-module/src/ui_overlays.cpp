@@ -84,12 +84,13 @@ static void onMenuItem(lv_event_t* e) {
         case 5: uiOpenWifi();         break;
         case 6: uiOpenInfo();         break;
         case 7: uiOpenPicker();       break;
+        case 8: uiOpenService();      break;
     }
 }
 
 void uiOpenMenu() {
     lv_obj_t* ov = uiOverlay("MENU", nullptr);
-    static const char* names[8] = {
+    static const char* names[9] = {
         LV_SYMBOL_LIST "\nSTATYSTYKI",
         LV_SYMBOL_EDIT "\nWZOR WLASNY",
         LV_SYMBOL_REFRESH "\nKALIBRACJA",
@@ -97,13 +98,15 @@ void uiOpenMenu() {
         LV_SYMBOL_SETTINGS "\nUSTAWIENIA",
         LV_SYMBOL_WIFI "\nPOLACZENIE WiFi",
         LV_SYMBOL_WARNING "\nINFORMACJE",
-        LV_SYMBOL_DIRECTORY "\nWSZYSTKIE WZORCE"
+        LV_SYMBOL_DIRECTORY "\nWSZYSTKIE WZORCE",
+        LV_SYMBOL_TRASH "\nSERWIS"
     };
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 9; i++) {
 #if UI_PORTRAIT
-        int c = i % 2, r = i / 2;
-        uiBtn(ov, names[i], 8 + c * 236, OV_TOP + 8 + r * 160, 228, 150, C_BTN, onMenuItem,
-              (void*)(intptr_t)i, FONT_M);
+        // 3x3 - 2 kolumny (jak wczesniej) nie miescilyby 9 pozycji w wysokosci ekranu
+        int c = i % 3, r = i / 3;
+        uiBtn(ov, names[i], 8 + c * 152, OV_TOP + 8 + r * 148, 144, 138, C_BTN, onMenuItem,
+              (void*)(intptr_t)i, FONT_S);
 #else
         int c = i % 3, r = i / 3;
         uiBtn(ov, names[i], 16 + c * 260, 76 + r * 132, 252, 120, C_BTN, onMenuItem,

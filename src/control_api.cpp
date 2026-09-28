@@ -19,6 +19,8 @@
 #include "storage.h"
 #include "paint_consumption.h"
 #include "estop.h"
+#include "statistics.h"
+#include "event_log.h"
 
 namespace {
 
@@ -325,6 +327,76 @@ ControlResult executeControl(const String& action, const ControlArgs& args) {
             } else {
                 result = "zakres 1-1000 litrow";
             }
+        }
+    } else if (action == "session_reset") {
+        // Reset etapu (dystans/powierzchnia/czas biezacej sesji) - odpowiednik SCREEN_SESSION_RESET
+        // + START z panelu fizycznego. value=1 to jawne potwierdzenie (zamiast dwuetapowej
+        // nawigacji ekranowej: wejdz na ekran -> nacisnij START).
+        if (snapState != STATE_IDLE && snapState != STATE_STOPPED) {
+            result = "najpierw zatrzymaj malowanie";
+        } else if (args.has("value") && args.get("value").toInt() == 1) {
+            menu.goToScreen(SCREEN_SESSION_RESET);
+            if (STATE_TRYLOCK(500)) { g_state.pendingWebEvent = (uint8_t)EVT_START_SHORT; STATE_UNLOCK(); }
+        } else {
+            result = "wymagane potwierdzenie: value=1";
+        }
+    } else if (action == "counter_reset") {
+        // Reset wszystkich licznikow oprocz kalibracji - odpowiednik SCREEN_COUNTER_RESET + START.
+        if (snapState != STATE_IDLE && snapState != STATE_STOPPED) {
+            result = "najpierw zatrzymaj malowanie";
+        } else if (args.has("value") && args.get("value").toInt() == 1) {
+            menu.goToScreen(SCREEN_COUNTER_RESET);
+            if (STATE_TRYLOCK(500)) { g_state.pendingWebEvent = (uint8_t)EVT_START_SHORT; STATE_UNLOCK(); }
+        } else {
+            result = "wymagane potwierdzenie: value=1";
+        }
+    } else if (action == "factory_reset") {
+        // Pelny reset NVS + restart - odpowiednik SCREEN_FACTORY_RESET + dlugie START (3s) z panelu
+        // fizycznego. value=1 zastepuje fizyczne przytrzymanie jawnym potwierdzeniem z UI (WWW/Sunton
+        // musza pokazac wlasne "na pewno?" PRZED wyslaniem tego zadania - tu nie ma cofniecia).
+        if (snapState != STATE_IDLE && snapState != STATE_STOPPED) {
+            result = "najpierw zatrzymaj malowanie";
+        } else if (args.has("value") && args.get("value").toInt() == 1) {
+            menu.goToScreen(SCREEN_FACTORY_RESET);
+            if (STATE_TRYLOCK(500)) { g_state.pendingWebEvent = (uint8_t)EVT_START_LONG; STATE_UNLOCK(); }
+        } else {
+            result = "wymagane potwierdzenie: value=1";
+        }
+    } else if (action == "stats_export") {
+        // Synchroniczny eksport (w odroznieniu od powyzszych) - caller od razu dostaje wynik
+        // zamiast musiec dopytywac o rezultat zdarzenia przetworzonego pozniej na Core 1.
+        if (stats.exportLifetimeCsv()) {
+            eventLog.log("CTRL", "Eksport statystyk na SD: /stats/lifetime_stats.csv");
+        } else {
+            result = "eksport nieudany — sprawdz karte SD";
+        }
+    } else if (action == "nozzle_hold_on") {
+        // "Martwy czlowiek" czyszczenia dysz z panelu WWW/Sunton — patrz menu.cpp update()
+        // (SCREEN_NOZZLE_CLEAN) i NOZZLE_HOLD_MAX_MS w config.h (twardy limit przytrzymania).
+        if (snapScreen != SCREEN_NOZZLE_CLEAN) {
+            result = "wejdz najpierw na ekran czyszczenia dysz";
+        } else if (STATE_TRYLOCK(500)) {
+            g_state.wwwNozzleHoldOn = true;
+            g_state.wwwNozzleHoldSetMs = millis();
+            STATE_UNLOCK();
+        }
+    } else if (action == "nozzle_hold_off") {
+        if (STATE_TRYLOCK(500)) {
+            g_state.wwwNozzleHoldOn = false;
+            STATE_UNLOCK();
+        }
+    } else if (action == "set_dist_target") {
+        // Cel pomiaru dystansu (SCREEN_DISTANCE_METER), w decymetrach (value=500 -> 50.0 m),
+        // zeby uniknac przesylania ulamkow przez formularz. Precyzja 0,1 m.
+        if (args.has("value")) {
+            int dm = args.get("value").toInt();
+            if (dm >= 0 && dm <= 99990) {
+                menu.setDistMeterTarget(dm / 10.0f);
+            } else {
+                result = "zakres 0-9999.0 m (w decymetrach: 0-99990)";
+            }
+        } else {
+            result = "brak parametru value";
         }
 #if HAS_ESTOP
     } else if (action == "ack_estop") {

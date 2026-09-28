@@ -379,7 +379,7 @@ void setup() {
         }
         buzzer.beep(1500, 80);
     }
-#else
+#elif HAS_DGUS_LINK
     // ======== POST + dane WiFi na ekranie DGUS ========
     // Jeden ekran informacyjny (SCREEN_POST): wyniki testu i dane WiFi. Czekamy na START
     // (fizyczny, z ekranu dotykowego albo z panelu WWW) — tak jak w wariancie z ILI9341.
@@ -426,6 +426,50 @@ void setup() {
             }
             STATE_UNLOCK();
             delay(5);
+        }
+        buzzer.beep(1500, 80);
+    }
+#else
+    // ======== POST "headless" — bez ekranu na sterowniku (Sunton po WiFi, display-module) ========
+    // Diagnostyka tylko do logu szeregowego (USB) — interfejs operatora jest na module WiFi,
+    // ktory sam pokazuje status polaczenia. Sterownik i tak czeka na START, zeby nie ruszyc
+    // malowania od razu po wlaczeniu, zanim operator swiadomie potwierdzi gotowosc.
+    {
+        char ip[24];
+        strlcpy(ip, webServer.getIPAddress().c_str(), sizeof(ip));
+        DBG_PRINTLN("[POST] ==== Diagnostyka startowa ====");
+        DBG_PRINTF("[POST] WiFi (SSID, dla telefonu): %s\n", WIFI_AP_SSID);
+        DBG_PRINTF("[POST] Haslo WiFi: %s\n", webServer.getPassword());
+        DBG_PRINTF("[POST] Adres: %s\n", ip);
+        DBG_PRINTF("[POST] Karta SD: %s\n", reportLogger.isReady() ? "OK" : "BRAK");
+        DBG_PRINTF("[POST] Zegar RTC: %s\n", rtcModule.isRunning() ? "OK" : "BLAD");
+        DBG_PRINTF("[POST] GPS: %s\n", gpsHandler.hasFix() ? "FIX" : "brak fix");
+        DBG_PRINTF("[POST] Przyciski MCP: %s\n", patternButtons.isReady() ? "OK" : "BLAD");
+        DBG_PRINTF("[POST] Enkoder: %s\n", encoderDist.isCalibrated() ? "skalibrowany" : "NIESKALIBROWANY");
+        if (tempSensor.isAvailable()) {
+            DBG_PRINTF("[POST] Temperatura: %.1f C\n", tempSensor.getTemperature());
+        } else {
+            DBG_PRINTLN("[POST] Temperatura: brak czujnika");
+        }
+        DBG_PRINTF("[POST] Firmware: %s\n", FW_VERSION);
+
+        g_state.currentScreen = SCREEN_POST;
+        buzzer.beep(2000, 100);
+
+        // Czekaj na START — fizyczny przycisk lub panel WWW/moduł Sunton (qrDismissed)
+        bool wait = true;
+        while (wait) {
+            esp_task_wdt_reset();
+            buttons.update();
+            ButtonEvent pe = buttons.getEvent();
+            if (pe == EVT_START_SHORT || pe == EVT_START_LONG) wait = false;
+            STATE_LOCK();
+            if (g_state.qrDismissed) {
+                g_state.qrDismissed = false;
+                wait = false;
+            }
+            STATE_UNLOCK();
+            delay(10);
         }
         buzzer.beep(1500, 80);
     }

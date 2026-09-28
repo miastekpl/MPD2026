@@ -26,6 +26,7 @@
 #include "event_log.h"
 #include "control_api.h"
 #include "dgus/dgus_link.h"
+#include "estop.h"
 #include <SD.h>
 
 TrassarWebServer webServer;
@@ -371,6 +372,7 @@ void TrassarWebServer::setupRoutes() {
     server.on("/api/stats", HTTP_GET, [this]() { handleStats(); });
     server.on("/api/reports", HTTP_GET, [this]() { handleReports(); });
     server.on("/api/reports/download", HTTP_GET, [this]() { handleReportDownload(); });
+    server.on("/api/stats/download", HTTP_GET, [this]() { handleStatsDownload(); });
     server.on("/api/reports/geojson", HTTP_GET, [this]() { handleGeoJson(); });
     server.on("/api/tracks", HTTP_GET, [this]() { handleTrackList(); });
     server.on("/api/tracks/download", HTTP_GET, [this]() { handleTrackDownload(); });
@@ -723,6 +725,26 @@ String TrassarWebServer::getStateJson() {
     doc["termPolicy"] = (int)dgusLink.getLossPolicy();
     doc["termLost"] = dgusLink.isLossAlarm();
 #endif
+#if HAS_ESTOP
+    doc["estopTriggered"] = estop.isTriggered();
+    doc["estopAwaitAck"] = estop.isAwaitingAck();
+#endif
+    // Przegladany wzorzec na ekranie czyszczenia dysz (aktualne tylko gdy screen==SCREEN_NOZZLE_CLEAN)
+    doc["nozzlePatternIdx"] = menu.getNozzlePatternIdx();
+
+    // Pomiar dystansu z alarmem (SCREEN_DISTANCE_METER) - aktualne tylko na tym ekranie.
+    // distMeterWarning liczone tu (nie po stronie klienta), zeby prog DIST_METER_WARN_MARGIN_M
+    // mial jedno miejsce prawdy zamiast duplikowac go w data/index.html i display-module/.
+    {
+        float dmVal = menu.getDistMeterValue();
+        float dmTgt = menu.getDistMeterTarget();
+        bool dmReached = menu.isDistMeterReached();
+        doc["distMeasuring"] = menu.isDistMeterMeasuring();
+        doc["distMeterValue"] = serialized(String(dmVal, 1));
+        doc["distMeterTarget"] = serialized(String(dmTgt, 1));
+        doc["distMeterReached"] = dmReached;
+        doc["distMeterWarning"] = (!dmReached && dmTgt > 0 && (dmTgt - dmVal) <= DIST_METER_WARN_MARGIN_M);
+    }
 
     doc["gunAnomalyDetected"] = snapAnomalyDetected;
     JsonArray anomArr = doc["gunAnomaly"].to<JsonArray>();
@@ -974,6 +996,44 @@ void TrassarWebServer::handleReportDownload() {
     f.close();
     SD_UNLOCK();
     DBG_PRINTF("[WWW] Pobranie raportu: %s\n", fname.c_str());
+}
+
+// ============================================================
+// GET /api/stats/download - Pobierz /stats/lifetime_stats.csv (eksport statystyk,
+// patrz control_api.cpp akcja "stats_export" / StatisticsManager::exportLifetimeCsv())
+// ============================================================
+void TrassarWebServer::handleStatsDownload() {
+    if (!reportLogger.isReady()) {
+        server.send(404, "text/plain", "Karta SD niedostepna");
+        return;
+    }
+    if (!SD_LOCK()) {
+        server.send(503, "text/plain", "SD zajeta");
+        return;
+    }
+    if (!SD.exists("/stats/lifetime_stats.csv")) {
+        SD_UNLOCK();
+        server.send(404, "text/plain", "Brak pliku — wykonaj najpierw eksport");
+        return;
+    }
+    File f = SD.open("/stats/lifetime_stats.csv", FILE_READ);
+    if (!f) {
+        SD_UNLOCK();
+        server.send(500, "text/plain", "Blad otwarcia pliku");
+        return;
+    }
+    server.sendHeader("Content-Disposition", "attachment; filename=\"lifetime_stats.csv\"");
+    server.setContentLength(f.size());
+    server.send(200, "text/csv", "");
+    uint8_t buf[512];
+    while (f.available()) {
+        esp_task_wdt_reset();
+        core0AliveMs = millis();
+        int r = f.read(buf, sizeof(buf));
+        if (r > 0) server.sendContent((const char*)buf, r);
+    }
+    f.close();
+    SD_UNLOCK();
 }
 
 // ============================================================

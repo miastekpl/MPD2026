@@ -21,6 +21,7 @@
 #include "gps_track.h"
 #include "paint_consumption.h"
 #include <esp_task_wdt.h>
+#include <cmath>
 
 MenuSystem menu;
 
@@ -47,6 +48,11 @@ void MenuSystem::goToScreen(ScreenID screen) {
     if (prevScreen == SCREEN_NOZZLE_CLEAN) {
         guns.allOff();
     }
+    // Zwolnij staly ton alarmu dystansu przy wyjsciu - inaczej zostalby wlaczony na zawsze
+    // (petla "reassert" w update() dziala tylko, gdy ekran jest aktywny)
+    if (prevScreen == SCREEN_DISTANCE_METER && buzzer.isHolding()) {
+        buzzer.releaseTone();
+    }
 
     STATE_LOCK();
     g_state.currentScreen = screen;
@@ -61,6 +67,18 @@ void MenuSystem::goToScreen(ScreenID screen) {
 #if HAS_JOYSTICK
     joystick.requireCenter();
 #endif
+}
+
+void MenuSystem::setDistMeterTarget(float meters) {
+    if (isnan(meters) || isinf(meters)) return;
+    if (meters < 0) meters = 0;
+    if (meters > 9999) meters = 9999;
+    distMeterTarget = roundf(meters * 10.0f) / 10.0f;   // zaokraglenie do 0.1 m
+    // Nowy cel - zdejmij zatrzask i wygas ewentualny staly ton, zeby alarm liczyl sie od nowa
+    if (distMeterReached) {
+        distMeterReached = false;
+        if (buzzer.isHolding()) buzzer.releaseTone();
+    }
 }
 
 // ============ Dyspozycja zdarzeń ============
@@ -101,19 +119,52 @@ void MenuSystem::update() {
     ScreenID curScreen = g_state.currentScreen;
     STATE_UNLOCK();
 
-    // --- Logika ciagla: pomiar dystansu ---
+    // --- Logika ciagla: pomiar dystansu + alarm przy zadanym celu ---
     if (curScreen == SCREEN_DISTANCE_METER && distMeasuring) {
         float current = encoderDist.getDistanceMeters();
         float delta = current - distMeterLast;
         distMeterLast = current;
         if (delta > 0) distMeterValue += delta;
+
+        uint32_t now = millis();
+        if (distMeterTarget > 0) {
+            if (!distMeterReached && distMeterValue >= distMeterTarget) {
+                // Cel osiagniety/przekroczony - zatrzask, staly ton (dopoki ZERUJ)
+                distMeterReached = true;
+                buzzer.holdTone(1500);
+                distMeterHoldMs = now;
+            } else if (distMeterReached) {
+                // Odswiezaj staly ton periodycznie - odzyskuje buzzer, gdyby cos innego
+                // (np. BUZ_ERROR z innego modulu) chwilowo go przejelo.
+                if (now - distMeterHoldMs >= DIST_METER_HOLD_REASSERT_MS) {
+                    buzzer.holdTone(1500);
+                    distMeterHoldMs = now;
+                }
+            } else {
+                float remaining = distMeterTarget - distMeterValue;
+                if (remaining <= DIST_METER_WARN_MARGIN_M &&
+                    now - distMeterWarnBeepMs >= DIST_METER_WARN_BEEP_MS) {
+                    buzzer.play(BUZ_DIST_WARN);
+                    distMeterWarnBeepMs = now;
+                }
+            }
+        }
+        STATE_LOCK();
+        g_state.displayNeedsUpdate = true;
+        STATE_UNLOCK();
     }
 
     // --- Logika ciagla: czyszczenie dysz ---
     if (curScreen == SCREEN_NOZZLE_CLEAN) {
-        // Fizyczny START albo przycisk "martwego czlowieka" na terminalu (wygasa po 250 ms
-        // bez ramki hold oraz przy utracie lacza — dysze zamykaja sie same).
-        bool held = buttons.isStartHeld() || dgusLink.isHoldActive();
+        // Fizyczny START, przycisk "martwego czlowieka" na ekranie DGUS (wygasa przy utracie
+        // lacza) albo z panelu WWW/Sunton (wwwNozzleHoldOn — twardy limit NOZZLE_HOLD_MAX_MS
+        // na wypadek zgubienia sygnalu "puszczono", patrz control_api.cpp).
+        bool wwwHeld;
+        STATE_LOCK();
+        wwwHeld = g_state.wwwNozzleHoldOn &&
+                  (uint32_t)(millis() - g_state.wwwNozzleHoldSetMs) < NOZZLE_HOLD_MAX_MS;
+        STATE_UNLOCK();
+        bool held = buttons.isStartHeld() || dgusLink.isHoldActive() || wwwHeld;
         const PatternDef& pat = patternMgr.getPattern((PatternID)nozzlePatternIdx);
         for (int i = 0; i < NUM_GUNS; i++) {
             bool active = (pat.guns[i].mode != GUN_OFF);

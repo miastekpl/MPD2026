@@ -21,7 +21,6 @@
 #include "gps_handler.h"
 #include "event_log.h"
 #include "paint_consumption.h"
-#include <SD.h>
 
 // ============ SCREEN_HOME ============
 
@@ -439,6 +438,10 @@ void MenuSystem::handleDistanceMeter(ButtonEvent e) {
             distMeasuring = false;
             distMeterValue = 0;
             distMeterLast = encoderDist.getDistanceMeters();
+            if (distMeterReached) {
+                distMeterReached = false;
+                if (buzzer.isHolding()) buzzer.releaseTone();
+            }
             STATE_LOCK();
             g_state.displayNeedsUpdate = true;
             STATE_UNLOCK();
@@ -447,6 +450,7 @@ void MenuSystem::handleDistanceMeter(ButtonEvent e) {
         case EVT_STOP_LONG:
             distMeasuring = false;
             distMeterValue = 0;
+            distMeterReached = false;   // releaseTone() jest juz w goToScreen() ponizej
             goToScreen(SCREEN_SERVICE_MENU);
             break;
 
@@ -788,56 +792,12 @@ void MenuSystem::handleStatsExport(ButtonEvent e) {
         case EVT_START_LONG: {
             if (exportDone) break;
 
-            if (!reportLogger.isReady()) {
-                exportDone = true;
-                exportSuccess = false;
-                buzzer.play(BUZ_ERROR);
-                STATE_LOCK();
-                g_state.displayNeedsUpdate = true;
-                STATE_UNLOCK();
-                break;
-            }
-
-            if (!SD_LOCK()) {
-                exportDone = true;
-                exportSuccess = false;
-                buzzer.play(BUZ_ERROR);
-                STATE_LOCK();
-                g_state.displayNeedsUpdate = true;
-                STATE_UNLOCK();
-                break;
-            }
-            if (!SD.exists("/stats")) {
-                SD.mkdir("/stats");
-            }
-            File f = SD.open("/stats/lifetime_stats.csv", FILE_WRITE);
-            if (f) {
-                f.println("parametr,wartosc");
-                char buf[64];
-                snprintf(buf, sizeof(buf), "dystans_m,%.1f", stats.getLifetimeDistance());
-                f.println(buf);
-                snprintf(buf, sizeof(buf), "powierzchnia_m2,%.2f", stats.getLifetimeArea());
-                f.println(buf);
-                snprintf(buf, sizeof(buf), "czas_malowania_s,%u", stats.getLifetimePaintTimeSec());
-                f.println(buf);
-                snprintf(buf, sizeof(buf), "motogodziny_s,%u", stats.getMTHSeconds());
-                f.println(buf);
-                for (int i = 0; i < NUM_GUNS; i++) {
-                    snprintf(buf, sizeof(buf), "strzaly_P%d,%u", i + 1, stats.getGunShotCount(i));
-                    f.println(buf);
-                }
-                snprintf(buf, sizeof(buf), "data_eksportu,%s", rtcModule.getDateTimeStr());
-                f.println(buf);
-                f.close();
-                SD_UNLOCK();
-                exportDone = true;
-                exportSuccess = true;
+            exportSuccess = stats.exportLifetimeCsv();
+            exportDone = true;
+            if (exportSuccess) {
                 buzzer.beep(2000, 150);
                 eventLog.log("MENU", "Eksport statystyk na SD: /stats/lifetime_stats.csv");
             } else {
-                SD_UNLOCK();
-                exportDone = true;
-                exportSuccess = false;
                 buzzer.play(BUZ_ERROR);
             }
             STATE_LOCK();

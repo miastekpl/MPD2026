@@ -8,23 +8,28 @@ Repozytorium zawiera dwa firmware'y i aplikację:
   Nie steruje pistoletami; używa istniejącego API (WebSocket :81 + `POST /api/control`).
 - **Aplikacja Android** (`android-app/`).
 
-**Architektura docelowa (kod sterownika zaimplementowany, projekt ekranu w DGUS Designer jeszcze nie zbudowany, nic nie sprawdzone na
-sprzęcie):** jeden duży ekran — **wyświetlacz inteligentny DWIN DGUS** (np. `DMG10600T070_09WTC`) podłączony **bezpośrednio** do
-sterownika przez UART (bez pośredniczącego ESP32, bez RS-485); sterownik ESP32-S3 = master (logika, stan, menu, dane), ekran renderuje
-sam wg projektu z DGUS Designer i odsyła kody dotyku. Bez małego ekranu ILI9341 i joysticka, karta SD osobnym modułem.
-Architektura i protokół: `docs/ARCHITEKTURA_TERMINAL.md`; specyfikacja stron/VP do zbudowania w DGUS Designer: `docs/EKRAN_DGUS.md`.
-**Dwa warianty sterownika muszą się kompilować zawsze:** `pio run -e esp32s3` (przejściowy: ILI9341 + joystick) i
-`pio run -e esp32s3_terminal` (docelowy: `HAS_SMALL_TFT=0 HAS_JOYSTICK=0 HAS_DGUS_LINK=1`). Moduł 7" (`display-module/`) to od tej
-architektury **osobny, niezależny wariant WiFi** (`sunton7`, `sunton7_portrait`) — nie bierze udziału w wariancie DGUS.
-Kod dotyczący ILI9341/joysticka owijaj `#if HAS_SMALL_TFT` / `#if HAS_JOYSTICK`, kod łącza `#if HAS_DGUS_LINK`. Ekran DGUS niczym nie
-steruje — tylko prosi sterownik; wszystkie polecenia idą przez `executeControl()` (`src/control_api.cpp`), zdarzenia dotyku przez
-`menu.handleEvent()` lub bezpośrednio przez `executeControl()` (patrz `dgus_link.cpp::handleTouchEvent()`).
-Nowy ekran serwisowy = handler w `menu_handlers.cpp` **oraz** wypełnienie pól w `dgus_pages.cpp::fillDgusPage()` **oraz** wpis w
-`docs/EKRAN_DGUS.md` (i wersja ILI9341 w `display_screens_*.cpp`).
+**Architektura docelowa:** sterownik **"headless"** — bez żadnego ekranu podłączonego bezpośrednio. Jedyny interfejs
+operatora to **moduł Sunton 7" po WiFi** (`display-module/`, LVGL) — cały interfejs to kod C++, zero pracy w
+zewnętrznym narzędziu GUI. Środowisko `pio run -e esp32s3` (domyślne) ustawia
+`HAS_SMALL_TFT=0 HAS_JOYSTICK=0 HAS_DGUS_LINK=0 HAS_ESTOP=1`. Joystick KY-023 (GPIO 19/20/46) i status STOP-u
+awaryjnego (GPIO 21, cięcie zasilania sprzętowe — patrz `src/estop.h`) działają niezależnie od ekranu.
+**`pio run -e esp32s3_terminal`** (ekran inteligentny DWIN DGUS na UART, `HAS_DGUS_LINK=1`) to **alternatywa, nie
+zalecana jako punkt startowy** — wymaga ręcznej budowy projektu w DGUS Designer (osobne narzędzie GUI, tylko
+Windows; kod sterownika i specyfikacja są gotowe: `docs/ARCHITEKTURA_TERMINAL.md`, `docs/EKRAN_DGUS.md`), ale ją
+też trzymaj kompilowalną — **oba środowiska muszą się kompilować zawsze**.
+Kod dotyczący ILI9341/joysticka owijaj `#if HAS_SMALL_TFT` / `#if HAS_JOYSTICK`, kod łącza DGUS `#if HAS_DGUS_LINK`.
+Wszystkie polecenia (WWW, moduł Sunton, ekran DGUS) idą przez `executeControl()` (`src/control_api.cpp`); zdarzenia
+przyciskowe przez `menu.handleEvent()` — ta sama ścieżka niezależnie od źródła (fizyczny przycisk, `send_event` z
+API, kod dotyku DGUS). Nowy ekran serwisowy = handler w `menu_handlers.cpp` **oraz** UI w module Sunton
+(`display-module/src/ui_overlays*.cpp`) **oraz** pola w `/api/status` (`web_server.cpp`) — mały ekran ILI9341 i DGUS
+są opcjonalne, ale Sunton+WWW to dziś jedyny **zawsze dostępny** interfejs, więc każda nowa funkcja musi tam trafić.
 
-**Role ekranów (wariant przejściowy):** duży ekran 7" (`display-module/`) = ekran **roboczy** operatora; mały ekran ILI9341 sterownika (`src/display_*`) =
-ekran **techniczny / serwisowy / awaryjny** (POST, QR/hasło WiFi, menu serwisowe, SETUP) i nośnik slotu karty SD. Nie usuwaj
-funkcji małego ekranu — moduł 7" nie ma części funkcji serwisowych (czyszczenie dysz, reset etapu/liczników, eksport, factory reset).
+**Role interfejsów (architektura docelowa):** moduł Sunton (`display-module/`) = ekran **roboczy** operatora
+(wzorce, START/STOP, tryby, prędkość, droga, farba) **oraz** menu „Serwis" (czyszczenie dysz, reset etapu/liczników,
+eksport statystyk, factory reset, pomiar dystansu z alarmem — `ui_overlays3.cpp`); panel WWW (`data/index.html`,
+zakładka „Serwis") ma te same funkcje zdalnie, z jednym świadomym wyjątkiem: czyszczenie dysz nie ma tam przycisku
+"przytrzymaj, aby strzelać" (tylko przegląd wzorca) — dead-man wymaga fizycznej obecności przy maszynie, tak samo
+jak tryb RĘCZNY.
 
 **Zasada pracy:** to repozytorium (MPD2026) jest rozwojową kopią `Trassar_251v3`. Repozytorium
 `miastekpl/Trassar_251v3` pozostaje niezmienioną referencją — nowe zmiany zapisujemy wyłącznie tutaj.

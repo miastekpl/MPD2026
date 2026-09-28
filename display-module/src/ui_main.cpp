@@ -165,6 +165,14 @@ static void onReverse(lv_event_t*) {
     uiSend("action=toggle_reverse");
 }
 
+static void onBannerClick(lv_event_t*) {
+    // Baner dziala jako przycisk POTWIERDZ TYLKO gdy czeka na potwierdzenie STOP-u
+    // awaryjnego (petla juz zamknieta) - w kazdym innym stanie tap nic nie robi.
+    if (g_stValid && g_st.estopAwaitAck && !g_st.estopTriggered) {
+        uiSend("action=ack_estop");
+    }
+}
+
 static void onMenu(lv_event_t*) { uiOpenMenu(); }
 static void onCoverWifi(lv_event_t*) { uiOpenWifi(); }
 
@@ -284,7 +292,9 @@ static void buildMainPortrait() {
     lv_obj_set_style_bg_color(s_banner, C_RED, 0);
     lv_obj_set_style_bg_opa(s_banner, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(s_banner, 8, 0);
-    lv_obj_clear_flag(s_banner, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_clear_flag(s_banner, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(s_banner, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(s_banner, onBannerClick, LV_EVENT_CLICKED, nullptr);
     s_lblBanner = lv_label_create(s_banner);
     lv_label_set_text(s_lblBanner, "");
     lv_label_set_long_mode(s_lblBanner, LV_LABEL_LONG_WRAP);
@@ -415,7 +425,9 @@ static void buildMainLandscape() {
     lv_obj_set_style_bg_color(s_banner, C_RED, 0);
     lv_obj_set_style_bg_opa(s_banner, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(s_banner, 8, 0);
-    lv_obj_clear_flag(s_banner, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_clear_flag(s_banner, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(s_banner, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(s_banner, onBannerClick, LV_EVENT_CLICKED, nullptr);
     s_lblBanner = lv_label_create(s_banner);
     lv_label_set_text(s_lblBanner, "");
     lv_obj_set_style_text_font(s_lblBanner, FONT_L, 0);
@@ -590,7 +602,9 @@ static void updateSlots(const Status& st) {
 static void updateBanner(const Status& st, bool blink) {
     const char* txt = nullptr;
     lv_color_t col = C_RED;
-    if (st.overspeed) { txt = "ZA SZYBKO!"; col = C_RED; }
+    if (st.estopTriggered) { txt = "STOP AWARYJNY AKTYWNY - zwolnij grzybek"; col = C_RED; }
+    else if (st.estopAwaitAck) { txt = "STOP AWARYJNY: dotknij tutaj, aby potwierdzic"; col = C_ORANGE; }
+    else if (st.overspeed) { txt = "ZA SZYBKO!"; col = C_RED; }
     else if (st.anomalyDetected) {
         static char b[40];
         int first = -1;
@@ -614,7 +628,7 @@ static void updateBanner(const Status& st, bool blink) {
     lv_obj_center(s_lblBanner);
     if (lv_obj_get_style_bg_color(s_banner, LV_PART_MAIN).full != col.full)
         lv_obj_set_style_bg_color(s_banner, col, 0);
-    bool flash = (st.overspeed || st.anomalyDetected) && blink;
+    bool flash = (st.estopTriggered || st.overspeed || st.anomalyDetected) && blink;
     lv_opa_t op = flash ? LV_OPA_40 : LV_OPA_COVER;
     if (lv_obj_get_style_bg_opa(s_banner, LV_PART_MAIN) != op) lv_obj_set_style_bg_opa(s_banner, op, 0);
 }

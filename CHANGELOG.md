@@ -11,6 +11,74 @@ Wersjonowanie zgodne z [Semantic Versioning](https://semver.org/lang/pl/).
 
 Repozytorium MPD2026 powstało jako kopia `Trassar_251v3` (firmware 2.52.0, commit bazowy `24e12c5`).
 
+### Dodano — pomiar dystansu z alarmem (cel co do 10 cm, ostrzeżenie + STOP)
+Rozszerzono istniejący, dotąd nieużywalny bez ekranu sterownika `SCREEN_DISTANCE_METER` o zadawany cel
+(precyzja 0,1 m) i dwustopniowy alarm: **strefa ostrzegawcza** (ostatnie `DIST_METER_WARN_MARGIN_M`=2 m przed
+celem) — miganie na żółto + cykliczny sygnał buzzera (`BUZ_DIST_WARN`, co `DIST_METER_WARN_BEEP_MS`=500 ms);
+**cel osiągnięty/przekroczony** — zatrzask (do ZERUJ), ekran na zielono z dużym napisem STOP, **stały,
+nieprzerywany ton buzzera** (nowe `BuzzerController::holdTone()`/`releaseTone()` — w odróżnieniu od
+dotychczasowych `play()`/`beep()`, które zawsze kończą się same). Dostępne w panelu WWW (zakładka „Serwis")
+i module Sunton (`uiOpenDistanceMeter()`), obie strony pokazują to samo źródło prawdy (`menu.cpp`).
+- Nowa akcja API `set_dist_target` (wartość w decymetrach, np. `500` = 50,0 m).
+- Nowe pole `/api/status`: `distMeterValue`, `distMeterTarget`, `distMeterReached`, `distMeterWarning`
+  (próg ostrzegawczy liczony w `web_server.cpp` — jedno miejsce prawdy zamiast duplikować stałą w obu UI).
+- **Nie dotyczy wariantu DGUS** (`esp32s3_terminal`) — `EKRAN_DGUS.md`/strona DISTANCE_METER nie zostały
+  rozszerzone o cel/alarm, zgodnie z tym, że ten wariant jest teraz nie zalecaną alternatywą.
+
+### Zmieniono — architektura docelowa: sterownik "headless" + moduł Sunton po WiFi (zamiast ekranu DGUS)
+Budowa projektu ekranu w DGUS Designer (osobne narzędzie GUI producenta, tylko Windows) okazała się barierą nie
+do przejścia dla użytkownika — cofnięto decyzję z poprzedniej sekcji. **Nowa architektura docelowa:** sterownik
+bez jakiegokolwiek ekranu podłączonego bezpośrednio; jedynym interfejsem operatora jest moduł **Sunton
+ESP32-8048S070C** (`display-module/`, LVGL) po WiFi — cały interfejs to kod, zero pracy w zewnętrznym GUI.
+Środowisko `esp32s3` (domyślne) ustawia teraz `HAS_SMALL_TFT=0 HAS_JOYSTICK=0 HAS_DGUS_LINK=0 HAS_ESTOP=1`;
+`esp32s3_terminal` (DGUS) zostaje jako jawnie oznaczona, nie zalecana alternatywa. Naprawiono lukę w `main.cpp`
+(POST-ekran zakładał tylko warianty "mały TFT" i "DGUS" — dodano trzecią, headless ścieżkę logującą diagnostykę
+startową przez USB zamiast na nieistniejący ekran).
+- **Joystick KY-023 przywrócony** (GPIO 19/20/46) — nawiguje po menu równolegle z dotykiem/panelem WWW
+  (`menu.handleEvent()`, ten sam kod co wcześniej dla wariantu przejściowego — tylko flaga była wyłączona).
+- **STOP awaryjny (E-STOP)** — nowy moduł `src/estop.h/.cpp` (GPIO 21). Cięcie zasilania pistoletów/pomp jest
+  **sprzętowe** (grzybek, styk NC, w torze zasilania modułu przekaźników); GPIO 21 tylko czyta status pętli
+  (fail-safe: zerwany przewód = jak zadziałanie). Obrona w głąb: ten sam ISR co fizyczny STOP zeruje przekaźniki
+  programowo w mikrosekundy po zboczu (`guns.cpp::beginEmergencyStop()`); `estop.cpp::update()` wymusza
+  `STATE_STOPPED`, alarm dźwiękowy (`BUZ_ESTOP`) i log. Wznowienie malowania wymaga jawnego potwierdzenia
+  operatora (`action=ack_estop`) — status (`estopTriggered`/`estopAwaitAck`) widoczny w `/api/status`, w panelu
+  WWW (baner na górze strony) i w module Sunton (baner na ekranie roboczym, dotyk = potwierdzenie).
+- **Ikony wzorców do DGUS Designer** — [`docs/schematy/ikony_dgus/`](docs/schematy/ikony_dgus/), 16 gotowych
+  plików PNG w kolejności `PatternID`, na wypadek gdyby ktoś jednak zdecydował się zbudować wariant DGUS.
+- **Grzybek E-STOP w wizualizacji obudowy** — nowy widok „prawej ściany bocznej" w
+  `docs/schematy/generate_enclosure.py` (pozycja 11 w tabeli wycięć), obie wersje (OŚ/KRAWĘDŹ).
+- Nowy budżet pinów `esp32s3`: **23 zajęte, 6 wolnych** (GPIO 9, 10, 14, 19, 20, 46 wolne bez ILI9341/DGUS;
+  GPIO 21 zajęty przez status E-STOP).
+
+### Dodano — funkcje serwisowe w panelu WWW i module Sunton (odpowiednik dawnego małego ekranu)
+Usunięcie wszystkich lokalnych ekranów sterownika ujawniło lukę: **czyszczenie dysz, reset etapu, reset
+liczników, eksport statystyk na SD i factory reset** były zaimplementowane wyłącznie jako obsługa lokalnych
+zdarzeń menu (`menu_handlers.cpp`) — bez żadnego odpowiednika w panelu WWW ani w module Sunton. Dodano wszystkie
+pięć funkcji w obu miejscach:
+- **`control_api.cpp`:** nowe akcje `session_reset`, `counter_reset`, `factory_reset` (wszystkie wymagają
+  `value=1` jako jawne potwierdzenie, zamiast dawnej dwuetapowej nawigacji ekranowej), `stats_export`
+  (synchroniczna, natychmiastowy wynik — w odróżnieniu od reszty, które korzystają z istniejącej kolejki
+  `pendingWebEvent`), `nozzle_hold_on`/`nozzle_hold_off` (nowy odpowiednik `dgusLink.isHoldActive()` dla
+  panelu WWW/Sunton, z tym samym twardym limitem `NOZZLE_HOLD_MAX_MS`, przeniesionym do `config.h` jako
+  wspólna stała).
+  - **Świadoma decyzja bezpieczeństwa:** panel WWW (telefon, może być gdziekolwiek) NIE dostał przycisku
+    "przytrzymaj, aby strzelać" dla czyszczenia dysz — tylko przeglądanie wzorca i instrukcję "przytrzymaj
+    fizyczny START przy maszynie", analogicznie do zasady trybu RĘCZNEGO ("strzał tylko przy fizycznie
+    trzymanym START — ekran nie może tego obejść"). Moduł Sunton (montowany na maszynie) dostał pełny
+    przycisk przytrzymania, bo operator i tak musi tam fizycznie być.
+- **`StatisticsManager::exportLifetimeCsv()`** (nowa metoda, `statistics.cpp`) — logika zapisu CSV wydzielona
+  z `menu_handlers.cpp::handleStatsExport()` do jednego miejsca, używanego teraz przez obie ścieżki (ekran
+  serwisowy i nowa akcja API), żeby się nie rozjechały. Nowy endpoint `GET /api/stats/download`.
+- **Panel WWW** (`data/index.html`): nowa zakładka „Serwis" w karcie „Menu serwisowe" — czyszczenie dysz
+  (przeglądanie wzorca + wejście/wyjście z ekranu), reset etapu, reset liczników (potwierdzenie `confirm()`),
+  eksport statystyk (+link do pobrania), factory reset (podwójne potwierdzenie, czerwony przycisk). Baner
+  STOP-u awaryjnego na górze strony (dotyk = potwierdzenie, gdy `estopAwaitAck`).
+- **Moduł Sunton** (`display-module/`): nowy overlay `uiOpenService()` (`ui_overlays3.cpp`) z tymi samymi
+  pięcioma funkcjami — przyciski reset/factory reset wymagają podwójnego dotknięcia w ciągu 3 s zamiast
+  osobnego dialogu. Baner E-STOP na ekranie roboczym (czerwony = aktywny, pomarańczowy = czeka na
+  potwierdzenie, dotyk banera = `ack_estop`). Nowe pola w `Status`/`/api/status`: `estopTriggered`,
+  `estopAwaitAck`, `screen`, `nozzlePatternIdx`.
+
 ### Dodano — architektura docelowa: ekran inteligentny DWIN DGUS (sterownik 2.53.0)
 Duży ekran podłączony **bezpośrednio** do sterownika (bez pośredniczącego ESP32, bez RS-485) — wyświetlacz inteligentny
 DWIN DGUS (np. `DMG10600T070_09WTC`, 7" 1024×600) renderujący samodzielnie wg projektu z DGUS Designer.

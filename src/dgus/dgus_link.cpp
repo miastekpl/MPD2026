@@ -41,7 +41,6 @@ constexpr uint32_t HOME_PERIOD_MS     = 250;    // odswiezanie ekranu roboczego
 constexpr uint32_t SERVICE_PERIOD_MS  = 300;    // odswiezanie ekranu serwisowego
 constexpr uint32_t ESTOP_LINK_PERIOD_MS = 200;  // odswiezanie statusu E-STOP - niezalezne od strony, szybsze niz SERVICE
 constexpr uint32_t ALARM_BEEP_MS      = 3000;
-constexpr uint32_t NOZZLE_HOLD_MAX_MS = 8000;   // twardy limit "martwego czlowieka" - patrz dgus_map.h
 
 dgus::Parser g_parser;
 uint8_t      g_frame[dgus::MAX_FRAME];

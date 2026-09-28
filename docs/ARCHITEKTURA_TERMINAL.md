@@ -275,7 +275,9 @@ Nic z poniższej listy nie zostało jeszcze sprawdzone:
   zbudowane według specyfikacji (rozdz. 8, [EKRAN_DGUS.md](EKRAN_DGUS.md)).
 - Rysunki wzorców "w skali" (jak w LVGL) nie są renderowane dynamicznie — DGUS pokazuje **statyczne ikony**
   wybierane numerem wzorca (0–15); wygląda dobrze, ale nie jest to żywy podgląd geometrii jak w module WiFi.
-  Zestaw ikon (16 wzorców + WŁASNY) trzeba przygotować jako obrazy w DGUS Designer.
+  Zestaw ikon (16 wzorców + WŁASNY) jest **już gotowy** jako pliki PNG —
+  [`docs/schematy/ikony_dgus/`](schematy/ikony_dgus/) — zostaje tylko zaimportować je w Designerze (patrz README
+  w tym folderze).
   "Droga" (animacja perspektywiczna) — analogicznie: nie da się jej łatwo odtworzyć w DGUS; `VP_PATDIST_DM`
   zostaje jako dana liczbowa (np. pod prosty pasek postępu), a nie animowana grafika.
 - Kod QR z danymi WiFi nie jest rysowany — ekran startowy pokazuje SSID, hasło i adres tekstem (8 wierszy).

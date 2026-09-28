@@ -105,7 +105,27 @@ struct Status {
     char     firmware[16] = "";
     uint32_t uptime = 0;
     int      clients = 0;
+
+    // STOP awaryjny (E-STOP) - ciecie zasilania jest sprzetowe (petla NC w torze zasilania
+    // przekaznikow), te pola sa tylko informacyjne. estopAwaitAck=true wymaga potwierdzenia
+    // operatora (action=ack_estop) zanim mozna wznowic malowanie - patrz src/estop.h sterownika.
+    bool     estopTriggered = false;
+    bool     estopAwaitAck  = false;
+
+    int      screen = -1;              // ScreenID sterownika (src/config.h) - -1 = nieznany
+    int      nozzlePatternIdx = 0;     // przegladany wzorzec na ekranie czyszczenia dysz
+
+    // Pomiar dystansu z alarmem (SCREEN_DISTANCE_METER) - aktualne tylko na tym ekranie
+    bool     distMeasuring = false;
+    float    distMeterValue = 0;
+    float    distMeterTarget = 50.0f;
+    bool     distMeterReached = false;
+    bool     distMeterWarning = false;   // liczone przez sterownik (web_server.cpp) - jedno miejsce prawdy
 };
+
+// ScreenID sterownika istotne dla tego modulu (src/config.h - musi sie zgadzac 1:1)
+constexpr int SCREEN_DISTANCE_METER_ID = 4;
+constexpr int SCREEN_NOZZLE_CLEAN_ID = 6;
 
 struct StatsData {
     bool     valid = false;

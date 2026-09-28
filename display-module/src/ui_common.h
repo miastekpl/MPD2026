@@ -92,3 +92,4 @@ void uiOpenPaint();
 void uiOpenWifi();
 void uiOpenCustomEditor();
 void uiOpenInfo();
+void uiOpenService();

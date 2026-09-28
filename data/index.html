@@ -161,6 +161,19 @@ body{
 }
 .gun-circle.anom{border-color:#e64040;animation:anomBlink 1s infinite;}
 @keyframes anomBlink{0%,100%{box-shadow:0 0 8px rgba(230,64,64,.6);}50%{box-shadow:none;}}
+.estop-warn.ack{background:#3a2a10;border-color:#e6a02a;color:#e6a02a;animation:none;cursor:pointer;}
+.danger-btn{background:#3a1020;border:1px solid #e64040;color:#e64040;}
+.danger-btn:active{transform:scale(.97);}
+.svc-tools-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.dm-box{border-radius:10px;padding:14px;text-align:center;transition:background .15s;background:#0f2557;border:1px solid #1a3a5a;}
+.dm-box.dm-warn{background:#4a3a00;border-color:#e6a02a;}
+.dm-box.dm-reached{background:#1a5c2e;border-color:#2ae67a;}
+.dm-val{font-size:30px;font-weight:bold;color:#fff;font-family:Consolas,monospace;}
+.dm-stop{font-size:34px;font-weight:bold;color:#fff;display:none;margin-top:4px;}
+.dm-reached .dm-stop{display:block;}
+.dm-target-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;}
+.dm-step-btn{width:52px;height:44px;border-radius:8px;background:#1a3a5a;border:1px solid #2a7d9f;color:#fff;font-size:18px;font-weight:bold;}
+.dm-step-btn:active{transform:scale(.93);}
 </style>
 </head>
 <body>
@@ -170,6 +183,11 @@ body{
 </div>
 
 <div class="container">
+
+    <!-- ========== STOP AWARYJNY (E-STOP) ========== -->
+    <div id="estopWarn" class="anom-warn" style="display:none;" onclick="ackEstop()">
+        STOP AWARYJNY AKTYWNY — zwolnij grzybek
+    </div>
 
     <!-- ========== STATUS ========== -->
     <div class="card">
@@ -429,6 +447,7 @@ body{
             <button class="svc-tab act" onclick="svcTab(0)">Statystyki</button>
             <button class="svc-tab" onclick="svcTab(1)">Raporty SD</button>
             <button class="svc-tab" onclick="svcTab(2)">Trasy GPS</button>
+            <button class="svc-tab" onclick="svcTab(3)">Serwis</button>
         </div>
         <div id="svcP0">
             <div class="info-grid two">
@@ -451,6 +470,48 @@ body{
         <div id="svcP2" style="display:none;">
             <div id="trkList" style="font-size:12px;color:#6b7d9a;">Ladowanie...</div>
             <button class="cal-btn" style="margin-top:8px;" onclick="loadTracks()">Odswiez</button>
+        </div>
+        <div id="svcP3" style="display:none;">
+            <div style="font-size:12px;color:#6b7d9a;margin-bottom:4px;">Pomiar dystansu z alarmem</div>
+            <div id="dmBox" class="dm-box">
+                <div class="dm-val" id="dmValue">0.0 m</div>
+                <div class="dm-stop" id="dmStop">STOP</div>
+                <div class="dm-target-row">
+                    <button class="dm-step-btn" onclick="dmTargetStep(-1)">&minus;0,1</button>
+                    <span style="color:#f0c040;font-weight:bold;">Cel: <span id="dmTarget">50.0 m</span></span>
+                    <button class="dm-step-btn" onclick="dmTargetStep(1)">+0,1</button>
+                </div>
+            </div>
+            <div class="svc-tools-row" style="margin-top:8px;">
+                <button class="cal-btn" id="dmStartBtn" onclick="dmStart()">Start</button>
+                <button class="cal-btn" onclick="dmZero()">Zeruj</button>
+            </div>
+
+            <div style="font-size:12px;color:#6b7d9a;margin:14px 0 4px;">Czyszczenie dysz</div>
+            <div id="nzPanel" style="display:none;">
+                <div class="cal-row">
+                    <button class="cal-btn" onclick="nzPrev()">&larr;</button>
+                    <div class="cal-info" style="text-align:center;flex:1;">
+                        Wzorzec: <span id="nzPat" style="color:#f0c040;font-weight:bold;">---</span><br>
+                        <span style="font-size:11px;">Przytrzymaj fizyczny przycisk START na sterowniku, aby otworzyc dysze.</span>
+                    </div>
+                    <button class="cal-btn" onclick="nzNext()">&rarr;</button>
+                </div>
+                <button class="cal-btn" style="margin-top:8px;" onclick="nzExit()">Zakoncz czyszczenie</button>
+            </div>
+            <button class="cal-btn" id="nzOpenBtn" onclick="nzOpen()">Otworz ekran czyszczenia dysz</button>
+
+            <div style="font-size:12px;color:#6b7d9a;margin:14px 0 4px;">Statystyki</div>
+            <div class="svc-tools-row">
+                <button class="cal-btn" onclick="sessionReset()">Reset etapu</button>
+                <button class="cal-btn" onclick="counterReset()">Reset licznikow</button>
+                <button class="cal-btn" onclick="statsExport()">Eksport na SD</button>
+            </div>
+
+            <div style="font-size:12px;color:#6b7d9a;margin:14px 0 4px;">Strefa niebezpieczna</div>
+            <div class="svc-tools-row">
+                <button class="cal-btn danger-btn" onclick="factoryReset()">Factory reset</button>
+            </div>
         </div>
     </div>
 
@@ -772,6 +833,42 @@ function applyStatus(d){
         if(d.gunAnomalyDetected){anomEl.style.display='block';}
         else{anomEl.style.display='none';}
 
+        /* STOP awaryjny (E-STOP) - ciecie zasilania jest sprzetowe, to pole tylko informuje.
+           estopAwaitAck=true -> dotkniecie banera wysyla potwierdzenie (patrz ackEstop()). */
+        let estopEl=document.getElementById('estopWarn');
+        if(d.estopTriggered){
+            estopEl.style.display='block';
+            estopEl.className='anom-warn';
+            estopEl.textContent='STOP AWARYJNY AKTYWNY — zwolnij grzybek';
+        } else if(d.estopAwaitAck){
+            estopEl.style.display='block';
+            estopEl.className='anom-warn estop-warn ack';
+            estopEl.textContent='STOP AWARYJNY: dotknij tutaj, aby potwierdzic';
+        } else {
+            estopEl.style.display='none';
+        }
+
+        /* Czyszczenie dysz: kod wzorca aktualnie przegladanego na ekranie (jesli tam jestesmy) */
+        if(typeof d.nozzlePatternIdx==='number'){
+            let nzp=document.getElementById('nzPat');
+            if(nzp) nzp.textContent=PAT_CODES[d.nozzlePatternIdx]||'---';
+        }
+
+        /* Pomiar dystansu z alarmem */
+        if(typeof d.distMeterValue!=='undefined'){
+            document.getElementById('dmValue').textContent=(+d.distMeterValue).toFixed(1)+' m';
+            if(Date.now()-dmTouchMs>2500){
+                dmTargetLocal=+d.distMeterTarget;
+                document.getElementById('dmTarget').textContent=dmTargetLocal.toFixed(1)+' m';
+            }
+            document.getElementById('dmStartBtn').textContent=d.distMeasuring?'Pauza':'Start';
+            let box=document.getElementById('dmBox');
+            box.classList.remove('dm-warn','dm-reached');
+            if(d.distMeterReached)box.classList.add('dm-reached');
+            else if(d.distMeterWarning)box.classList.add('dm-warn');
+            else box.style.background='';
+        }
+
         /* Calibration section */
         calibrating=d.calibrating;
         let cb=document.getElementById('calBtn');
@@ -897,10 +994,104 @@ function svcTab(n){
     document.getElementById('svcP0').style.display=n===0?'block':'none';
     document.getElementById('svcP1').style.display=n===1?'block':'none';
     document.getElementById('svcP2').style.display=n===2?'block':'none';
+    document.getElementById('svcP3').style.display=n===3?'block':'none';
     activeTab=n;
     if(n===0)loadStats();
     if(n===1)loadReports();
     if(n===2)loadTracks();
+}
+
+/* ------- Serwis: czyszczenie dysz, resety, eksport, factory reset -------
+   "Panel fizyczny" to dzis moduł Sunton (nawigacja+dotyk); ten panel WWW
+   daje te same funkcje zdalnie. Czyszczenie dysz NIE ma tu przycisku
+   przytrzymania — otwarcie dysz wymaga fizycznej obecnosci przy maszynie
+   (fizyczny START na sterowniku), tak samo jak tryb RECZNY. */
+function ackEstop(){ cmd('ack_estop'); }
+
+/* ------- Pomiar dystansu z alarmem ------- */
+let dmTargetLocal=50.0, dmTouchMs=0, dmBlinkOn=false;
+function dmStart(){
+    fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=send_event&value=1'}).then(r=>r.json()).then(()=>fetchStatus());
+}
+function dmZero(){
+    fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=send_event&value=3'}).then(r=>r.json()).then(()=>fetchStatus());
+}
+function dmTargetStep(dir){
+    dmTargetLocal=Math.max(0,Math.min(9999,Math.round((dmTargetLocal+dir*0.1)*10)/10));
+    dmTouchMs=Date.now();
+    document.getElementById('dmTarget').textContent=dmTargetLocal.toFixed(1)+' m';
+    fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=set_dist_target&value='+Math.round(dmTargetLocal*10)});
+}
+/* Miganie na zolto niezaleznie od tempa odswiezania statusu (co ~500ms to za wolno na wyrazne miganie) */
+setInterval(function(){
+    dmBlinkOn=!dmBlinkOn;
+    let box=document.getElementById('dmBox');
+    if(box&&box.classList.contains('dm-warn')){
+        box.style.background=dmBlinkOn?'#4a3a00':'#0f2557';
+    }
+},300);
+
+function nzOpen(){
+    fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=set_screen&value=6'}).then(r=>r.json()).then(function(){
+        document.getElementById('nzPanel').style.display='block';
+        document.getElementById('nzOpenBtn').style.display='none';
+        fetchStatus();
+    });
+}
+function nzExit(){
+    fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=send_event&value=4'}).then(r=>r.json()).then(function(){
+        document.getElementById('nzPanel').style.display='none';
+        document.getElementById('nzOpenBtn').style.display='block';
+    });
+}
+function nzPrev(){
+    fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=send_event&value=6'}).then(r=>r.json()).then(()=>fetchStatus());
+}
+function nzNext(){
+    fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=send_event&value=5'}).then(r=>r.json()).then(()=>fetchStatus());
+}
+
+function sessionReset(){
+    if(!confirm('Zresetowac dystans/powierzchnie/czas biezacego etapu?'))return;
+    fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=session_reset&value=1'}).then(r=>r.json()).then(function(d){
+        if(d.result!=='ok')alert(d.result||d.error||'Blad');
+        fetchStatus();
+    });
+}
+function counterReset(){
+    if(!confirm('Zresetowac WSZYSTKIE liczniki (kalibracja zostanie zachowana)?'))return;
+    fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=counter_reset&value=1'}).then(r=>r.json()).then(function(d){
+        if(d.result!=='ok')alert(d.result||d.error||'Blad');
+        fetchStatus();
+    });
+}
+function statsExport(){
+    fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=stats_export'}).then(r=>r.json()).then(function(d){
+        if(d.result==='ok'){
+            alert('Eksport zapisany na SD: /stats/lifetime_stats.csv');
+            window.location.href='/api/stats/download';
+        } else {
+            alert(d.result||d.error||'Eksport nieudany');
+        }
+    });
+}
+function factoryReset(){
+    if(!confirm('FACTORY RESET usunie WSZYSTKIE ustawienia i statystyki (kalibracja tez). Sterownik sie zrestartuje. Kontynuowac?'))return;
+    if(!confirm('Na pewno? Tej operacji NIE MOZNA cofnac.'))return;
+    fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=factory_reset&value=1'}).then(r=>r.json()).then(function(d){
+        alert('Sterownik restartuje sie... odswiez strone za kilka sekund.');
+    });
 }
 function loadStats(){
     fetch('/api/stats').then(function(r){return r.json();}).then(function(d){

@@ -70,6 +70,7 @@ private:
     void handleStats();
     void handleReports();
     void handleReportDownload();
+    void handleStatsDownload();
     void handleControl();
     void handleGeoJson();
     void handleTrackList();

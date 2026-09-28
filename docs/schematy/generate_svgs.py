@@ -862,6 +862,28 @@ def ui_mock_portrait(s, x, y, scale, group=0):
     s.group_close()
 
 
+def pattern_icons():
+    """Pojedyncze ikony wzorców do zaimportowania w DGUS Designer jako 'ikona wariantowa'
+    (kontrolka wybierająca obrazek numerem indeksu — patrz docs/EKRAN_DGUS.md rozdz. 'Kolumny
+    wzorców S1-S10'). Nazwy plików = indeks PatternID (src/config.h) + kod wzorca, więc kolejność
+    importu do biblioteki ikon w Designerze jest jednoznaczna: 00=P-1a ... 14=P-7d, 15=WŁASNY.
+    Samo tło ikony (bez tła kafelka) — w Designerze nakłada się na kafelek slotu."""
+    names = list(PATS.keys())
+    icon_dir = os.path.join(OUT, "ikony_dgus")
+    os.makedirs(icon_dir, exist_ok=True)
+    W, H = 200, 240
+    for i, n in enumerate(names):
+        s = Svg(W, H, "#1b1b1f")
+        glyph(s, 14, 14, W - 28, H - 28, PATS[n], rounded=6)
+        fname = f"{i:02d}_{n.replace('Ł', 'L')}.svg"
+        body = "\n".join(s.items)
+        svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{s.w}" height="{s.h}" '
+               f'viewBox="0 0 {s.w} {s.h}">\n{body}\n</svg>\n')
+        with open(os.path.join(icon_dir, fname), "w", encoding="utf-8") as f:
+            f.write(svg)
+        print("zapisano ikony_dgus/" + fname)
+
+
 def glyph_sheet():
     """Arkusz wszystkich wzorców rysowanych w skali (kontrola geometrii)."""
     names = list(PATS.keys())
@@ -1455,6 +1477,7 @@ if __name__ == "__main__":
     panel_C()
     panel_D()
     glyph_sheet()
+    pattern_icons()
     complete_computer()
     architecture_target()
     from generate_enclosure import enclosure_vertical

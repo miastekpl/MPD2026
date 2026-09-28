@@ -112,10 +112,13 @@ związana ze wskazanym adresem VP):
 | Zaznaczony slot *i* | `0x110A + i` | liczba, 1 słowo (0/1 — podświetl ramką) |
 | Kod wzorca slotu *i* | `0x1120 + i*6` | tekst ASCII, 6 słów |
 
-Ikona/rysunek wzorca w kafelku: przygotuj **16 statycznych obrazków** (P-1a…P-4, P-6, P-7a…P-7d, WŁASNY — patrz
-`docs/schematy/wzorce_w_skali.svg` jako wzór graficzny) i powiąż je z polem "indeks wzorca slotu" jako "ikona
-wariantowa" (DGUS Designer: kontrolka wybierająca obrazek numerem z listy). Pole `0x1055` (WŁASNY zapisany) możesz
-powiązać z wyglądem kafelka WŁASNY (np. wyszarzona ikona / dopisek "(pusty)"), gdy slot nie jest jeszcze zapisany.
+Ikona/rysunek wzorca w kafelku: **16 gotowych obrazków PNG już przygotowanych** —
+[`docs/schematy/ikony_dgus/`](schematy/ikony_dgus/) (wygenerowane z tego samego kodu, co rysunki w
+`wzorce_w_skali.svg`, więc wyglądają identycznie). Zaimportuj je w podanej tam kolejności (plik `README.md`
+w tym folderze) do biblioteki ikon w Designerze i powiąż z polem "indeks wzorca slotu" jako "ikona wariantowa"
+(DGUS Designer: kontrolka wybierająca obrazek numerem z listy — kolejność importu = indeks `PatternID`).
+Pole `0x1055` (WŁASNY zapisany) możesz powiązać z wyglądem kafelka WŁASNY (np. wyszarzona ikona / dopisek
+"(pusty)"), gdy slot nie jest jeszcze zapisany.
 
 ### Przyciski strony roboczej (piszą pod `VP_TOUCH_EVENT` = `0x1300`)
 
@@ -303,12 +306,14 @@ bezpieczny domyślny fallback przy pomyłce w konfiguracji przycisku.
 ## 7. Kolejność prac przy budowie projektu
 
 1. Utwórz projekt w DGUS Designer dla posiadanego modelu ekranu, ustaw UART 115200 8N1, CRC wyłączone.
-2. Zbuduj **stronę 0/1** (robocza) wg rozdz. 3 — to najważniejszy i najczęściej używany ekran.
-3. Zbuduj **stronę 2** (SERVICE_MENU) z 11 przyciskami (kody 30–40).
-4. Zbuduj pozostałe strony serwisowe (3–16) wg rozdz. 5 — mogą być prostsze wizualnie na start (sam tekst, bez
+2. Zaimportuj **gotowe ikony wzorców** — [`docs/schematy/ikony_dgus/`](schematy/ikony_dgus/) (16 plików PNG,
+   kolejność importu opisana w README tego folderu) — przyda się od razu przy budowie strony 0/1.
+3. Zbuduj **stronę 0/1** (robocza) wg rozdz. 3 — to najważniejszy i najczęściej używany ekran.
+4. Zbuduj **stronę 2** (SERVICE_MENU) z 11 przyciskami (kody 30–40).
+5. Zbuduj pozostałe strony serwisowe (3–16) wg rozdz. 5 — mogą być prostsze wizualnie na start (sam tekst, bez
    grafik), dopracowanie wyglądu może poczekać.
-5. Dodaj alarm STOP-u awaryjnego (rozdz. 4b) na **każdej** stronie — nie pomiń, to jedyny element bezpieczeństwa
+6. Dodaj alarm STOP-u awaryjnego (rozdz. 4b) na **każdej** stronie — nie pomiń, to jedyny element bezpieczeństwa
    po stronie ekranu.
-6. Wgraj projekt na ekran (karta SD ekranu — procedura opisana w dokumentacji DWIN dla posiadanego modelu).
-7. Podłącz ekran do sterownika **z działającym dzielnikiem napięcia** na linii TX ekranu → RX sterownika (patrz
+7. Wgraj projekt na ekran (karta SD ekranu — procedura opisana w dokumentacji DWIN dla posiadanego modelu).
+8. Podłącz ekran do sterownika **z działającym dzielnikiem napięcia** na linii TX ekranu → RX sterownika (patrz
    [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md), rozdz. 10) i wykonaj próby z rozdz. 11 tego dokumentu.

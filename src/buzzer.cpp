@@ -89,6 +89,12 @@ static const BuzzerStep SEQ_ESTOP[] = {
     {3500, 120}
 };
 
+// Zbliżanie się do zadanego dystansu: krotki, wyrazny puls — wolany cyklicznie co
+// DIST_METER_WARN_BEEP_MS w strefie ostrzegawczej (patrz menu.cpp, config.h)
+static const BuzzerStep SEQ_DIST_WARN[] = {
+    {2200, 90}
+};
+
 // ============ Implementacja ============
 
 void BuzzerController::begin() {
@@ -99,6 +105,7 @@ void BuzzerController::begin() {
 }
 
 void BuzzerController::update() {
+    if (holding) return;   // staly ton - nic do zrobienia, dopoki nie wywolasz releaseTone()
     if (!playing || currentSeq == nullptr) return;
 
     unsigned long now = millis();
@@ -154,6 +161,9 @@ void BuzzerController::play(BuzzerSignal signal) {
         case BUZ_ESTOP:
             startSequence(SEQ_ESTOP, sizeof(SEQ_ESTOP) / sizeof(BuzzerStep));
             break;
+        case BUZ_DIST_WARN:
+            startSequence(SEQ_DIST_WARN, sizeof(SEQ_DIST_WARN) / sizeof(BuzzerStep));
+            break;
         default:
             break;
     }
@@ -167,7 +177,21 @@ void BuzzerController::beep(uint16_t freq, uint16_t durationMs) {
 void BuzzerController::stop() {
     toneOff();
     playing = false;
+    holding = false;
     currentSeq = nullptr;
+}
+
+void BuzzerController::holdTone(uint16_t freq) {
+    currentSeq = nullptr;
+    playing = false;
+    holding = true;
+    toneOn(freq);
+}
+
+void BuzzerController::releaseTone() {
+    if (!holding) return;
+    holding = false;
+    toneOff();
 }
 
 void BuzzerController::toneOn(uint16_t freq) {
@@ -180,6 +204,7 @@ void BuzzerController::toneOff() {
 }
 
 void BuzzerController::startSequence(const BuzzerStep* seq, uint8_t len) {
+    holding = false;
     currentSeq = seq;
     seqLen = len;
     seqIdx = 0;

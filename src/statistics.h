@@ -62,6 +62,12 @@ public:
     void loadMTH();
     uint32_t getMTHSeconds() const;
 
+    // Eksport statystyk lifetime do /stats/lifetime_stats.csv na karcie SD.
+    // Wspolna implementacja dla ekranu serwisowego (menu_handlers.cpp) i API
+    // (control_api.cpp) - jedno miejsce z logika zapisu, zeby oba wywolania
+    // nie mogly sie rozjechac. Zwraca false gdy karta SD niegotowa/zapis sie nie udal.
+    bool exportLifetimeCsv();
+
 private:
     // Sesja
     float sessionDistance = 0;
