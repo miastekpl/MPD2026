@@ -141,11 +141,21 @@ void MenuSystem::update() {
                     distMeterHoldMs = now;
                 }
             } else {
+                // Strefa ostrzegawcza = ostatnie DIST_METER_WARN_PCT zadanego dystansu. Czestotliwosc
+                // pikniec narasta liniowo (efekt "czujnika parkowania") od WARN_BEEP_MAX_MS na wejsciu
+                // do strefy, do WARN_BEEP_MIN_MS tuz przed celem.
+                float warnMargin = distMeterTarget * DIST_METER_WARN_PCT;
                 float remaining = distMeterTarget - distMeterValue;
-                if (remaining <= DIST_METER_WARN_MARGIN_M &&
-                    now - distMeterWarnBeepMs >= DIST_METER_WARN_BEEP_MS) {
-                    buzzer.play(BUZ_DIST_WARN);
-                    distMeterWarnBeepMs = now;
+                if (warnMargin > 0 && remaining <= warnMargin) {
+                    float progress = 1.0f - (remaining / warnMargin);   // 0 = wejscie do strefy, 1 = cel
+                    if (progress < 0) progress = 0;
+                    if (progress > 1) progress = 1;
+                    uint32_t interval = (uint32_t)(DIST_METER_WARN_BEEP_MAX_MS -
+                        progress * (DIST_METER_WARN_BEEP_MAX_MS - DIST_METER_WARN_BEEP_MIN_MS));
+                    if (now - distMeterWarnBeepMs >= interval) {
+                        buzzer.play(BUZ_DIST_WARN);
+                        distMeterWarnBeepMs = now;
+                    }
                 }
             }
         }

@@ -210,26 +210,47 @@ Szczegóły API: [API_WWW.md](API_WWW.md). Moduł 7": [MODUL_WYSWIETLACZA.md](MO
                         └──────────────┘
 ```
 
-### 3.2 Wariant docelowy (`esp32s3_terminal`) — zmiany w mapie GPIO
+### 3.2 Wariant docelowy (`esp32s3`, domyślny) — sterownik „headless" + moduł Sunton po WiFi
 
-Sterownik bez ekranu ILI9341; duży ekran to wyświetlacz inteligentny DWIN DGUS podłączony
-**bezpośrednio** przez UART (bez pośredniczącego ESP32) — patrz [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md).
-Joystick **zostaje** — nawiguje po menu równolegle z dotykiem ekranu (te same zdarzenia, patrz
-ARCHITEKTURA_TERMINAL.md rozdz. 6). Doszedł też status pętli STOP-u awaryjnego (E-STOP, rozdz. 7).
+Sterownik **bez żadnego ekranu podłączonego bezpośrednio** (ani ILI9341, ani DGUS). Jedyny interfejs operatora to
+moduł wyświetlacza **Sunton 7" po WiFi** (`display-module/`) — **zero przewodów danych** między sterownikiem
+a ekranem, tylko wspólne zasilanie 5 V (osobny odczep) i WiFi. Joystick jest **wyłączony domyślnie**
+(`HAS_JOYSTICK=0`) — Sunton ma dotyk, nie jest potrzebny; piny 19/20/46 zostają wolne, ale kod nadal go obsługuje,
+jeśli ktoś zechce go fizycznie dodać (`-DHAS_JOYSTICK=1`). STOP awaryjny (E-STOP) jest **zawsze włączony**
+(`HAS_ESTOP=1`) — patrz [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md) rozdz. 7.
 
-| Funkcja | Wariant przejściowy (`esp32s3`) | **Wariant docelowy (`esp32s3_terminal`)** |
+| Funkcja | Wariant przejściowy (dawny `esp32s3`, ILI9341) | **Wariant docelowy (`esp32s3`, dziś domyślny)** |
+|---------|----------------------------------|--------------------------------------------|
+| ILI9341: DC / CS / RST / BL / Touch CS | 9 / 10 / 14 / 21 / 15 | **usunięte** (9, 10, 14 wolne; 21 zajęty przez status E-STOP; 15 zajęty przez DS18B20) |
+| Karta SD: MOSI / SCK / MISO / CS | 11 / 12 / 13 / 16 (wspólnie z ILI9341) | 11 / 12 / 13 / 16 (**osobny moduł SD**) |
+| Joystick VRx / VRy / SW | 19 / 20 / 46 | **wyłączony domyślnie** (19, 20, 46 wolne; opcja: `-DHAS_JOYSTICK=1`) |
+| Status pętli STOP awaryjnego (E-STOP) | — | **nowy: GPIO 21** (INPUT_PULLUP; cięcie zasilania jest sprzętowe, patrz ARCHITEKTURA_TERMINAL.md rozdz. 7) |
+| SELEKTOR | 40 | **opcjonalny** (jeśli pominięty: 40 wolny; odwracanie P-3a/b także dotykiem na module Sunton) |
+| Czujnik temperatury DS18B20 (opcjonalny, OneWire) | 15 | 15 (**pin zawsze zajęty w firmware, niezależnie od montażu czujnika**) |
+| Pozostałe (przekaźniki, enkoder, GAP, buzzer, I2C, START/STOP, GPS) | bez zmian | bez zmian |
+| **Zajęte / wolne** | — | **23 zajęte, 6 wolnych: GPIO 9, 10, 14, 19, 20, 46** (+ GPIO 40 wolny tylko bez SELEKTORA) |
+
+Pełny schemat tego wariantu (wszystkie połączenia): [schematy/schemat_polaczen_docelowy.svg](schematy/schemat_polaczen_docelowy.svg).
+
+### 3.3 Alternatywa (nie zalecana jako punkt startowy): ekran DWIN DGUS na UART
+
+Zamiast modułu Sunton — inteligentny wyświetlacz DWIN DGUS podłączony **bezpośrednio** przez UART (bez
+pośredniczącego ESP32), środowisko `esp32s3_terminal`. **Wymaga ręcznej budowy projektu w DGUS Designer**
+(osobne narzędzie GUI producenta, tylko Windows) — patrz [EKRAN_DGUS.md](EKRAN_DGUS.md). Joystick zostaje włączony
+tu domyślnie (nawigacja menu równolegle z dotykiem ekranu).
+
+| Funkcja | Wariant przejściowy (`esp32s3`, ILI9341) | **Alternatywa DGUS (`esp32s3_terminal`)** |
 |---------|----------------------------------|--------------------------------------------|
 | ILI9341: DC / CS / RST / BL / Touch CS | 9 / 10 / 14 / 21 / 15 | **usunięte** (14 wolny; 21 zajęty przez status E-STOP; 15 zajęty przez DS18B20) |
 | **UART1 do ekranu DGUS** | — | **TX = 9, RX = 10** (RX przez dzielnik napięcia — ekran ma wyjście 5 V) |
 | Karta SD: MOSI / SCK / MISO / CS | 11 / 12 / 13 / 16 (wspólnie z ILI9341) | 11 / 12 / 13 / 16 (**osobny moduł SD**) |
 | Joystick VRx / VRy / SW | 19 / 20 / 46 | **bez zmian** (19, 20, 46 — nawigacja menu) |
-| Status pętli STOP awaryjnego (E-STOP) | — | **nowy: GPIO 21** (INPUT_PULLUP; cięcie zasilania jest sprzętowe, patrz ARCHITEKTURA_TERMINAL.md rozdz. 7) |
+| Status pętli STOP awaryjnego (E-STOP) | — | **nowy: GPIO 21** |
 | SELEKTOR | 40 | **opcjonalny** (jeśli pominięty: 40 wolny; odwracanie P-3a/b także dotykiem na ekranie) |
-| Czujnik temperatury DS18B20 (opcjonalny, OneWire) | 15 | 15 (**pin zawsze zajęty w firmware, niezależnie od montażu czujnika**) |
-| Pozostałe (przekaźniki, enkoder, GAP, buzzer, I2C, START/STOP, GPS) | bez zmian | bez zmian |
+| Czujnik temperatury DS18B20 (opcjonalny, OneWire) | 15 | 15 (**pin zawsze zajęty w firmware**) |
 | **Zajęte / wolne** | — | **27 zajęte, 1 wolny: GPIO 14** (+ GPIO 40 wolny tylko bez SELEKTORA) |
 
-Pełny schemat tego wariantu (wszystkie połączenia): [schematy/schemat_polaczen_docelowy.svg](schematy/schemat_polaczen_docelowy.svg).
+Pełny schemat tej alternatywy: [schematy/schemat_polaczen_dgus.svg](schematy/schemat_polaczen_dgus.svg).
 Piny 9/10 są w wariancie przejściowym pinami SPI ekranu — flaga `HAS_DGUS_LINK=1` wymaga `HAS_SMALL_TFT=0` (kompilator zgłasza `#error` przy kolizji).
 
 ---
@@ -489,13 +510,22 @@ Interfejs panelu zajmuje niemal wszystkie GPIO ESP32-S3 (stąd wybór architektu
 Parametry taktowania panelu: PCLK 12 MHz; HSYNC front/pulse/back = 8/2/43; VSYNC front/pulse/back = 8/2/12.
 Zestaw ustawiony pod stabilną pracę z aktywnym WiFi i PSRAM (bez migotania).
 
-### 5.2b Łącze z ekranem DWIN DGUS (wariant docelowy — zaimplementowane w kodzie)
+### 5.2a Wariant docelowy: pełny schemat sterownika (bez ekranu, z modułem Sunton po WiFi)
 
-Zamiast łączności radiowej duży ekran to **wyświetlacz inteligentny DWIN DGUS** (np. `DMG10600T070_09WTC`) podłączony
-**bezpośrednio** do sterownika kablem UART (115 200 baud 8N1, 4 przewody: 5 V, GND, TX, RX) — **bez pośredniczącego
-ESP32 i bez RS-485**. **Piny sterownika: GPIO 9 (TX) / GPIO 10 (RX, przez dzielnik napięcia — ekran ma wyjście 5 V,
-ESP32 toleruje max ~3,6 V).** Protokół i firmware: [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md); specyfikacja
-projektu ekranu: [EKRAN_DGUS.md](EKRAN_DGUS.md); pełny schemat: [schematy/schemat_polaczen_docelowy.svg](schematy/schemat_polaczen_docelowy.svg).
+Pełny schemat wszystkich połączeń sterownika w wariancie docelowym (przekaźniki, enkoder, GPS, buzzer, I2C/RTC/
+MCP23017, karta SD, START/STOP/SELEKTOR, STOP awaryjny) — moduł Sunton **nie jest na nim narysowany jako
+okablowany**, bo nie jest: łączy się wyłącznie przez WiFi (patrz 5.1 wyżej).
+
+![Schemat połączeń — wariant docelowy](schematy/schemat_polaczen_docelowy.svg)
+
+### 5.2b Alternatywa: łącze z ekranem DWIN DGUS (nie zalecane jako punkt startowy)
+
+Zamiast modułu Sunton po WiFi — **wyświetlacz inteligentny DWIN DGUS** (np. `DMG10600T070_09WTC`) podłączony
+**bezpośrednio** do sterownika kablem UART (115 200 baud 8N1, 4 przewody: 5 V, GND, TX, RX) — bez pośredniczącego
+ESP32 i bez RS-485, ale **wymagający ręcznej budowy projektu ekranu w DGUS Designer** (osobne narzędzie GUI
+producenta, tylko Windows). **Piny sterownika: GPIO 9 (TX) / GPIO 10 (RX, przez dzielnik napięcia — ekran ma
+wyjście 5 V, ESP32 toleruje max ~3,6 V).** Protokół i firmware: [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md);
+specyfikacja projektu ekranu: [EKRAN_DGUS.md](EKRAN_DGUS.md); pełny schemat: [schematy/schemat_polaczen_dgus.svg](schematy/schemat_polaczen_dgus.svg).
 **Kod sterownika się kompiluje i ma testy protokołu na hoście, ale nic nie było uruchomione na sprzęcie** — projekt
 ekranu w DGUS Designer trzeba dopiero zbudować.
 
@@ -503,7 +533,7 @@ Dla bardzo długich przewodów (ekran montowany daleko od sterownika) rozważ po
 konwerter MAX3485) — analiza warstwy fizycznej: [LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md),
 schemat: [schematy/schemat_lacze_rs485.svg](schematy/schemat_lacze_rs485.svg). To opcja, nie domyślne połączenie.
 
-![Schemat połączeń — wariant docelowy](schematy/schemat_polaczen_docelowy.svg)
+![Schemat połączeń — alternatywa DGUS](schematy/schemat_polaczen_dgus.svg)
 
 ### 5.3 Montaż
 

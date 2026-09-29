@@ -11,17 +11,20 @@ Wersjonowanie zgodne z [Semantic Versioning](https://semver.org/lang/pl/).
 
 Repozytorium MPD2026 powstało jako kopia `Trassar_251v3` (firmware 2.52.0, commit bazowy `24e12c5`).
 
-### Dodano — pomiar dystansu z alarmem (cel co do 10 cm, ostrzeżenie + STOP)
+### Dodano — pomiar dystansu z alarmem (cel co do 10 cm, ostrzeżenie narastające + STOP)
 Rozszerzono istniejący, dotąd nieużywalny bez ekranu sterownika `SCREEN_DISTANCE_METER` o zadawany cel
-(precyzja 0,1 m) i dwustopniowy alarm: **strefa ostrzegawcza** (ostatnie `DIST_METER_WARN_MARGIN_M`=2 m przed
-celem) — miganie na żółto + cykliczny sygnał buzzera (`BUZ_DIST_WARN`, co `DIST_METER_WARN_BEEP_MS`=500 ms);
-**cel osiągnięty/przekroczony** — zatrzask (do ZERUJ), ekran na zielono z dużym napisem STOP, **stały,
-nieprzerywany ton buzzera** (nowe `BuzzerController::holdTone()`/`releaseTone()` — w odróżnieniu od
+(precyzja 0,1 m) i dwustopniowy alarm: **strefa ostrzegawcza** = ostatnie `DIST_METER_WARN_PCT`=10% zadanego
+dystansu przed celem (skaluje się z celem, nie jest to stała liczba metrów) — miganie na żółto + cykliczny
+sygnał buzzera (`BUZ_DIST_WARN`), którego **częstotliwość narasta liniowo** w miarę zbliżania się do celu
+(od `DIST_METER_WARN_BEEP_MAX_MS`=600 ms do `DIST_METER_WARN_BEEP_MIN_MS`=120 ms — efekt "czujnika
+parkowania"); **cel osiągnięty/przekroczony** — zatrzask (do ZERUJ), ekran na zielono z dużym napisem STOP,
+**stały, nieprzerywany ton buzzera** (nowe `BuzzerController::holdTone()`/`releaseTone()` — w odróżnieniu od
 dotychczasowych `play()`/`beep()`, które zawsze kończą się same). Dostępne w panelu WWW (zakładka „Serwis")
 i module Sunton (`uiOpenDistanceMeter()`), obie strony pokazują to samo źródło prawdy (`menu.cpp`).
 - Nowa akcja API `set_dist_target` (wartość w decymetrach, np. `500` = 50,0 m).
-- Nowe pole `/api/status`: `distMeterValue`, `distMeterTarget`, `distMeterReached`, `distMeterWarning`
-  (próg ostrzegawczy liczony w `web_server.cpp` — jedno miejsce prawdy zamiast duplikować stałą w obu UI).
+- Nowe pole `/api/status`: `distMeterValue`, `distMeterTarget`, `distMeterReached`, `distMeterWarning`,
+  `distMeterWarnProgress` (0..1 — jak daleko w strefie ostrzegawczej; próg i postęp liczone w
+  `web_server.cpp`, jedno miejsce prawdy, klienci tylko odtwarzają narastające miganie w tym samym tempie).
 - **Nie dotyczy wariantu DGUS** (`esp32s3_terminal`) — `EKRAN_DGUS.md`/strona DISTANCE_METER nie zostały
   rozszerzone o cel/alarm, zgodnie z tym, że ten wariant jest teraz nie zalecaną alternatywą.
 

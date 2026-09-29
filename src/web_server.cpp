@@ -733,17 +733,29 @@ String TrassarWebServer::getStateJson() {
     doc["nozzlePatternIdx"] = menu.getNozzlePatternIdx();
 
     // Pomiar dystansu z alarmem (SCREEN_DISTANCE_METER) - aktualne tylko na tym ekranie.
-    // distMeterWarning liczone tu (nie po stronie klienta), zeby prog DIST_METER_WARN_MARGIN_M
-    // mial jedno miejsce prawdy zamiast duplikowac go w data/index.html i display-module/.
+    // distMeterWarning/distMeterWarnProgress liczone tu (nie po stronie klienta), zeby prog
+    // DIST_METER_WARN_PCT mial jedno miejsce prawdy zamiast duplikowac go w data/index.html
+    // i display-module/. Progress (0..1) pozwala klientom przyspieszac miganie/pikniecia
+    // tak samo jak robi to buzzer sterownika (patrz menu.cpp) - "efekt czujnika parkowania".
     {
         float dmVal = menu.getDistMeterValue();
         float dmTgt = menu.getDistMeterTarget();
         bool dmReached = menu.isDistMeterReached();
+        float dmWarnMargin = dmTgt * DIST_METER_WARN_PCT;
+        float dmRemaining = dmTgt - dmVal;
+        bool dmWarning = (!dmReached && dmTgt > 0 && dmWarnMargin > 0 && dmRemaining <= dmWarnMargin);
+        float dmProgress = 0.0f;
+        if (dmWarning) {
+            dmProgress = 1.0f - (dmRemaining / dmWarnMargin);
+            if (dmProgress < 0) dmProgress = 0;
+            if (dmProgress > 1) dmProgress = 1;
+        }
         doc["distMeasuring"] = menu.isDistMeterMeasuring();
         doc["distMeterValue"] = serialized(String(dmVal, 1));
         doc["distMeterTarget"] = serialized(String(dmTgt, 1));
         doc["distMeterReached"] = dmReached;
-        doc["distMeterWarning"] = (!dmReached && dmTgt > 0 && (dmTgt - dmVal) <= DIST_METER_WARN_MARGIN_M);
+        doc["distMeterWarning"] = dmWarning;
+        doc["distMeterWarnProgress"] = serialized(String(dmProgress, 2));
     }
 
     doc["gunAnomalyDetected"] = snapAnomalyDetected;

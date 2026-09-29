@@ -29,9 +29,10 @@ TMP = OUT / "_tmp"
 DOCUMENTS = [
     (ROOT / "README.md", "00_README.pdf", "README - przegląd projektu"),
     (DOCS / "INSTRUKCJA_OBSLUGI.md", "01_Instrukcja_obslugi.pdf", "Instrukcja obsługi"),
+    (DOCS / "INSTRUKCJA_MONTAZU.md", "01a_Instrukcja_montazu.pdf", "Instrukcja montażu"),
     (DOCS / "INSTRUKCJA_TERENOWA.md", "02_Instrukcja_terenowa.pdf", "Instrukcja obsługi w terenie"),
     (DOCS / "SCHEMAT_PODLACZEN.md", "03_Schemat_polaczen.pdf", "Schemat połączeń i dokumentacja sprzętowa"),
-    (DOCS / "ARCHITEKTURA_TERMINAL.md", "03a_Architektura_docelowa.pdf", "Architektura docelowa"),
+    (DOCS / "ARCHITEKTURA_TERMINAL.md", "03a_Architektura_docelowa.pdf", "Architektura - alternatywa DGUS (nie zalecana)"),
     (DOCS / "EKRAN_DGUS.md", "03b_Ekran_DGUS.pdf", "Specyfikacja ekranu DWIN DGUS"),
     (DOCS / "WIZUALIZACJE.md", "04_Wizualizacje_panelu.pdf", "Wizualizacje panelu"),
     (DOCS / "MODUL_WYSWIETLACZA.md", "05_Modul_wyswietlacza.pdf", "Moduł wyświetlacza 7\""),
@@ -43,12 +44,13 @@ DOCUMENTS = [
 ]
 
 SVGS = [
-    ("architektura_terminal.svg", "Architektura docelowa"),
+    ("architektura_terminal.svg", "Architektura - alternatywa DGUS (nie aktualizowana pod Sunton, patrz ARCHITEKTURA_TERMINAL.md)"),
     ("obudowa_pionowa_os.svg", "Obudowa z pionowym ekranem - grupa OS"),
     ("obudowa_pionowa_krawedz.svg", "Obudowa z pionowym ekranem - grupa KRAWEDZ"),
     ("komputer_kompletny.svg", "Komputer kompletny - dwa ekrany i przyciski"),
-    ("schemat_polaczen.svg", "Schemat polaczen elektronicznych (wariant przejsciowy)"),
-    ("schemat_polaczen_docelowy.svg", "Schemat polaczen elektronicznych (wariant docelowy, ekran DGUS)"),
+    ("schemat_polaczen.svg", "Schemat polaczen elektronicznych (wariant przejsciowy, ILI9341)"),
+    ("schemat_polaczen_docelowy.svg", "Schemat polaczen elektronicznych (wariant docelowy: headless + Sunton WiFi)"),
+    ("schemat_polaczen_dgus.svg", "Schemat polaczen elektronicznych (alternatywa: ekran DGUS)"),
     ("schemat_zlacza_wiazka.svg", "Wiazka okablowania - zlacza J1-J6"),
     ("schemat_lacze_rs485.svg", "Lacze przewodowe RS-485 (opcja dla dlugich przewodow)"),
     ("wzorce_w_skali.svg", "Rysunki wzorcow w skali"),

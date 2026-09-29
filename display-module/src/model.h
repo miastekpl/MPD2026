@@ -121,6 +121,7 @@ struct Status {
     float    distMeterTarget = 50.0f;
     bool     distMeterReached = false;
     bool     distMeterWarning = false;   // liczone przez sterownik (web_server.cpp) - jedno miejsce prawdy
+    float    distMeterWarnProgress = 0;  // 0..1 - jak daleko w strefie ostrzegawczej (przyspiesza miganie/pikniecia)
 };
 
 // ScreenID sterownika istotne dla tego modulu (src/config.h - musi sie zgadzac 1:1)

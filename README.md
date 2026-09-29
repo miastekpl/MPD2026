@@ -99,7 +99,8 @@ Szczegóły: [Instrukcja obsługi](docs/INSTRUKCJA_OBSLUGI.md).
 
 | Dokument | Zawartość |
 |----------|-----------|
-| [Instrukcja obsługi](docs/INSTRUKCJA_OBSLUGI.md) | obsługa modułu 7" i panelu fizycznego, tryby, kalibracja, alarmy, 11 przykładów |
+| [Instrukcja obsługi](docs/INSTRUKCJA_OBSLUGI.md) | obsługa modułu 7"/WWW i przycisków fizycznych, tryby, kalibracja, STOP awaryjny, pomiar dystansu z alarmem, alarmy, 13 przykładów |
+| [Instrukcja montażu](docs/INSTRUKCJA_MONTAZU.md) | montaż krok po kroku: obudowa, okablowanie, E-STOP, pierwsze uruchomienie, checklist, częste błędy |
 | [Schemat połączeń](docs/SCHEMAT_PODLACZEN.md) | architektura, BOM, mapa GPIO, schematy wszystkich modułów, złącza J1–J5, zasilanie, diagnostyka |
 | [Architektura DGUS (alternatywa)](docs/ARCHITEKTURA_TERMINAL.md) | sterownik jako mózg + wyświetlacz DGUS na UART: protokół, piny, bezpieczeństwo, mapa kodu, próby sprzętowe — wymaga DGUS Designer |
 | [Ekran DGUS — specyfikacja](docs/EKRAN_DGUS.md) | strony, pola VP, przyciski i kody zdarzeń — do zbudowania w DGUS Designer (tylko dla alternatywy DGUS) |

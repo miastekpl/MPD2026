@@ -8,11 +8,12 @@ wyświetlacza 7" (display-module 0.2.0).
 1. [Zasada działania i podział urządzeń](#1-zasada-działania-i-podział-urządzeń)
 2. [Szybki start — pierwsze uruchomienie](#2-szybki-start--pierwsze-uruchomienie)
 3. [Moduł wyświetlacza 7" — obsługa](#3-moduł-wyświetlacza-7--obsługa)
-4. [Sterownik — panel fizyczny](#4-sterownik--panel-fizyczny)
+4. [Sterownik — przyciski fizyczne i STOP awaryjny](#4-sterownik--przyciski-fizyczne-i-stop-awaryjny)
 5. [Wzorce malowania](#5-wzorce-malowania)
 6. [Tryby pracy](#6-tryby-pracy)
 7. [Start od przerwy](#7-start-od-przerwy)
 8. [Kalibracja enkodera](#8-kalibracja-enkodera)
+8a. [Pomiar dystansu z alarmem](#8a-pomiar-dystansu-z-alarmem)
 9. [Farba i zbiornik](#9-farba-i-zbiornik)
 10. [Zabezpieczenia, alarmy i sygnały dźwiękowe](#10-zabezpieczenia-alarmy-i-sygnały-dźwiękowe)
 11. [Raporty, GPS, statystyki, kopia zapasowa](#11-raporty-gps-statystyki-kopia-zapasowa)
@@ -25,59 +26,61 @@ wyświetlacza 7" (display-module 0.2.0).
 
 ## 1. Zasada działania i podział urządzeń
 
-System składa się z **dwóch urządzeń** i ma **dwa ekrany o różnych rolach**:
+System składa się z **dwóch urządzeń**. Sterownik **nie ma żadnego ekranu podłączonego bezpośrednio** — jedynym
+interfejsem operatora jest moduł wyświetlacza 7":
 
 | Urządzenie | Rola | Ważne |
 |------------|------|-------|
-| **Sterownik** (ESP32-S3, przyciski fizyczne, **mały ekran 2,8" — techniczny / serwisowy**) | Steruje 6 pistoletami, mierzy dystans i prędkość, zapisuje raporty. **Jedyne urządzenie sterujące pistoletami.** | Działa samodzielnie, także bez modułu 7". |
-| **Moduł wyświetlacza 7"** (ekran dotykowy — **duży ekran roboczy**) | Panel operatora na całą zmianę: podgląd na żywo, wybór wzorców, tryby, START/STOP, ustawienia. | Łączy się ze sterownikiem przez WiFi. Nie steruje pistoletami bezpośrednio. |
+| **Sterownik** (ESP32-S3, przyciski fizyczne, bez ekranu) | Steruje 6 pistoletami, mierzy dystans i prędkość, zapisuje raporty. **Jedyne urządzenie sterujące pistoletami.** | Działa samodzielnie (przyciski START/STOP fizyczne, wzorce z panelu MCP23017), także bez modułu 7". |
+| **Moduł wyświetlacza 7"** (ekran dotykowy — **jedyny ekran systemu**) | Panel operatora na całą zmianę: podgląd na żywo, wybór wzorców, tryby, START/STOP, ustawienia, **oraz menu Serwis** (czyszczenie dysz, resety, eksport, factory reset, pomiar dystansu z alarmem). | Łączy się ze sterownikiem **wyłącznie przez WiFi** (zero przewodów danych). Nie steruje pistoletami bezpośrednio. |
 
-**Podział ról ekranów:**
+Drugi, równoległy sposób obsługi to **panel WWW** (telefon/laptop, `http://192.168.4.1`) — ma te same funkcje co
+moduł 7" (włącznie z menu Serwis), z jednym świadomym wyjątkiem opisanym w [sekcji 4](#4-sterownik--przyciski-fizyczne-i-stop-awaryjny).
+Pełny opis API: [API_WWW.md](API_WWW.md).
 
-| | **Duży ekran 7"** (praca) | **Mały ekran 2,8"** (technika / serwis) |
-|---|---|---|
-| Kiedy | cała zmiana w terenie | uruchomienie, diagnostyka, serwis, awarie |
-| Zawartość | wzorce z rysunkami w skali, prędkość, droga, pistolety, liczniki, alarmy, farba, statystyki, kalibracja, wzorzec własny, ustawienia | POST (SD, RTC, MCP), QR i hasło WiFi, menu serwisowe (czyszczenie dysz, pomiar dystansu, reset etapu/liczników, eksport, factory reset, tryb nocny), SETUP, karta SD |
-| Gdy nie działa | praca dalej z panelu fizycznego | brak diagnostyki startowej; praca robocza możliwa z modułu 7" |
+> **Alternatywa (nie zalecana jako punkt startowy):** wyświetlacz inteligentny DWIN DGUS podłączony bezpośrednio
+> przewodem UART zamiast modułu 7" po WiFi — prostsze okablowanie, ale wymaga ręcznej budowy projektu ekranu w
+> DGUS Designer (osobne narzędzie GUI producenta). Opis: [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md).
 
-Mały ekran nie jest drugim ekranem roboczym — operator pracuje na dużym. Rysunek całego układu (oba ekrany i wszystkie
-przyciski): [schematy/komputer_kompletny.svg](schematy/komputer_kompletny.svg), opis w [WIZUALIZACJE.md](WIZUALIZACJE.md).
-
-> **Dwa warianty sprzętowe.** Powyższy opis (dwa ekrany, WiFi) dotyczy wariantu **przejściowego**. W wariancie **docelowym** jest jeden duży
-> ekran, sterownik bez małego ekranu i joysticka, a duży ekran to wyświetlacz inteligentny DWIN DGUS podłączony bezpośrednio (bez WiFi,
-> bez drugiego ESP32) — opis w [sekcji 4.5](#45-wariant-docelowy-jeden-duży-ekran-dwin-dgus-sterownik-bez-małego-ekranu).
-
-Trzeci sposób obsługi to **panel WWW** (telefon/laptop, `http://192.168.4.1`) — pełny opis w [API_WWW.md](API_WWW.md).
-
-> **ZASADA BEZPIECZEŃSTWA:** przycisk STOP na module 7" działa przez WiFi. **Fizyczny STOP na sterowniku
-> (panel, pilot, pedał) jest głównym zabezpieczeniem** i działa zawsze — niezależnie od WiFi.
+> **ZASADA BEZPIECZEŃSTWA:** przycisk STOP na module 7" i w panelu WWW działa przez WiFi. **Fizyczny STOP na
+> sterowniku (panel, pilot, pedał) jest głównym zabezpieczeniem** i działa zawsze — niezależnie od WiFi.
+> Dodatkowo, **STOP awaryjny (E-STOP)** — grzybek na obudowie sterownika — tnie zasilanie pistoletów/pomp
+> **sprzętowo**, niezależnie od tego, czy firmware działa. Patrz [sekcja 4](#4-sterownik--przyciski-fizyczne-i-stop-awaryjny).
 
 ---
 
 ## 2. Szybki start — pierwsze uruchomienie
 
 ### Krok 1 — Sprawdź montaż
-- Karta MicroSD (FAT32) włożona do slotu wyświetlacza sterownika.
+- Karta MicroSD (FAT32) włożona do slotu modułu SD sterownika.
 - Bateria CR2032 w module RTC.
 - Koło pomiarowe z enkoderem obraca się swobodnie; antena GPS wyniesiona na zewnątrz kabiny.
 - Zasilanie 5 V (min. 3 A) podłączone do J1; moduł 7" zasilony z osobnego odgałęzienia 5 V.
+- Grzybek E-STOP zamontowany i okablowany (patrz [INSTRUKCJA_MONTAZU.md](INSTRUKCJA_MONTAZU.md) krok 7) —
+  **przetestuj go teraz**, zanim pojedziesz w teren.
 
 ### Krok 2 — Włącz sterownik
-1. Po uruchomieniu pojawia się ekran powitalny, a następnie **ekran WiFi z kodem QR**. Zapisz z niego:
-   - **SSID:** `TrassarV3`
-   - **Hasło:** 8 znaków (np. `A1B2C3D4`) — unikalne dla każdego sterownika, generowane z jego adresu MAC
-   - **Adres panelu:** `http://192.168.4.1`
-2. Naciśnij **START** (lub poczekaj), aby przejść dalej. Ekran **POST** pokaże stan modułów:
 
-| Pozycja | Znaczenie |
+Sterownik nie ma własnego ekranu — diagnostyka startowa (POST) trafia do **portu szeregowego (USB)**:
+
+1. Podłącz laptop do sterownika przez USB, otwórz monitor portu (115200 baud, `pio device monitor` albo dowolny
+   terminal szeregowy).
+2. W logu znajdziesz linie `[POST]` ze stanem modułów oraz danymi do połączenia z modułem 7":
+
+| Pozycja w logu | Znaczenie |
 |---------|-----------|
-| SD: OK / FAIL | karta SD |
-| RTC: OK / FAIL | zegar |
-| GPS: BRAK | normalne na początku (zimny start 30–60 s) |
-| MCP: OK / FAIL | ekspander przycisków wzorców |
-| ENK: Domyślny | enkoder wymaga kalibracji |
+| SSID (SSID, dla telefonu) | `TrassarV3` |
+| Hasło WiFi | 8 znaków (np. `A1B2C3D4`) — unikalne dla każdego sterownika, generowane z jego adresu MAC, **stałe** (nie zmienia się między uruchomieniami) |
+| Adres | `http://192.168.4.1` |
+| Karta SD | OK / BRAK |
+| Zegar RTC | OK / BLAD |
+| GPS | FIX / brak fix (brak fix na starcie jest normalne — zimny start trwa 30–60 s) |
+| Przyciski MCP | OK / BLAD |
+| Enkoder | skalibrowany / NIESKALIBROWANY |
 
-3. Ekran **HOME** oznacza gotowość.
+3. Warto **zapisać hasło WiFi na trwałe** (np. nakleić na obudowę) — to jedyne miejsce, gdzie się pokazuje.
+4. Naciśnij fizyczny **START** na sterowniku (albo poczekaj — moduł 7" też może to zrobić po połączeniu),
+   aby przejść do pracy.
 
 ### Krok 3 — Połącz moduł 7" ze sterownikiem
 1. Włącz moduł 7". Pierwszy raz zobaczysz napis **BRAK ŁĄCZNOŚCI ZE STEROWNIKIEM** i przycisk
@@ -268,125 +271,104 @@ Polecenie STOP wysłane z modułu jest powtarzane kilkukrotnie; jeśli nie dotrz
 | **WSZYSTKIE WZORCE** | Siatka 4 × 4 wszystkich 16 wzorców — wybór dowolnego wzorca bez przełączania stron OŚ/KRAWĘDŹ. |
 | **POŁĄCZENIE WiFi** | Hasło sieci sterownika (min. 8 znaków), stan połączenia i siła sygnału. |
 | **INFORMACJE** | Wersje firmware, wolna pamięć, czas pracy sterownika, klienci WiFi, GPS (fix, satelity, HDOP, prędkość GPS, zapis trasy), enkoder, progi prędkości, poziom farby. |
+| **SERWIS** | Czyszczenie dysz, pomiar dystansu z alarmem, reset etapu, reset liczników, eksport statystyk, factory reset — patrz [sekcja 4.3](#43-menu-serwis--na-module-7-i-w-panelu-www). |
 
-**Funkcje dostępne tylko na sterowniku lub w panelu WWW** (nie ma ich w module 7"): pobieranie raportów SD,
-czyszczenie dysz, pomiar dystansu, reset etapu, reset liczników, eksport statystyk, factory reset,
-tryb nocny, tryb DEMO. Pełna obsługa w [sekcji 4](#4-sterownik--panel-fizyczny).
+Panel WWW ma dokładnie te same funkcje co moduł 7" (włącznie z menu SERWIS) — patrz [sekcja 4.3](#43-menu-serwis--na-module-7-i-w-panelu-www).
+Jedyna różnica: w panelu WWW nie ma przycisku przytrzymania do czyszczenia dysz (świadomie, patrz tam).
 
 ---
 
-## 4. Sterownik — panel fizyczny
+## 4. Sterownik — przyciski fizyczne i STOP awaryjny
 
-Sterownik ma własny **techniczny / serwisowy ekran 2,8" (320×240)** i przyciski. Działa niezależnie od modułu 7". W pracy
-codziennej operator korzysta z dużego ekranu 7"; mały ekran służy do uruchomienia, diagnostyki, serwisu i pracy awaryjnej
-oraz mieści slot karty SD.
+Sterownik **nie ma ekranu** — cały interfejs graficzny (wzorce, tryby, menu Serwis) jest na module 7" i w panelu
+WWW (sekcja 3). Sterownik ma za to własne, niezależne od WiFi przyciski fizyczne, które działają **zawsze**,
+nawet gdy moduł 7" jest wyłączony lub poza zasięgiem.
 
 ### 4.1 Przyciski
 
 | Przycisk | Krótkie naciśnięcie | Długie (1,5 s) |
 |----------|---------------------|-----------------|
-| **START** (GPIO 38) | start / pauza / wznowienie; SEMI: następna linia; RĘCZNY: **trzymaj = strzelaj** | HOME: ekran SETUP |
-| **STOP** (GPIO 39) | zatrzymanie malowania; w menu: poprzednia pozycja | HOME: menu serwisowe; w menu: powrót |
-| **SELEKTOR** (GPIO 40) | HOME/malowanie: odwróć P-3a/P-3b; w menu: następna pozycja | HOME: przełącz Smart/Instant; w menu: wejdź |
-| **GAP** (GPIO 7, przycisk enkodera) | HOME: start od przerwy | — |
+| **START** (GPIO 38) | start / pauza / wznowienie; SEMI: następna linia; RĘCZNY: **trzymaj = strzelaj** | — |
+| **STOP** (GPIO 39) | zatrzymanie malowania | — |
+| **SELEKTOR** (GPIO 40, opcjonalny) | odwróć P-3a/P-3b (to samo dostępne dotykiem na module 7"/WWW) | — |
+| **GAP** (GPIO 7, przycisk enkodera) | start od przerwy | — |
 | **Przyciski wzorców** (MCP23017) | zależnie od układu: **klasyczny — 15 przycisków**, każdy wybiera jeden wzorzec P-1a … P-7d; **soft-key — 10 przycisków S1–S10 + GRUPA** (patrz niżej). Potwierdza buzzer. | — |
-| **START + STOP razem** (1,5 s) | menu serwisowe | |
 
-**Układ przycisków wzorców** (ustawienie w module 7": MENU → USTAWIENIA → *Przyciski wzorców*; panel WWW/API:
+**Układ przycisków wzorców** (ustawienie w module 7"/WWW: MENU → USTAWIENIA → *Przyciski wzorców*; API:
 `set_pattern_layout`; zapis trwały):
 
 | Układ | Przyciski | Działanie |
 |-------|-----------|-----------|
 | **KLASYCZNE 15** *(domyślny)* | 15 | jeden przycisk = jeden wzorzec (działa samodzielnie, bez modułu 7") |
-| **SOFT-KEY 10 + GRUPA** | 10 + 1 | S1–S10 wybierają wzorce **aktywnej grupy** (OŚ albo KRAWĘDŹ); przycisk **GRUPA** przełącza grupę (krótki ton 1,8 kHz, wyższy niż przy wyborze wzorca). **Etykiety wzorców są na ekranie modułu 7" obok przycisków**, więc ten układ wymaga modułu 7". |
+| **SOFT-KEY 10 + GRUPA** | 10 + 1 | S1–S10 wybierają wzorce **aktywnej grupy** (OŚ albo KRAWĘDŹ); przycisk **GRUPA** przełącza grupę (krótki ton 1,8 kHz, wyższy niż przy wyborze wzorca). **Etykiety wzorców są na module 7"/WWW obok przycisków.** |
 
 Podział na grupy i numeracja przycisków — [sekcja 5.5](#55-podział-na-grupy-oś-i-krawędź). Aktywna grupa podąża za wybranym
-wzorcem i jest wspólna dla przycisków fizycznych i ekranu 7".
+wzorcem i jest wspólna dla przycisków fizycznych, modułu 7" i panelu WWW.
 
 STOP dodatkowo uruchamia **sprzętowe przerwanie awaryjne** — pistolety są wyłączane natychmiast, bez
-oczekiwania na pętlę programu.
+oczekiwania na pętlę programu. Pilot (złącze J4) i pedał (J5) działają **elektrycznie równolegle** do
+START/STOP/SELEKTOR/GAP. Schemat elektryczny: [SCHEMAT_PODLACZEN.md](SCHEMAT_PODLACZEN.md).
 
-**Elementy fizyczne na panelu** (układ soft-key, propozycja A z [WIZUALIZACJE.md](WIZUALIZACJE.md)):
-10 przycisków wzorców **S1–S10** przy ekranie (S1–S5 lewa kolumna, S6–S10 prawa, od góry), **GRUPA**, **START**,
-**STOP**, **SELEKTOR**, **GAP**, opcjonalnie joystick — razem 15 przycisków fizycznych (w układzie klasycznym było
-19). Dodatkowo pilot (J4) i pedał (J5) działają równolegle do START/STOP/SELEKTOR/GAP. Rysunki: [WIZUALIZACJE.md](WIZUALIZACJE.md);
-schemat elektryczny: [SCHEMAT_PODLACZEN.md](SCHEMAT_PODLACZEN.md), sekcja 8.
+> **Joystick KY-023 (opcjonalny, domyślnie wyłączony):** kod go obsługuje, ale w wariancie docelowym nie jest
+> potrzebny — moduł 7" ma dotyk. Można go fizycznie dodać (`-DHAS_JOYSTICK=1` w `platformio.ini`) jako
+> dodatkową, redundantną nawigację menu. Domyślnie piny 19/20/46 są po prostu wolne.
 
-### 4.2 Joystick KY-023
+### 4.2 STOP awaryjny (E-STOP)
 
-| Ruch | Odpowiednik |
-|------|-------------|
-| Góra | STOP (krótko) — poprzednia pozycja |
-| Dół | SELEKTOR (krótko) — następna pozycja |
-| Prawo | SELEKTOR (długo) — wejdź / zmień |
-| Lewo | STOP (długo) — cofnij |
-| Przycisk (krótko) | SELEKTOR (długo) |
-| Przycisk (długo) | START (długo) — SETUP |
+Czerwony **grzybek** na prawej ściance bocznej obudowy sterownika. W odróżnieniu od zwykłego przycisku STOP,
+**tnie zasilanie pistoletów i pomp fizycznie, w torze mocy** — działa nawet gdyby firmware się zawiesił.
 
-> **Nie wciskaj joysticka przy włączaniu zasilania** (pin rozruchowy — może uniemożliwić start).
+1. **Wciśnięcie grzybka:** natychmiastowe odcięcie zasilania zaworów (sprzętowe, niezależne od sterownika).
+   Dodatkowo moduł 7" i panel WWW pokazują czerwony baner **„STOP AWARYJNY AKTYWNY"** i sterownik gra ciągły
+   alarm dźwiękowy.
+2. **Zwolnienie grzybka (przekręcenie/wyciągnięcie):** baner zmienia się na pomarańczowy **„dotknij, aby
+   potwierdzić"** — **wznowienie malowania jest zablokowane**, dopóki operator świadomie nie dotknie banera
+   (na module 7" albo w panelu WWW).
+3. To celowe podwójne zabezpieczenie: sama fizyczna dostępność grzybka nie wystarcza do wznowienia — ktoś
+   musi też potwierdzić na ekranie, że sytuacja jest bezpieczna.
 
-### 4.3 Ekrany
+Szczegóły techniczne: [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md) rozdz. 7. **Przetestuj działanie
+grzybka przed każdym wyjazdem w teren** (checklist w [INSTRUKCJA_MONTAZU.md](INSTRUKCJA_MONTAZU.md)).
 
-- **HOME** — wzorzec, prędkość, powierzchnia, tryb `[AUTO]/[SEMI]/[RECZNY]`, „Gotowy", 6 prostokątów pistoletów.
-- **PAINTING** — jak HOME plus flagi `[ODW]` `[GAP]`; „Malowanie" (zielony) lub „Pauza" (żółty). Prostokąty pistoletów:
-  zielony = maluje, żółty migający = pauza, szary = nieużywany.
-- **SETUP** (START 1,5 s na HOME): kursor `►` na opcjach *Tryb pracy* (AUTO → SEMI → RĘCZNY → DEMO), *Przełączanie*
-  (Smart ↔ Instant), *Start* (Normalny ↔ Od przerwy). SELEKTOR krótko = kursor, SELEKTOR długo = zmiana wartości,
-  START = maluj, STOP długo = powrót.
-- **SUMMARY** (po STOP): wzorzec, dystans, powierzchnia, czas, średnia prędkość, GPS. START = kontynuuj,
-  STOP krótko = nowy etap (zeruje liczniki sesji), STOP długo = HOME.
+### 4.3 Menu Serwis — na module 7" i w panelu WWW
 
-### 4.4 Menu serwisowe (STOP 1,5 s na HOME)
+Wszystkie funkcje serwisowe są dostępne w **obu miejscach jednocześnie** (menu „SERWIS" na module 7"; zakładka
+„Serwis" w panelu WWW) — te same dane, te same przyciski, żadne z nich nie jest „ważniejsze".
 
-Nawigacja: SELEKTOR krótko = w dół, STOP krótko = w górę, SELEKTOR długo = wejdź, STOP długo = powrót.
-START/START długo w menu przełącza **tryb nocny** (bursztynowa paleta).
-
-| # | Pozycja | Opis |
-|---|---------|------|
-| 1 | Kalibracja enkodera | procedura 10 m — START = początek / koniec pomiaru |
-| 2 | Pomiar dystansu | ręczny miernik: START = start/wstrzymaj, STOP = zeruj |
-| 3 | Raporty | status karty SD, liczba raportów, ostatni wpis |
-| 4 | Czyszczenie dysz | wybierz wzorzec SELEKTOREM, **trzymaj START** — pistolety strzelają (nawet na postoju), puść = OFF |
-| 5 | Statystyki lifetime | łączny dystans, powierzchnia, czas malowania |
-| 6 | Wzorzec własny | edycja 3 slotów na sterowniku |
-| 7 | Eksport statystyk | zapis na SD: `/stats/lifetime_stats.csv` |
-| 8 | Reset etapu | zeruje liczniki **sesji** (START = TAK, STOP = NIE) |
-| 9 | Reset liczników | zeruje wszystkie liczniki oprócz kalibracji |
-| 10 | Tankowanie farby | uzupełnienie zbiornika |
-| 11 | Factory reset | przywrócenie ustawień fabrycznych (kasuje NVS) |
-
-### 4.5 Wariant docelowy: jeden duży ekran (DWIN DGUS), sterownik bez małego ekranu
-
-W wariancie docelowym ([ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md)) **nie ma małego ekranu ILI9341 ani joysticka** —
-wszystkie funkcje z tabeli 4.4 są na dużym ekranie. Duży ekran to **wyświetlacz inteligentny DWIN DGUS** (np. 7" `DMG10600T070_09WTC`)
-podłączony **bezpośrednio** do sterownika przewodem UART (bez WiFi, bez hasła, bez drugiego ESP32).
-Panel ma **14 przycisków fizycznych**: S1–S10, GRUPA, START, STOP, GAP; SELEKTOR (odwracanie P-3a/P-3b) jest opcjonalny — to samo można zrobić
-dotykiem na ekranie. Joystick usunięty.
-
-> **Uwaga:** kod sterownika jest gotowy, ale **projekt ekranu (strony, przyciski) trzeba dopiero zbudować** w narzędziu producenta
-> (DGUS Designer) według specyfikacji [docs/EKRAN_DGUS.md](EKRAN_DGUS.md) — nic z tego nie było jeszcze uruchamiane na sprzęcie.
-> Przed użyciem w terenie wykonaj próby z ARCHITEKTURA_TERMINAL.md, rozdz. 11.
-
-**Wejście do serwisu:** ekran roboczy → przycisk **SERWIS** → ekran menu serwisowego z 11 pozycjami (dotknij wprost wybraną pozycję —
-kalibracja, pomiar dystansu, raporty, czyszczenie dysz, statystyki, wzorzec własny, eksport, reset etapu, reset liczników, tankowanie,
-factory reset). Na każdym ekranie serwisowym: przycisk **WYJDŹ** (powrót) i fizyczny **STOP** działają zawsze, niezależnie od strony.
+| Funkcja | Opis |
+|---|---|
+| Kalibracja enkodera | procedura 10 m — patrz [sekcja 8](#8-kalibracja-enkodera) |
+| Pomiar dystansu z alarmem | zadajesz cel co do 0,1 m; ostrzeżenie (żółte miganie + dźwięk) blisko celu, zielony ekran + STOP + ciągły dźwięk po osiągnięciu — patrz [sekcja 8a](#8a-pomiar-dystansu-z-alarmem) |
+| Raporty | status karty SD, lista raportów, pobieranie CSV/GeoJSON (panel WWW) |
+| Czyszczenie dysz | wybór wzorca + test z „martwym człowiekiem" — patrz niżej |
+| Statystyki lifetime | łączny dystans, powierzchnia, czas malowania, strzały per pistolet |
+| Wzorzec własny | edycja 3 slotów |
+| Eksport statystyk | zapis na SD: `/stats/lifetime_stats.csv` (panel WWW: od razu też pobranie pliku) |
+| Reset etapu | zeruje liczniki **sesji** (wymaga potwierdzenia) |
+| Reset liczników | zeruje wszystkie liczniki oprócz kalibracji (wymaga potwierdzenia) |
+| Tankowanie farby | uzupełnienie zbiornika |
+| Factory reset | przywrócenie ustawień fabrycznych, kasuje NVS, **restart sterownika** (wymaga podwójnego potwierdzenia — to nieodwracalne) |
 
 **Czyszczenie dysz (test z „martwym człowiekiem"):**
-1. Z menu serwisowego dotknij *Czyszczenie dysz* (tylko gdy maszyna jest w stanie GOTOWY/ZATRZYMANY — inaczej sygnał błędu).
-2. Wybierz wzorzec (NASTĘPNY / POPRZEDNI); ekran pokazuje, które dysze zostaną otwarte.
-3. **Trzymaj** duży przycisk *TRZYMAJ = PSIKAJ* — dysze wybranego wzorca otwierają się. **Puść — zamykają się.**
-4. Dysze zamkną się także po **odłączeniu ekranu** lub jego zawieszeniu (twardy limit bezpieczeństwa w sterowniku, niezależny od
-   ekranu). Można też, jak dotąd, trzymać fizyczny START na sterowniku.
+1. Otwórz *Czyszczenie dysz* w menu Serwis (tylko gdy maszyna jest w stanie GOTOWY/ZATRZYMANY).
+2. Wybierz wzorzec strzałkami — widzisz, które dysze zostaną otwarte.
+3. **Na module 7":** przytrzymaj duży przycisk *PRZYTRZYMAJ, ABY OTWORZYĆ DYSZE* — dysze wybranego wzorca
+   otwierają się, puszczenie zamyka je natychmiast.
+4. **W panelu WWW celowo nie ma tego przycisku** — telefon może być gdziekolwiek, nawet daleko od maszyny.
+   Zamiast tego panel WWW pokazuje instrukcję: **przytrzymaj fizyczny przycisk START na sterowniku**, żeby
+   otworzyć dysze wybranego wzorca. To ta sama zasada, co w trybie RĘCZNYM — strzał wymaga fizycznej obecności
+   przy maszynie.
+5. Dysze zamkną się też automatycznie po ok. 8 s ciągłego trzymania bez odnowienia sygnału (twardy limit
+   bezpieczeństwa, niezależny od tego, co się dzieje z łączem).
 
-**Resety i factory reset:** wymagają przytrzymania odpowiedniego przycisku (jak dotąd fizyczny START przytrzymany) — sama
-wielostopniowa nawigacja (menu → pozycja → potwierdzenie) jest już zabezpieczeniem przed przypadkowym dotknięciem.
+**Resety i factory reset:** reset etapu i reset liczników wymagają jawnego potwierdzenia (w panelu WWW: okno
+`confirm()`; na module 7": dotknij przycisku dwa razy w ciągu 3 s). Factory reset wymaga **podwójnego**
+potwierdzenia w panelu WWW i tego samego podwójnego dotknięcia na module 7" — to nieodwracalna operacja.
 
-**Utrata ekranu podczas malowania:** sterownik wykrywa brak łącza po ok. 1,2 s, **włącza sygnał dźwiękowy** i zapisuje zdarzenie w logu.
-Domyślnie **malowanie trwa dalej** (użyj fizycznego STOP, aby zatrzymać). Poleceniem `POST /api/control action=set_term_policy` (panel WWW/API)
-można wybrać **AUTO-PAUZA** (sterownik sam wstrzymuje malowanie). Po powrocie łącza wznowienie robi operator.
-
-**Start:** ekran startowy pokazuje SSID i hasło WiFi (dla telefonu), adres i wyniki testu (SD, RTC, GPS, przyciski, enkoder);
-naciśnij **START** (na ekranie lub fizycznie), aby przejść do pracy.
+**Utrata łączności z modułem 7" podczas malowania:** sterownik wykrywa brak połączenia po ok. 1,2 s, **włącza
+sygnał dźwiękowy** i zapisuje zdarzenie w logu. Domyślnie **malowanie trwa dalej** (użyj fizycznego STOP, aby
+zatrzymać). Poleceniem `POST /api/control action=set_term_policy` (panel WWW/API) można wybrać **AUTO-PAUZA**
+(sterownik sam wstrzymuje malowanie). Po powrocie łącza wznowienie robi operator.
 
 ---
 
@@ -468,8 +450,8 @@ dokładnie obok przycisków. Podłączenie do MCP23017: [SCHEMAT_PODLACZEN.md](S
 | **RĘCZNY** | Pistolety strzelają **tylko przy trzymanym fizycznym START** i odpowiedniej prędkości; puszczenie = natychmiast OFF. Pistolety wyłączone we wzorcu pozostają wyłączone. | Strzałki, symbole, ręczne oznaczenia |
 | **DEMO** | Logika jak AUTO, ale pistolety **nie strzelają fizycznie** — pokazywane jest, które by strzelały. | Szkolenie operatorów, sprawdzenie wzorca bez zużycia farby |
 
-Zmiana trybu: moduł 7" (przyciski dolne: AUTO/SEMI/RĘCZNY), sterownik (SETUP: także DEMO), panel WWW.
-Tryb DEMO wybierany jest na sterowniku (SETUP); moduł 7" wyświetla go jako `DEMO`. Tryb jest pamiętany po restarcie.
+Zmiana trybu: moduł 7" (przyciski dolne: AUTO/SEMI/RĘCZNY) i panel WWW (tam też DEMO, przez `action=set_mode`).
+Tryb jest pamiętany po restarcie.
 
 ---
 
@@ -497,14 +479,35 @@ Wykonaj po montażu, po zmianie koła pomiarowego i gdy dystanse odbiegają od r
 
 1. Odmierz na prostym podłożu **dokładnie 10 m** i zaznacz początek i koniec.
 2. Ustaw maszynę na początku odcinka; maszyna musi stać (stan GOTOWY).
-3. **Moduł 7":** MENU → KALIBRACJA → **START KALIBRACJI**.
-   **Sterownik:** menu serwisowe → *Kalibracja enkodera* → START.
+3. **Moduł 7" lub panel WWW:** MENU → KALIBRACJA → **START KALIBRACJI**.
 4. Przejedź **dokładnie 10 m po prostej**.
-5. **KONIEC KALIBRACJI** (moduł 7") lub START (sterownik). Nowa wartość impulsów/metr = zliczone impulsy / 10.
+5. **KONIEC KALIBRACJI**. Nowa wartość impulsów/metr = zliczone impulsy / 10.
 6. Sprawdź wynik: status „Enkoder skalibrowany" i wartość impulsów/metr. Zapis trwały (NVS).
 7. Kontrola: przejedź znany odcinek i porównaj z dystansem na ekranie.
 
-Anulowanie na sterowniku: STOP (1,5 s). Domyślnie 100 imp/m (niekalibrowane).
+Domyślnie 100 imp/m (niekalibrowane) — nie ufaj dystansom, dopóki nie zrobisz kalibracji.
+
+---
+
+## 8a. Pomiar dystansu z alarmem
+
+Osobne narzędzie w menu Serwis (nie mylić z dystansem malowania) — do odmierzania konkretnego odcinka: np. „ile
+metrów farby mi zostało do końca zlecenia", wyznaczanie stref roboczych, testy. Dostępne identycznie na module
+7" i w panelu WWW.
+
+**Jak używać:**
+1. Otwórz *Pomiar dystansu* w menu Serwis.
+2. Ustaw **cel** przyciskami −0,1 / +0,1 m — precyzja co do **10 cm**.
+3. Naciśnij **START** — licznik rusza od 0 (mierzy tym samym enkoderem co reszta systemu).
+4. **W ostatnich 10% zadanego dystansu:** ekran zaczyna migać na żółto, buzzer gra cykliczne piknięcia —
+   im bliżej celu, tym **szybciej migają i piszczą** (jak czujnik parkowania w samochodzie). Przy celu 50 m
+   strefa ostrzegawcza zaczyna się więc 5 m przed końcem; przy celu 10 m — 1 m przed końcem.
+5. **Po osiągnięciu/przekroczeniu celu:** ekran robi się **zielony z dużym napisem STOP**, buzzer gra
+   **stały, nieprzerywany ton** — to się **nie wyłączy samo**, świadomie zatrzymujesz maszynę.
+6. **ZERUJ** — kasuje wynik i wyłącza alarm, gotowe do kolejnego pomiaru.
+
+> Strefa ostrzegawcza to zawsze ostatnie **10%** zadanego dystansu — skaluje się razem z celem, nie jest to
+> stała liczba metrów.
 
 ---
 
@@ -553,6 +556,9 @@ Poziom jest szacunkiem z powierzchni — po każdym tankowaniu i przy zmianie fa
 | Błąd startowy (SD/RTC) | opadający ton (1000→800→600 Hz) |
 | SEMI: kreska gotowa | 1 krótki beep (1 kHz, 50 ms) |
 | SEMI: nowa linia / wybór trybu / wybór wzorca | 1 krótki beep (1,5 kHz, 80 ms) |
+| **STOP awaryjny (E-STOP) aktywny** | **głośny, potrójny wysoki ton (3,5 kHz), powtarzany co 1,5 s — dopóki grzybek jest wciśnięty** |
+| **Pomiar dystansu: strefa ostrzegawcza** | cykliczny pojedynczy puls (2,2 kHz), coraz częstszy w miarę zbliżania się do celu (od co 600 ms do co 120 ms) |
+| **Pomiar dystansu: cel osiągnięty** | **stały, nieprzerywany ton (1,5 kHz) — nie gaśnie sam, wyłącza go dopiero ZERUJ** |
 
 Moduł 7" nie ma własnych sygnałów dźwiękowych — alarmy słychać z buzzera sterownika.
 
@@ -685,6 +691,32 @@ zobaczysz, że strona i wzorzec zmieniły się tak samo.
 3. Po powrocie sygnału (moduł łączy się sam, zwykle w kilka sekund) ekran wraca do normalnego widoku. Jeśli nie wraca:
    sprawdź zasięg, hasło (**MENU → POŁĄCZENIE WiFi**) oraz czy do sterownika nie jest podłączonych już 4 klientów.
 
+### Przykład 12 — Odmierzenie 50 m odcinka z alarmem (pomiar dystansu)
+
+Chcesz dokładnie wiedzieć, kiedy przejedziesz 50 metrów — np. koniec przydzielonego odcinka, albo miejsce, w
+którym trzeba zmienić wzorzec.
+
+1. Menu Serwis → **Pomiar dystansu**.
+2. Ustaw cel: naciskaj **+0,1 m**, aż licznik pokaże `50.0 m` (albo −0,1 m, jeśli przeskoczysz).
+3. Naciśnij **START** i ruszaj.
+4. W ostatnich 5 metrach (10% z 50 m) ekran zacznie migać na żółto, usłyszysz cykliczne piknięcia, coraz
+   szybsze im bliżej celu — to znak, żeby się przygotować (np. zwolnić, spojrzeć na drogę).
+5. Dokładnie przy 50,0 m ekran zrobi się **zielony z dużym napisem STOP**, a buzzer zacznie grać ciągły ton —
+   to się samo nie wyłączy.
+6. Zatrzymaj maszynę, wykonaj co trzeba (zmiana wzorca, koniec odcinka), naciśnij **ZERUJ**, żeby przygotować
+   się do kolejnego pomiaru.
+
+### Przykład 13 — Zadziałanie STOP-u awaryjnego (E-STOP)
+
+1. Ktoś wciska czerwony grzybek na obudowie sterownika (np. sytuacja awaryjna, ktoś wchodzi w strefę roboczą).
+2. Zasilanie pistoletów/pomp jest odcięte **natychmiast, sprzętowo** — niezależnie od tego, co robił w tej
+   chwili sterownik. Moduł 7" i panel WWW pokazują czerwony baner **STOP AWARYJNY AKTYWNY**, słychać ciągły alarm.
+3. Sytuacja zostaje oceniona jako bezpieczna — osoba przekręca/wyciąga grzybek. Baner zmienia kolor na
+   pomarańczowy: **„dotknij, aby potwierdzić"**.
+4. Operator **świadomie dotyka banera** na module 7" (albo w panelu WWW) — dopiero to odblokowuje możliwość
+   ponownego naciśnięcia START. Samo zwolnienie grzybka nie wystarcza — to celowe.
+5. Praca może być wznowiona normalnie (START).
+
 ---
 
 ## 13. Rozwiązywanie problemów
@@ -700,18 +732,19 @@ zobaczysz, że strona i wzorzec zmieniły się tak samo.
 | Moduł 7": obraz miga / przesunięty | ustawienia panelu | patrz [SCHEMAT_PODLACZEN.md](SCHEMAT_PODLACZEN.md) sekcja 5 |
 | Tryb RĘCZNY: pistolety nie strzelają | nie trzymasz fizycznego START | trzymaj START na sterowniku / pilocie / pedale |
 | Pistolety nie włączają się | prędkość < min. lub > max | sprawdź prędkość i progi (USTAWIENIA) |
-| Pistolety nie włączają się na postoju | zabezpieczenie prędkości | to normalne; do testu użyj *Czyszczenie dysz* na sterowniku |
+| Pistolety nie włączają się na postoju | zabezpieczenie prędkości | to normalne; do testu użyj *Czyszczenie dysz* w menu Serwis |
 | Złe długości kresek/przerw | brak/zła kalibracja | powtórz kalibrację 10 m |
-| Wyświetlacz sterownika nie świeci | podświetlenie | GPIO 21 (PWM) |
+| Sterownik nie startuje / brak logu POST | zasilanie / USB | sprawdź zasilanie multimetrem, podłącz USB, otwórz monitor portu (115200) |
 | Brak daty i czasu | DS1307 / bateria | I2C (SDA 17, SCL 18), wymień CR2032 |
 | Enkoder nie liczy | okablowanie | CLK = GPIO 5, DT = GPIO 6 |
 | Przyciski nie działają | okablowanie | GPIO 38 / 39 / 40 / 7 do GND |
-| Pętla restartów | użyte piny PSRAM lub zwarty GPIO 46 | odłącz GPIO 26–37; nie wciskaj joysticka przy starcie |
+| Pętla restartów | użyte piny PSRAM lub zwarty GPIO 46 | odłącz GPIO 26–37; jeśli masz podłączony opcjonalny joystick, nie wciskaj go przy starcie |
 | Karta SD nie działa | format / CS | FAT32, CS = GPIO 16 |
 | Brak raportów | raport zapisuje się po STOP | zakończ malowanie STOP-em |
 | Anomalia pistoletu (buzzer 800 Hz) | pistolet nie strzela | sprawdź przekaźnik, przewód, dyszę, farbę |
 | Alarm prędkości miga stale | próg zbyt niski | USTAWIENIA → maks. prędkość ↑ |
 | Panel WWW nie odpowiada | 4 klientów WiFi | odłącz zbędne urządzenia |
+| START zablokowany po zwolnieniu grzybka E-STOP | brak potwierdzenia operatora | dotknij czerwono-pomarańczowego banera na module 7"/WWW (patrz [sekcja 4.2](#42-stop-awaryjny-e-stop)) |
 
 ---
 
@@ -733,9 +766,9 @@ zobaczysz, że strona i wzorzec zmieniły się tak samo.
 
 | Parametr | Wartość |
 |----------|---------|
-| Sterownik | ESP32-S3 N16R8 (16 MB Flash, 8 MB PSRAM), firmware 2.53.0 |
-| Ekran serwisowy sterownika | ILI9341 2,8", 320×240 (techniczny / awaryjny, slot karty SD) |
-| Moduł wyświetlacza | Sunton ESP32-8048S070C, 7", 800×480, dotyk pojemnościowy |
+| Sterownik | ESP32-S3 N16R8 (16 MB Flash, 8 MB PSRAM), firmware 2.53.0, headless (bez ekranu bezpośrednio podłączonego) |
+| STOP awaryjny (E-STOP) | grzybek NC, cięcie zasilania sprzętowe w torze mocy, status GPIO 21 |
+| Moduł wyświetlacza (jedyny ekran) | Sunton ESP32-8048S070C, 7", 800×480, dotyk pojemnościowy, łączność wyłącznie WiFi |
 | Pistolety | 6 (P1–P6), przekaźniki, logika HIGH = ON |
 | Wzorce | 16 (15 normowych + własny, 3 sloty) |
 | Tryby | AUTO, SEMI, RĘCZNY (+ DEMO) |

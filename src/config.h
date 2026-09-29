@@ -150,12 +150,15 @@
 
 // ============ Pomiar dystansu z alarmem (SCREEN_DISTANCE_METER) ============
 // Zadany cel [m] ustawiany co do 0.1 m (patrz menu.h setDistMeterTarget()). Strefa
-// ostrzegawcza: ostatnie DIST_METER_WARN_MARGIN_M metrow przed celem - miganie
-// (Sunton/WWW) + cykliczny sygnal. Po osiagnieciu/przekroczeniu celu: zatrzask (do
-// czasu ZERUJ) - ekran na zielono z napisem STOP, staly ton buzzera.
-#define DIST_METER_WARN_MARGIN_M     2.0f   // odleglosc od celu, w ktorej zaczyna sie ostrzeganie [m]
-#define DIST_METER_WARN_BEEP_MS       500   // odstep miedzy sygnalami w strefie ostrzegawczej [ms]
-#define DIST_METER_HOLD_REASSERT_MS  1000   // odswiezanie stalego tonu po osiagnieciu celu [ms]
+// ostrzegawcza: ostatnie DIST_METER_WARN_PCT (10%) zadanego dystansu przed celem -
+// miganie (Sunton/WWW) + cykliczny sygnal, ktorego czestotliwosc NARASTA liniowo
+// (parking-sensor: od DIST_METER_WARN_BEEP_MAX_MS na wejsciu do strefy, do
+// DIST_METER_WARN_BEEP_MIN_MS tuz przed celem). Po osiagnieciu/przekroczeniu celu:
+// zatrzask (do czasu ZERUJ) - ekran na zielono z napisem STOP, staly ton buzzera.
+#define DIST_METER_WARN_PCT           0.10f  // ulamek zadanego dystansu, w ktorym zaczyna sie ostrzeganie
+#define DIST_METER_WARN_BEEP_MAX_MS    600   // odstep miedzy sygnalami na WEJSCIU do strefy ostrzegawczej [ms]
+#define DIST_METER_WARN_BEEP_MIN_MS    120   // odstep miedzy sygnalami TUZ PRZED celem [ms]
+#define DIST_METER_HOLD_REASSERT_MS   1000   // odswiezanie stalego tonu po osiagnieciu celu [ms]
 
 // ============ Czyszczenie dysz — "martwy czlowiek" (wspolne dla ekranu DGUS i panelu WWW/Sunton) ============
 // Twardy limit przytrzymania na wypadek zgubienia ramki/pakietu zwolnienia - dysze zamykaja sie

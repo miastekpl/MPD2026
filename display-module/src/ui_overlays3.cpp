@@ -291,11 +291,14 @@ static void dmUpdate() {
     setLbl(s_dmTargetLbl, b);
     uiBtnSetText(s_dmStartBtn, g_st.distMeasuring ? "PAUZA" : "START");
 
-    bool blink = ((millis() / 300) & 1) != 0;
     if (g_st.distMeterReached) {
         lv_obj_set_style_bg_color(s_dmOverlay, C_GREEN, 0);
         lv_obj_clear_flag(s_dmStop, LV_OBJ_FLAG_HIDDEN);
     } else if (g_st.distMeterWarning) {
+        // Miganie przyspiesza tak samo jak pikniecia buzzera sterownika (efekt "czujnika
+        // parkowania") - okres liczony z distMeterWarnProgress (0..1), patrz web_server.cpp.
+        uint32_t period = 600 - (uint32_t)(g_st.distMeterWarnProgress * (600 - 120));
+        bool blink = ((millis() / period) & 1) != 0;
         lv_obj_set_style_bg_color(s_dmOverlay, blink ? C_YELLOW : C_BG, 0);
         lv_obj_add_flag(s_dmStop, LV_OBJ_FLAG_HIDDEN);
     } else {

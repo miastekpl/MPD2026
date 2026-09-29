@@ -171,6 +171,7 @@ bool parseStatus(const char* json, size_t len, Status& o) {
     o.distMeterTarget = jf(doc["distMeterTarget"], 50.0f);
     o.distMeterReached = doc["distMeterReached"] | false;
     o.distMeterWarning = doc["distMeterWarning"] | false;
+    o.distMeterWarnProgress = jf(doc["distMeterWarnProgress"]);
 
     o.valid = true;
     return true;

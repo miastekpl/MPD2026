@@ -856,6 +856,7 @@ function applyStatus(d){
 
         /* Pomiar dystansu z alarmem */
         if(typeof d.distMeterValue!=='undefined'){
+            dmWarnProgress=+d.distMeterWarnProgress||0;
             document.getElementById('dmValue').textContent=(+d.distMeterValue).toFixed(1)+' m';
             if(Date.now()-dmTouchMs>2500){
                 dmTargetLocal=+d.distMeterTarget;
@@ -1009,7 +1010,7 @@ function svcTab(n){
 function ackEstop(){ cmd('ack_estop'); }
 
 /* ------- Pomiar dystansu z alarmem ------- */
-let dmTargetLocal=50.0, dmTouchMs=0, dmBlinkOn=false;
+let dmTargetLocal=50.0, dmTouchMs=0, dmBlinkOn=false, dmWarnProgress=0, dmLastBlinkMs=0;
 function dmStart(){
     fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
         body:'action=send_event&value=1'}).then(r=>r.json()).then(()=>fetchStatus());
@@ -1025,14 +1026,20 @@ function dmTargetStep(dir){
     fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
         body:'action=set_dist_target&value='+Math.round(dmTargetLocal*10)});
 }
-/* Miganie na zolto niezaleznie od tempa odswiezania statusu (co ~500ms to za wolno na wyrazne miganie) */
+/* Miganie na zolto niezaleznie od tempa odswiezania statusu (co ~500ms to za wolno na wyrazne miganie).
+   Okres przyspiesza liniowo wraz z dmWarnProgress (0..1, liczone przez sterownik) - ten sam "efekt
+   czujnika parkowania" co pikniecia buzzera (patrz src/menu.cpp) i miganie na module Sunton. */
 setInterval(function(){
+    let period=600-dmWarnProgress*(600-120);
+    let now=Date.now();
+    if(now-dmLastBlinkMs<period)return;
+    dmLastBlinkMs=now;
     dmBlinkOn=!dmBlinkOn;
     let box=document.getElementById('dmBox');
     if(box&&box.classList.contains('dm-warn')){
         box.style.background=dmBlinkOn?'#4a3a00':'#0f2557';
     }
-},300);
+},50);
 
 function nzOpen(){
     fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},

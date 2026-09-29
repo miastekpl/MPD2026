@@ -1,19 +1,27 @@
-# Architektura docelowa: sterownik (mózg) + wyświetlacz inteligentny DWIN DGUS
+# Alternatywa (nie zalecana jako punkt startowy): sterownik (mózg) + wyświetlacz inteligentny DWIN DGUS
 
-**Decyzja:** jeden duży ekran, podłączony **bezpośrednio** do sterownika (bez pośredniczącego ESP32). Cała logika,
-stan, menu, ustawienia i dane są w **sterowniku ESP32-S3 (master)**. Duży ekran to **wyświetlacz inteligentny DWIN
-DGUS** (np. 7" `DMG10600T070_09WTC`, 1024×600, IPS, dotyk pojemnościowy, 650 cd/m²) — ma własny procesor i sam
-renderuje interfejs zaprojektowany w edytorze producenta (DGUS Designer); sterownik komunikuje się z nim prostym
-protokołem szeregowym (patrz rozdz. 4). Mały ekran ILI9341 i joystick są usuwane, karta SD przechodzi na osobny
-moduł SPI.
+> **Ta architektura NIE jest już wariantem docelowym.** Architektura docelowa dziś to sterownik „headless" (bez
+> żadnego ekranu podłączonego bezpośrednio) + moduł wyświetlacza **Sunton 7" po WiFi** (`display-module/`) jako
+> jedyny interfejs operatora — cały interfejs to kod, zero pracy w zewnętrznym narzędziu GUI. Opis:
+> [README.md](../README.md), [SCHEMAT_PODLACZEN.md](SCHEMAT_PODLACZEN.md) rozdz. 3.2/5.2a. Ten dokument opisuje
+> **alternatywę** (ekran DGUS na UART) — zachowaną, bo kod jest gotowy, ale **nie zalecaną jako punkt startowy**,
+> bo wymaga ręcznej budowy projektu w DGUS Designer (osobne narzędzie GUI producenta, tylko Windows), co dla
+> większości użytkowników okazało się barierą nie do przejścia.
+
+**Decyzja (historyczna, dla tej alternatywy):** jeden duży ekran, podłączony **bezpośrednio** do sterownika (bez
+pośredniczącego ESP32). Cała logika, stan, menu, ustawienia i dane są w **sterowniku ESP32-S3 (master)**. Duży
+ekran to **wyświetlacz inteligentny DWIN DGUS** (np. 7" `DMG10600T070_09WTC`, 1024×600, IPS, dotyk pojemnościowy,
+650 cd/m²) — ma własny procesor i sam renderuje interfejs zaprojektowany w edytorze producenta (DGUS Designer);
+sterownik komunikuje się z nim prostym protokołem szeregowym (patrz rozdz. 4). Mały ekran ILI9341 jest usuwany
+(joystick zostaje — patrz rozdz. 6), karta SD przechodzi na osobny moduł SPI.
 
 > **Status: zaimplementowane w kodzie (kontroler), niesprawdzone na sprzęcie.** Firmware sterownika kompiluje się
 > i ma testy protokołu ramki na hoście (`test/test_dgus_protocol`, zweryfikowane ręcznie względem przykładów z
 > oficjalnej dokumentacji DWIN). **Projekt ekranu w DGUS Designer (strony, przyciski, ikony) trzeba dopiero
 > zbudować** według specyfikacji w [docs/EKRAN_DGUS.md](EKRAN_DGUS.md) — nie da się tego wygenerować automatycznie,
-> to osobne narzędzie producenta. Żaden element (ekran + sterownik razem) nie był uruchamiany na fizycznym sprzęcie.
-> Lista prób sprzętowych: rozdz. 11. Wariant przejściowy (ILI9341 + WiFi) pozostaje w repozytorium jako działająca
-> alternatywa (rozdz. 9).
+> to osobne narzędzie producenta; gotowe ikony wzorców: [schematy/ikony_dgus/](schematy/ikony_dgus/). Żaden
+> element (ekran + sterownik razem) nie był uruchamiany na fizycznym sprzęcie. Lista prób sprzętowych: rozdz. 11.
+> Wariant przejściowy (ILI9341 + WiFi) pozostaje w repozytorium jako działająca alternatywa (rozdz. 9).
 
 ## 1. Dlaczego bezpośrednio, bez drugiego ESP32
 
@@ -235,8 +243,8 @@ malowania/pauzy (zabezpieczenie wprowadzone razem z tą architekturą, dotąd ni
 | **Przycisk grzybkowy E-STOP (styk NC)** | **dodać** — wpięty **fizycznie w tor zasilania** modułu przekaźników (tnie prąd niezależnie od firmware); dodatkowa pętla statusu do GPIO 21 (INPUT_PULLUP, patrz rozdz. 7) |
 | Przyciski fizyczne | S1–S10 + GRUPA + START + STOP + GAP = **14**, plus opcjonalny SELEKTOR = 15, plus joystick (4 kierunki + SW) i grzybek E-STOP (pilot J4, pedał J5 — opcje) |
 
-Pełny schemat wszystkich połączeń (ten wariant): [schematy/schemat_polaczen_docelowy.svg](schematy/schemat_polaczen_docelowy.svg)
-(patrz [SCHEMAT_PODLACZEN.md](SCHEMAT_PODLACZEN.md), rozdz. 3.2/4.1b). Obudowa z ekranem pionowym:
+Pełny schemat wszystkich połączeń (ta alternatywa): [schematy/schemat_polaczen_dgus.svg](schematy/schemat_polaczen_dgus.svg)
+(patrz [SCHEMAT_PODLACZEN.md](SCHEMAT_PODLACZEN.md), rozdz. 3.3/5.2b). Obudowa z ekranem pionowym:
 [WIZUALIZACJE.md](WIZUALIZACJE.md), dwie wersje (OŚ/KRAWĘDŹ): [obudowa_pionowa_os.svg](schematy/obudowa_pionowa_os.svg),
 [obudowa_pionowa_krawedz.svg](schematy/obudowa_pionowa_krawedz.svg).
 

@@ -293,10 +293,11 @@ def wiring():
 def wiring_dgus():
     W, H = 2100, 1900
     s = Svg(W, H, "#ffffff")
-    s.text(40, 46, "MPD2026 — schemat połączeń, wariant DOCELOWY (ekran DWIN DGUS)", 30, "#0b1f4a", weight="bold")
+    s.text(40, 46, "MPD2026 — schemat połączeń, ALTERNATYWA (ekran DWIN DGUS, wymaga DGUS Designer)", 30, "#0b1f4a", weight="bold")
     s.text(40, 74, "Sterownik Trassar (ESP32-S3 N16R8, firmware 2.53.0, środowisko esp32s3_terminal) + wyświetlacz"
                    " inteligentny DWIN DGUS (np. DMG10600T070_09WTC, 7\" 1024x600) na łączu UART, bez ILI9341."
-                   " Joystick zostaje (nawigacja menu). Numery = GPIO ESP32-S3 (zgodnie z src/config.h).", 15, "#444")
+                   " Joystick zostaje (nawigacja menu). NIE ZALECANE jako punkt startowy — wymaga ręcznej pracy"
+                   " w DGUS Designer (patrz docs/EKRAN_DGUS.md). Wariant docelowy: schemat_polaczen_docelowy.svg.", 15, "#444")
     s.text(40, 94, "Kod skompilowany i sprawdzony; POŁĄCZENIA nie były jeszcze zweryfikowane na fizycznym sprzęcie — sprawdź to na prototypie.",
            13, "#b71c1c", weight="bold")
 
@@ -543,6 +544,247 @@ def wiring_dgus():
     s.text(120, ly2 + 20, "Joystick (19/20/46) i status E-STOP (21) zajmują niemal wszystkie pozostałe piny:"
                           " 27 zajęte / 1 wolny — GPIO 14 (+ GPIO 40, jeśli pominiesz SELEKTOR).", 12, "#b71c1c")
     s.text(120, ly2 + 44, "Złącza maszynowe: J1 zasilanie 5 V, J2 zawory P1-P6, J3 enkoder, J4 pilot, J5 pedał, J6 (opcja) wyprowadzenie UART ekranu.", 12, "#333")
+    s.save("schemat_polaczen_dgus.svg")
+
+
+def wiring_headless():
+    """Schemat połączeń wariantu DOCELOWEGO: sterownik "headless" (bez żadnego ekranu
+    podłączonego bezpośrednio) + moduł wyświetlacza Sunton 7" wyłącznie po WiFi.
+    Środowisko esp32s3 (domyślne), HAS_SMALL_TFT=0 HAS_JOYSTICK=0 HAS_DGUS_LINK=0 HAS_ESTOP=1."""
+    W, H = 2100, 1750
+    s = Svg(W, H, "#ffffff")
+    s.text(40, 46, "MPD2026 — schemat połączeń, wariant DOCELOWY (sterownik headless + moduł Sunton po WiFi)",
+           28, "#0b1f4a", weight="bold")
+    s.text(40, 74, "Sterownik Trassar (ESP32-S3 N16R8, firmware 2.53.0, środowisko esp32s3_terminal) + moduł"
+                   " wyświetlacza Sunton 7\" (ESP32-8048S070C) jako JEDYNY interfejs operatora — połączony"
+                   " WYŁĄCZNIE przez WiFi (bez żadnych przewodów danych). Numery = GPIO ESP32-S3 (src/config.h).",
+           15, "#444")
+    s.text(40, 94, "Kod skompilowany i sprawdzony; POŁĄCZENIA nie były jeszcze zweryfikowane na fizycznym sprzęcie — sprawdź to na prototypie.",
+           13, "#b71c1c", weight="bold")
+
+    # --- zasilanie ---
+    s.rect(40, 116, 200, 60, "#fff3cd", "#b8860b", 2, 6)
+    s.text(140, 142, "Akumulator / instalacja", 14, anchor="middle", weight="bold")
+    s.text(140, 162, "maszyny 12 V / 24 V DC", 14, anchor="middle")
+    s.line(240, 146, 300, 146, "#b8860b", 3)
+    s.rect(300, 116, 200, 60, "#fff3cd", "#b8860b", 2, 6)
+    s.text(400, 142, "Przetwornica DC-DC", 14, anchor="middle", weight="bold")
+    s.text(400, 162, "12/24 V -> 5 V, min. 3 A", 14, anchor="middle")
+    s.line(500, 146, 560, 146, "#c1121f", 3)
+    s.rect(560, 116, 170, 60, "#fde2e4", "#c1121f", 2, 6)
+    s.text(645, 142, "J1 TS13CP03", 14, anchor="middle", weight="bold")
+    s.text(645, 162, "+5 V / GND / GND", 13, anchor="middle")
+    s.line(730, 146, 1980, 146, "#c1121f", 3)
+    s.text(750, 138, "+5 V (PTC 1,5 A + TVS)", 13, "#c1121f", weight="bold")
+    s.line(1980, 146, 1980, 260, "#c1121f", 3)
+    s.line(1980, 260, 1550, 260, "#c1121f", 3)
+    s.text(1560, 252, "+5 V do modułu Sunton (osobny odczep — patrz uwaga)", 12, "#c1121f")
+
+    EX, EY, EW, EH = 800, 200, 460, 680
+    s.rect(EX, EY, EW, EH, "#e8f0fe", "#0b1f4a", 3, 10)
+    s.text(EX + EW / 2, EY + 32, "ESP32-S3 N16R8", 20, "#0b1f4a", "middle", "bold")
+    s.text(EX + EW / 2, EY + 54, "DevKitC-1 — sterownik Trassar (esp32s3_terminal), \"headless\"", 13, "#0b1f4a", "middle")
+    s.line(EX + EW / 2, 146, EX + EW / 2, EY, "#c1121f", 3)
+    s.text(EX + EW / 2 + 8, 180, "5 V (VBUS)", 12, "#c1121f")
+    s.text(EX + EW / 2, EY + EH - 18, "3V3: SD, GPS, MCP23017, enkoder    GND: masa wspólna", 12, "#333", "middle")
+
+    pitch = 28
+
+    def pin_left(y, gpio, label):
+        s.line(EX - 6, y, EX, y, "#0b1f4a", 2)
+        s.circle(EX, y, 4, "#0b1f4a")
+        s.text(EX + 12, y + 5, f"GPIO {gpio}", 13, "#0b1f4a", weight="bold")
+        s.text(EX + 88, y + 5, label, 12, "#555")
+
+    def pin_right(y, gpio, label):
+        s.circle(EX + EW, y, 4, "#0b1f4a")
+        s.text(EX + EW - 12, y + 5, f"GPIO {gpio}", 13, "#0b1f4a", "end", "bold")
+        s.text(EX + EW - 88, y + 5, label, 12, "#555", "end")
+
+    def module(x, y, w, h, title, sub=None, fill="#f1f8e9", stroke="#33691e"):
+        s.rect(x, y, w, h, fill, stroke, 2, 8)
+        s.text(x + w / 2, y + 22, title, 15, "#111", "middle", "bold")
+        if sub:
+            s.text(x + w / 2, y + 40, sub, 12, "#444", "middle")
+
+    def wire(x1, y, x2, color="#333", label=None):
+        s.line(x1, y, x2, y, color, 1.8)
+        if label:
+            s.text((x1 + x2) / 2, y - 4, label, 11, "#666", "middle")
+
+    # ---------- lewa strona ----------
+    LX, LW = 120, 420
+    y = EY + 40
+
+    # Modul Sunton 7" - JEDYNY ekran, BEZ zadnych przewodow danych (wylacznie WiFi)
+    top = y - 20
+    s.rect(LX, top, LW, pitch + 96, "#e1f5fe", "#01579b", 2, 8)
+    s.text(LX + LW / 2, top + 22, "Moduł wyświetlacza Sunton 7\" (ESP32-8048S070C)", 14, "#111", "middle", "bold")
+    s.text(LX + LW / 2, top + 40, "JEDYNY interfejs operatora — display-module/", 12, "#01579b", "middle", weight="bold")
+    s.text(LX + LW / 2, top + 58, "BEZ przewodów danych do sterownika — tylko WiFi", 11, "#444", "middle")
+    s.text(LX + LW / 2, top + 76, "Zasilanie: osobne 5 V (USB-C), min. 2 A, wspólna masa", 11, "#444", "middle")
+    s.text(LX + LW / 2, top + 94, "z instalacją maszyny (patrz uwaga o wspólnym GND niżej)", 11, "#444", "middle")
+    box_bottom = top + pitch + 96
+    wifi_y = box_bottom + 24
+    s.line(LX + LW / 2, box_bottom, LX + LW / 2, wifi_y, "#01579b", 2, "6 4")
+    s.line(LX + LW / 2, wifi_y, EX - 6, wifi_y, "#01579b", 2, "6 4")
+    s.circle(EX - 6, wifi_y, 4, "#01579b")
+    s.text(LX + LW / 2 + 10, wifi_y - 6, "WiFi: WebSocket :81 (status) + HTTP :80 (POST /api/control)", 11, "#01579b")
+    y = wifi_y + 40
+
+    # Karta SD - osobny modul
+    top = y - 20
+    module(LX, top, LW, 4 * pitch + 50, "Moduł microSD (osobny, SPI)", "raporty, GPX, kopia ustawień",
+           "#e3f2fd", "#0d47a1")
+    sd_rows = [("11", "MOSI", "SPI MOSI"), ("12", "SCK", "SPI SCK"), ("13", "MISO", "SPI MISO"), ("16", "CS", "SD CS")]
+    for i, (g, port, lab) in enumerate(sd_rows):
+        yy = y + 30 + i * pitch
+        s.text(LX + LW - 10, yy + 5, port, 12, "#111", "end", "bold")
+        wire(LX + LW, yy, EX, "#0d47a1")
+        pin_left(yy, g, lab)
+    y = y + 30 + 4 * pitch + 34
+
+    # I2C
+    top = y - 20
+    module(LX, top, LW, 2 * pitch + 78, "Magistrala I2C", "DS1307 (0x68, 5 V) + MCP23017 (0x20, 3V3)",
+           "#e3f2fd", "#0d47a1")
+    for i, (g, port, lab) in enumerate([("17", "SDA", "I2C SDA"), ("18", "SCL", "I2C SCL")]):
+        yy = y + 30 + i * pitch
+        s.text(LX + LW - 10, yy + 5, port, 12, "#111", "end", "bold")
+        wire(LX + LW, yy, EX, "#0d47a1")
+        pin_left(yy, g, lab)
+    y = y + 30 + 2 * pitch + 44
+
+    # GPS
+    top = y - 20
+    module(LX, top, LW, 2 * pitch + 50, "GPS GY-NEO6MV2 (NEO-6M)", "UART2 9600 baud, zasilanie 3V3",
+           "#fff8e1", "#e65100")
+    for i, (g, port, lab) in enumerate([("47", "TX", "RX <- GPS TX"), ("48", "RX", "TX -> GPS RX")]):
+        yy = y + 30 + i * pitch
+        s.text(LX + LW - 10, yy + 5, port, 12, "#111", "end", "bold")
+        wire(LX + LW, yy, EX, "#e65100")
+        pin_left(yy, g, lab)
+    y_left_end = y + 30 + 2 * pitch + 20
+
+    # ---------- prawa strona ----------
+    RX, RW = 1400, 300
+    y = EY + 40
+    top = y - 20
+    relay_rows = [("41", "IN1", "P1 oś lewy 12 cm"), ("42", "IN2", "P2 oś środek 12 cm"),
+                  ("1", "IN3", "P3 oś prawy 12 cm"), ("2", "IN4", "P4 oś szeroki 24 cm"),
+                  ("3", "IN5", "P5 krawędź 12 cm"), ("4", "IN6", "P6 krawędź 24 cm")]
+    module(RX, top, RW, 6 * pitch + 140, "Moduł przekaźników 6 kanałów",
+           "5 V, opto-izolacja, wejścia HIGH = ON", "#e8f5e9", "#1b5e20")
+    for i, (g, port, lab) in enumerate(relay_rows):
+        yy = y + 30 + i * pitch
+        s.text(RX + 10, yy + 5, port, 12, "#111", "start", "bold")
+        wire(EX + EW, yy, RX, "#1b5e20")
+        pin_right(yy, g, lab)
+        s.text(RX + RW - 10, yy + 5, f"NO{i + 1}", 12, "#111", "end", "bold")
+        wire(RX + RW, yy, 1770, "#e65100")
+        s.rect(1770, yy - 11, 90, 22, "#fff3e0", "#e65100", 1.5, 4)
+        s.text(1815, yy + 4, f"J2/{i + 1} -> P{i + 1}", 11, "#111", "middle")
+        wire(1860, yy, 1900, "#e65100")
+        s.rect(1900, yy - 11, 70, 22, "#ffe0b2", "#e65100", 1.5, 4)
+        s.text(1935, yy + 4, f"zawór P{i + 1}", 11, "#111", "middle")
+    yb = y + 30 + 6 * pitch + 6
+    s.text(RX + RW / 2, yb + 12, "COM przekaźników (J2/7, J2/8) <- +12/24 V instalacji maszyny", 11, "#b71c1c", "middle", "bold")
+    s.text(RX + RW / 2, yb + 28, "masa zaworów = minus instalacji (NIE do GND ESP32)", 11, "#b71c1c", "middle")
+    y = yb + 120
+
+    top = y - 20
+    module(RX, top, RW, 3 * pitch + 78, "Enkoder KY-040 (złącze J3)", "skrętka CLK+DT, 100 nF do GND, <= 2 m",
+           "#e0f7fa", "#006064")
+    for i, (g, port, lab) in enumerate([("5", "CLK", "CLK (A), ISR"), ("6", "DT", "DT (B), ISR"),
+                                        ("7", "SW", "SW = GAP (start od przerwy)")]):
+        yy = y + 30 + i * pitch
+        s.text(RX + 10, yy + 5, port, 12, "#111", "start", "bold")
+        wire(EX + EW, yy, RX, "#006064")
+        pin_right(yy, g, lab)
+    s.text(RX + RW / 2, y + 30 + 3 * pitch + 14, "GPIO 7 równolegle: J4/4 (pilot GAP)", 11, "#006064", "middle")
+    y = y + 30 + 3 * pitch + 60
+
+    top = y - 20
+    module(RX, top, RW, 2 * pitch + 90, "Przyciski START / STOP (+opcjonalny SELEKTOR)",
+           "styk -> GND, pull-up wewn.; równolegle: J4 pilot, J5 pedał", "#fce4ec", "#880e4f")
+    for i, (g, port, lab) in enumerate([("38", "START", "START"), ("39", "STOP", "STOP (+ISR awaryjny)")]):
+        yy = y + 30 + i * pitch
+        s.text(RX + 10, yy + 5, port, 12, "#111", "start", "bold")
+        wire(EX + EW, yy, RX, "#880e4f")
+        pin_right(yy, g, lab)
+    s.text(RX + RW / 2, y + 30 + 2 * pitch + 34, "GPIO 40 (SELEKTOR) opcjonalny — patrz uwaga o wolnych pinach niżej",
+           11, "#1b5e20", "middle", weight="bold")
+    y = y + 30 + 2 * pitch + 74
+
+    top = y - 20
+    module(RX, top, RW, pitch + 66, "Buzzer pasywny 5 V", "LEDC PWM 100 Hz - 5 kHz", "#f3e5f5", "#4a148c")
+    yy = y + 30
+    s.text(RX + 10, yy + 5, "(+)", 12, "#111", "start", "bold")
+    wire(EX + EW, yy, RX, "#4a148c")
+    pin_right(yy, "8", "buzzer (PWM)")
+    y = y + 30 + pitch + 50
+
+    top = y - 20
+    module(RX, top, RW, pitch + 66, "Czujnik temperatury DS18B20 (opcjonalny)",
+           "OneWire, rezystor podciagajacy 4,7 k do 3V3", "#ede7f6", "#4527a0")
+    yy = y + 30
+    s.text(RX + 10, yy + 5, "DATA", 12, "#111", "start", "bold")
+    wire(EX + EW, yy, RX, "#4527a0")
+    pin_right(yy, "15", "OneWire (jesli zamontowany)")
+    y = y + 30 + pitch + 50
+
+    # STOP awaryjny (E-STOP) - ciecie zasilania jest SPRZETOWE (grzybek w torze zasilania
+    # przekaznikow), GPIO 21 to WYLACZNIE odczyt statusu petli dla firmware/UI/logow
+    top = y - 20
+    module(RX, top, RW, pitch + 90, "STOP awaryjny — grzybek E-STOP (styk NC)",
+           "CIĘCIE ZASILANIA: grzybek W SERII z +12/24V do COM przekaźników", "#ffebee", "#b71c1c")
+    yy = y + 30
+    s.text(RX + 10, yy + 5, "STATUS", 12, "#111", "start", "bold")
+    wire(EX + EW, yy, RX, "#b71c1c")
+    pin_right(yy, "21", "petla NC -> GND (INPUT_PULLUP, fail-safe)")
+    s.text(RX + RW / 2, yy + pitch + 14,
+           "Odcięcie mocy NIE zależy od firmware — ten pin to TYLKO status (UI/log/alarm)",
+           10, "#b71c1c", "middle", weight="bold")
+    y_right_end = y + 30 + pitch + 50
+
+    # ---------- klawisze soft-key (MCP23017) ----------
+    ky = max(y_left_end, y_right_end) + 40
+    s.rect(120, ky, 1100, 250, "#fffde7", "#f57f17", 2, 10)
+    s.text(140, ky + 28, "Przyciski wzorców — MCP23017 (I2C 0x20, SDA=GPIO 17, SCL=GPIO 18): układ soft-key 10 + GRUPA",
+           15, "#111", weight="bold")
+    keys = [("S1", "GPA0", "P-1a | P-6"), ("S2", "GPA1", "P-1b | P-7a"), ("S3", "GPA2", "P-1c | P-7b"),
+            ("S4", "GPA3", "P-1d | P-7c"), ("S5", "GPA4", "P-1e | P-7d"), ("S6", "GPA5", "P-2a | WŁASNY"),
+            ("S7", "GPA6", "P-2b | -"), ("S8", "GPA7", "P-3a | -"), ("S9", "GPB0", "P-3b | -"),
+            ("S10", "GPB1", "P-4 | -"), ("GRUPA", "GPB2", "OŚ <-> KRAWĘDŹ")]
+    bx = 140
+    for i, (k, pin, lab) in enumerate(keys):
+        x = bx + i * 96
+        s.rect(x, ky + 56, 86, 40, "#fff", "#f57f17", 1.5, 6)
+        s.text(x + 43, ky + 80, k, 14, "#111", "middle", "bold")
+        s.line(x + 43, ky + 96, x + 43, ky + 130, "#f57f17", 2)
+        s.text(x + 43, ky + 148, pin, 12, "#111", "middle", "bold")
+        s.text(x + 43, ky + 166, lab, 10, "#555", "middle")
+    s.line(bx + 43, ky + 190, bx + 43 + 10 * 96, ky + 190, "#000", 3)
+    s.text(bx, ky + 212, "GND wspólna; SELEKTOR (odwracanie P-3a/b) opcjonalny — patrz obudowa_pionowa_os.svg / obudowa_pionowa_krawedz.svg",
+           12, "#333")
+    s.text(bx, ky + 232, "Podpis 'A | B' = wzorzec w grupie OŚ | grupie KRAWĘDŹ.", 12, "#333")
+
+    ly = ky + 270
+    s.text(120, ly, "Legenda:", 14, weight="bold")
+    for i, (c, t) in enumerate([("#c1121f", "zasilanie 5 V"), ("#01579b", "WiFi (bez przewodu)"), ("#0d47a1", "SPI / I2C"),
+                                ("#e65100", "UART GPS / wyjścia mocy do zaworów"), ("#1b5e20", "sygnały do przekaźników"),
+                                ("#4527a0", "DS18B20 (OneWire)"), ("#b71c1c", "status E-STOP")]):
+        col, row = i % 3, i // 3
+        s.line(200 + col * 320, ly - 5 + row * 22, 240 + col * 320, ly - 5 + row * 22, c, 3)
+        s.text(246 + col * 320, ly + row * 22, t, 12, "#333")
+    ly2 = ly + 2 * 22 + 30
+    s.text(120, ly2, "GPIO 26-37 zajęte (Flash + Octal PSRAM). GPIO 15 zajęte przez czujnik temperatury DS18B20"
+                      " (nawet jeśli niezamontowany — pin zarezerwowany w firmware).", 12, "#b71c1c")
+    s.text(120, ly2 + 20, "Bez ekranu bezpośredniego i joysticka (domyślnie wyłączony) WOLNE pozostają: GPIO 9, 10,"
+                          " 14, 19, 20, 46 (+ 40, jeśli pominiesz SELEKTOR) — 23 zajęte / 6 wolnych.", 12, "#1b5e20", weight="bold")
+    s.text(120, ly2 + 44, "Joystick KY-023 (opcja, GPIO 19/20/46) można podłączyć jak w wariancie z ekranem DGUS —"
+                          " ustaw HAS_JOYSTICK=1 w platformio.ini. Zajmie 3 z 6 wolnych pinów.", 12, "#333")
+    s.text(120, ly2 + 68, "Złącza maszynowe: J1 zasilanie 5 V, J2 zawory P1-P6, J3 enkoder, J4 pilot, J5 pedał.", 12, "#333")
     s.save("schemat_polaczen_docelowy.svg")
 
 
@@ -1471,6 +1713,7 @@ if __name__ == "__main__":
     rs485()
     wiring()
     wiring_dgus()
+    wiring_headless()
     screen_mock()
     panel_A()
     panel_B()
