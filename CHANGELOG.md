@@ -11,6 +11,28 @@ Wersjonowanie zgodne z [Semantic Versioning](https://semver.org/lang/pl/).
 
 Repozytorium MPD2026 powstało jako kopia `Trassar_251v3` (firmware 2.52.0, commit bazowy `24e12c5`).
 
+### Dodano — łącze przewodowe (UART) sterownik ↔ moduł Sunton, przywrócony joystick
+Zaimplementowano łącze przewodowe zaproponowane w [`docs/LACZE_PRZEWODOWE.md`](docs/LACZE_PRZEWODOWE.md): UART
+3,3 V, priorytet nad WiFi (automatyczny fallback, jak dotąd jedyne łącze dla telefonów/tabletów w panelu WWW).
+**W odróżnieniu od pierwotnej propozycji, joystick fizyczny jest zachowany** — piny łącza to GPIO 9/10 (wolne
+po stronie sterownika, bo wariant DGUS który ich też używa to osobne, wykluczające się środowisko kompilacji),
+nie piny joysticka 19/20/46.
+- Nowy wspólny nagłówek `shared/serial_link_protocol.h`: ramka `$<JSON>*<CRC16-hex>\n` (CRC-16/CCITT), parser
+  odporny na resynchronizację po błędnym CRC.
+- **Sterownik:** `src/serial_link.h/.cpp` (nowa flaga `HAS_SERIAL_LINK`, domyślnie `1` w środowisku `esp32s3`)
+  — wysyła status (`webServer.statusJson()`, ten sam JSON co `GET /api/status`) co 100/500 ms, odbiera polecenia
+  i wykonuje je przez istniejący `executeControl()` (ta sama ścieżka co panel WWW i DGUS — zero duplikacji
+  logiki biznesowej).
+- **Moduł Sunton:** `display-module/src/link.cpp` — nowy transport UART1 (GPIO 17/18) obok istniejącego WiFi;
+  moduł wybiera **jeden transport na polecenie** (kabel gdy `cableLinkUp()`, inaczej HTTP) żeby nie wykonać tej
+  samej komendy dwa razy. Wskaźnik „KABEL"/„POLACZONO" (WiFi) w pasku górnym (`linkIsCable()`).
+- Środowisko `esp32s3` ma teraz **`HAS_JOYSTICK=1` i `HAS_SERIAL_LINK=1` jednocześnie** — nowy budżet pinów:
+  **28 zajęte, 1 wolny (GPIO 14)**, w miejsce wcześniejszego stanu z wyłączonym joystickiem (patrz sekcja
+  „architektura docelowa" niżej — ten wpis go aktualizuje).
+- Zaktualizowane diagramy: `docs/schematy/schemat_polaczen_docelowy.svg` (dodano blok łącza kablowego i
+  joysticka), `docs/schematy/schemat_lacze_rs485.svg` (poprawione piny 9/10, opcja dla długich kabli zamiast
+  głównej propozycji), `docs/LACZE_PRZEWODOWE.md` i `docs/SCHEMAT_PODLACZEN.md` (status: zaimplementowane).
+
 ### Dodano — pomiar dystansu z alarmem (cel co do 10 cm, ostrzeżenie narastające + STOP)
 Rozszerzono istniejący, dotąd nieużywalny bez ekranu sterownika `SCREEN_DISTANCE_METER` o zadawany cel
 (precyzja 0,1 m) i dwustopniowy alarm: **strefa ostrzegawcza** = ostatnie `DIST_METER_WARN_PCT`=10% zadanego
@@ -50,8 +72,9 @@ startową przez USB zamiast na nieistniejący ekran).
   plików PNG w kolejności `PatternID`, na wypadek gdyby ktoś jednak zdecydował się zbudować wariant DGUS.
 - **Grzybek E-STOP w wizualizacji obudowy** — nowy widok „prawej ściany bocznej" w
   `docs/schematy/generate_enclosure.py` (pozycja 11 w tabeli wycięć), obie wersje (OŚ/KRAWĘDŹ).
-- Nowy budżet pinów `esp32s3`: **23 zajęte, 6 wolnych** (GPIO 9, 10, 14, 19, 20, 46 wolne bez ILI9341/DGUS;
-  GPIO 21 zajęty przez status E-STOP).
+- Budżet pinów `esp32s3` w tym momencie (bez łącza przewodowego, z wyłączonym joystickiem): 23 zajęte, 6 wolnych
+  (GPIO 9, 10, 14, 19, 20, 46 wolne bez ILI9341/DGUS; GPIO 21 zajęty przez status E-STOP). **Od dodania łącza
+  przewodowego i przywrócenia joysticka (sekcja wyżej) budżet to 28 zajęte, 1 wolny.**
 
 ### Dodano — funkcje serwisowe w panelu WWW i module Sunton (odpowiednik dawnego małego ekranu)
 Usunięcie wszystkich lokalnych ekranów sterownika ujawniło lukę: **czyszczenie dysz, reset etapu, reset

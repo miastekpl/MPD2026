@@ -33,6 +33,7 @@
 #include "gps_track.h"
 #include "joystick.h"
 #include "estop.h"
+#include "serial_link.h"
 #include "event_log.h"
 #include "nvs_backup.h"
 #include "pattern_buttons.h"
@@ -317,6 +318,13 @@ void setup() {
     // 13. WiFi AP + serwer WWW
     DBG_PRINTLN("[INIT] WiFi AP + serwer WWW...");
     webServer.begin();
+
+    // 13b. Lacze przewodowe (RS-485) z modulem Sunton - patrz src/serial_link.h.
+    // Wywolane PO webServer.begin(), bo sendStatus() korzysta z webServer.statusJson().
+#if HAS_SERIAL_LINK
+    DBG_PRINTLN("[INIT] Lacze przewodowe (RS-485) do modulu Sunton...");
+    serialLink.begin();
+#endif
 
 #if HAS_SMALL_TFT
     // ======== POST (Power-On Self-Test) ========
@@ -630,6 +638,12 @@ void loop() {
     // Zdarzenia z ekranu przechodza dokladnie ta sama sciezke co przyciski fizyczne
     // (menu.handleEvent) badz panel WWW (executeControl) - patrz dgus_link.cpp.
     dgusLink.update();
+#endif
+
+#if HAS_SERIAL_LINK
+    // 1b3. Lacze przewodowe (RS-485) z modulem Sunton: wysyla status, odbiera i
+    // wykonuje polecenia przez executeControl() - ta sama sciezka co panel WWW.
+    serialLink.update();
 #endif
 
     // 1c. Odczyt przycisków wzorców (MCP23017 I2C)

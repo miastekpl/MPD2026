@@ -29,8 +29,11 @@ sterującym pistoletami; moduł 7" jest panelem operatora (nie ma żadnego przew
 ze sterownikiem — tylko zasilanie).
 
 > **Architektura docelowa:** sterownik **bez żadnego ekranu podłączonego bezpośrednio** ("headless") — jedynym
-> interfejsem operatora jest moduł Sunton 7" **wyłącznie po WiFi** (zero przewodów danych, zero ILI9341, zero
-> joysticka domyślnie). Bilans pinów: 23 zajęte, 6 wolnych. Pełny opis: rozdz. 3.2, schemat:
+> interfejsem operatora jest moduł Sunton 7", połączony **dwoma równoległymi transportami jednocześnie**:
+> **łączem przewodowym UART** (priorytet, GPIO 9/10 — patrz [LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md)) i **WiFi**
+> (automatyczny fallback oraz jedyne łącze dla telefonu/tabletu w panelu WWW). Zero ILI9341. **Joystick fizyczny
+> jest zachowany** (`HAS_JOYSTICK=1` domyślnie). Bilans pinów: 28 zajęte, 1 wolny (GPIO 14; +GPIO 40 jeśli
+> pominięto SELEKTOR). Pełny opis: rozdz. 3.2, schemat:
 > [schematy/schemat_polaczen_docelowy.svg](schematy/schemat_polaczen_docelowy.svg).
 >
 > **Poniższy opis w rozdz. 1-2, 4.1 i BOM sekcji 2.1 (mermaid wyżej, mapa GPIO w rozdz. 3, ILI9341+joystick)
@@ -38,8 +41,8 @@ ze sterownikiem — tylko zasilanie).
 > **nie jest tym, co dziś montujesz domyślnie**. Różnice wariantu docelowego: rozdz. 3.2.
 >
 > **Alternatywa (nie zalecana):** wyświetlacz inteligentny DWIN DGUS podłączony bezpośrednio do sterownika (UART,
-> bez WiFi) zamiast modułu Sunton — wymaga ręcznej budowy projektu w DGUS Designer.
-> [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md), [EKRAN_DGUS.md](EKRAN_DGUS.md), rozdz. 3.3.
+> bez WiFi, bez łącza przewodowego do modułu Sunton) zamiast modułu Sunton — wymaga ręcznej budowy projektu
+> w DGUS Designer. [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md), [EKRAN_DGUS.md](EKRAN_DGUS.md), rozdz. 3.3.
 
 **Role ekranów w wariancie przejściowym** (patrz uwaga wyżej — **nie dotyczy wariantu docelowego, który nie ma
 żadnego ekranu na sterowniku**): **duży ekran 7"** (moduł Sunton) to ekran **roboczy** operatora; **mały ekran
@@ -133,12 +136,12 @@ Szczegóły API: [API_WWW.md](API_WWW.md). Moduł 7": [MODUL_WYSWIETLACZA.md](MO
 | 17 | Kondensatory | 100 nF ceramiczne | 2+ | Filtr CLK/DT enkodera |
 | 18 | Bezpiecznik | PTC 1,5 A (linia 5 V) + dioda TVS 5,5 V | 1+1 | Zalecane |
 
-**Opcjonalne, tylko jeśli fizycznie dodajesz je do wariantu docelowego** (kod je obsługuje, ale nie są domyślnie
-montowane — patrz [SCHEMAT_PODLACZEN.md](#3-sterownik-mapa-gpio) rozdz. 3.2):
+**Standardowo montowane w wariancie docelowym** (nie tylko opcja — patrz [SCHEMAT_PODLACZEN.md](#3-sterownik-mapa-gpio) rozdz. 3.2):
 
 | Komponent | Model | Uwagi |
 |---|---|---|
-| Joystick | KY-023 analogowy 2-osiowy + przycisk | Wymaga `-DHAS_JOYSTICK=1`; Sunton ma dotyk, więc niepotrzebny w typowym montażu |
+| Joystick | KY-023 analogowy 2-osiowy + przycisk | `-DHAS_JOYSTICK=1` (domyślnie włączony); zachowany mimo dotyku na module Sunton — szybka nawigacja menu bez sięgania do ekranu |
+| Konwerter UART/RS-485 (opcjonalnie) | MAX3485 (auto-kierunek) | Tylko gdy moduł 7" montowany daleko od sterownika — patrz [LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md) §2 i §4; przy montażu w jednej obudowie wystarczy bezpośrednie UART (bez konwerterów) |
 
 **Wariant PRZEJŚCIOWY (starszy, z małym ekranem na sterowniku)** — jeśli świadomie budujesz ten wariant zamiast
 docelowego, komponent 2 wyżej zastępujesz przez:
@@ -161,9 +164,10 @@ docelowego, komponent 2 wyżej zastępujesz przez:
 
 ## 3. Sterownik: mapa GPIO
 
-> **Tabela niżej to baza wspólna dla obu wariantów, opisana z pinami ILI9341/joysticka wariantu PRZEJŚCIOWEGO
-> zajętymi.** W wariancie docelowym (domyślnym) te piny (9, 10, 14, 19, 20, 46) są wolne — pełna, gotowa tabela
-> dla wariantu docelowego jest w [rozdz. 3.2](#32-wariant-docelowy-esp32s3-domyślny--sterownik-headless--moduł-sunton-po-wifi).
+> **Tabela niżej to baza wspólna dla obu wariantów, opisana z pinami ILI9341 wariantu PRZEJŚCIOWEGO zajętymi.**
+> W wariancie docelowym (domyślnym) GPIO 9/10 służą łączu przewodowemu (nie ILI9341) i GPIO 14 jest wolny;
+> GPIO 19/20/46 (joystick) pozostają zajęte w obu wariantach. Pełna, gotowa tabela dla wariantu docelowego jest
+> w [rozdz. 3.2](#32-wariant-docelowy-esp32s3-domyślny--sterownik-headless--moduł-sunton-po-wifi--łącze-przewodowe).
 
 > **UWAGA:** GPIO 26–37 są zajęte przez Flash i Octal PSRAM w wariancie N16R8 — **nie podłączać niczego**.
 > GPIO 46 (joystick SW) jest pinem strapping — **nie wciskać joysticka przy włączaniu zasilania**.
@@ -242,25 +246,31 @@ docelowego, komponent 2 wyżej zastępujesz przez:
                         └──────────────┘
 ```
 
-### 3.2 Wariant docelowy (`esp32s3`, domyślny) — sterownik „headless" + moduł Sunton po WiFi
+### 3.2 Wariant docelowy (`esp32s3`, domyślny) — sterownik „headless" + moduł Sunton po WiFi + łącze przewodowe
 
 Sterownik **bez żadnego ekranu podłączonego bezpośrednio** (ani ILI9341, ani DGUS). Jedyny interfejs operatora to
-moduł wyświetlacza **Sunton 7" po WiFi** (`display-module/`) — **zero przewodów danych** między sterownikiem
-a ekranem, tylko wspólne zasilanie 5 V (osobny odczep) i WiFi. Joystick jest **wyłączony domyślnie**
-(`HAS_JOYSTICK=0`) — Sunton ma dotyk, nie jest potrzebny; piny 19/20/46 zostają wolne, ale kod nadal go obsługuje,
-jeśli ktoś zechce go fizycznie dodać (`-DHAS_JOYSTICK=1`). STOP awaryjny (E-STOP) jest **zawsze włączony**
-(`HAS_ESTOP=1`) — patrz [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md) rozdz. 7.
+moduł wyświetlacza **Sunton 7"** (`display-module/`), połączony **dwoma transportami naraz**: **łącze przewodowe
+UART1** (GPIO 9/10, priorytet, patrz [LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md)) i **WiFi** (automatyczny fallback
+gdy kabel odłączony, oraz jedyne łącze dla telefonu/tabletu w panelu WWW). **Joystick fizyczny jest zachowany**
+(`HAS_JOYSTICK=1` domyślnie) — mimo dotyku na module Sunton, daje szybką nawigację menu bez sięgania do ekranu;
+pinów na to starczyło, bo GPIO 9/10 (zajęte niegdyś przez ILI9341, a w wariancie DGUS przez UART do ekranu) są
+w tym wariancie wolne od ILI9341 i wykorzystane właśnie przez łącze przewodowe zamiast przez joystick. STOP
+awaryjny (E-STOP) jest **zawsze włączony** (`HAS_ESTOP=1`) — patrz [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md) rozdz. 7.
 
 | Funkcja | Wariant przejściowy (dawny `esp32s3`, ILI9341) | **Wariant docelowy (`esp32s3`, dziś domyślny)** |
 |---------|----------------------------------|--------------------------------------------|
-| ILI9341: DC / CS / RST / BL / Touch CS | 9 / 10 / 14 / 21 / 15 | **usunięte** (9, 10, 14 wolne; 21 zajęty przez status E-STOP; 15 zajęty przez DS18B20) |
+| ILI9341: DC / CS / RST / BL / Touch CS | 9 / 10 / 14 / 21 / 15 | **usunięte** (14 wolny; 21 zajęty przez status E-STOP; 15 zajęty przez DS18B20) |
+| **Łącze przewodowe do modułu Sunton (UART1)** | — | **nowe: GPIO 9 = TX, GPIO 10 = RX** (`HAS_SERIAL_LINK=1`, patrz `src/serial_link.h`) |
 | Karta SD: MOSI / SCK / MISO / CS | 11 / 12 / 13 / 16 (wspólnie z ILI9341) | 11 / 12 / 13 / 16 (**osobny moduł SD**) |
-| Joystick VRx / VRy / SW | 19 / 20 / 46 | **wyłączony domyślnie** (19, 20, 46 wolne; opcja: `-DHAS_JOYSTICK=1`) |
+| Joystick VRx / VRy / SW | 19 / 20 / 46 | **zachowany, bez zmian** (19, 20, 46; `HAS_JOYSTICK=1` domyślnie) |
 | Status pętli STOP awaryjnego (E-STOP) | — | **nowy: GPIO 21** (INPUT_PULLUP; cięcie zasilania jest sprzętowe, patrz ARCHITEKTURA_TERMINAL.md rozdz. 7) |
 | SELEKTOR | 40 | **opcjonalny** (jeśli pominięty: 40 wolny; odwracanie P-3a/b także dotykiem na module Sunton) |
 | Czujnik temperatury DS18B20 (opcjonalny, OneWire) | 15 | 15 (**pin zawsze zajęty w firmware, niezależnie od montażu czujnika**) |
 | Pozostałe (przekaźniki, enkoder, GAP, buzzer, I2C, START/STOP, GPS) | bez zmian | bez zmian |
-| **Zajęte / wolne** | — | **23 zajęte, 6 wolnych: GPIO 9, 10, 14, 19, 20, 46** (+ GPIO 40 wolny tylko bez SELEKTORA) |
+| **Zajęte / wolne** | — | **28 zajęte, 1 wolny: GPIO 14** (+ GPIO 40 wolny tylko bez SELEKTORA, wtedy 2 wolne) |
+
+Odpowiadające piny po stronie modułu Sunton: **GPIO 17 = TX, GPIO 18 = RX** (wolne, nieużywane przez panel RGB/dotyk/SD —
+patrz [sekcja 5.2](#52-piny-wewnętrzne-płytki-sunton)).
 
 Pełny schemat tego wariantu (wszystkie połączenia): [schematy/schemat_polaczen_docelowy.svg](schematy/schemat_polaczen_docelowy.svg).
 
@@ -509,9 +519,10 @@ Progi ostrzeżeń: < 5 °C (farba za zimna), > 35 °C (za ciepła). GPIO 15 jest
 
 ### 5.1 Połączenia zewnętrzne
 
-Moduł nie ma połączeń sygnałowych ze sterownikiem. Wymaga wyłącznie **zasilania 5 V** i łączy się z siecią
-WiFi sterownika (SSID `TrassarV3`, hasło = ostatnie 4 bajty MAC sterownika, 8 znaków HEX — wyświetlane na
-ekranie startowym sterownika).
+Moduł ma **zasilanie 5 V** oraz **łącze przewodowe UART do sterownika** (priorytet — patrz
+[LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md)); dodatkowo łączy się z siecią WiFi sterownika (SSID `TrassarV3`,
+hasło = ostatnie 4 bajty MAC sterownika, 8 znaków HEX — wyświetlane na ekranie startowym sterownika) jako
+automatyczny fallback, gdy kabel jest odłączony, oraz dla telefonów/tabletów w panelu WWW.
 
 ```
    Przetwornica 5 V (maszyna)
@@ -519,15 +530,18 @@ ekranie startowym sterownika).
         ├── J1 → sterownik (5 V VBUS, GND)
         └── osobne odgałęzienie [bezpiecznik/PTC ≥ 1 A] ──► Moduł 7" (5 V, GND)
 
-   Moduł 7"  ~~~ WiFi 2,4 GHz ~~~  Sterownik (AP TrassarV3, kanał 6)
+   Sterownik GPIO 9 (TX) ──────────────────────► Moduł 7" GPIO 18 (RX)
+   Sterownik GPIO 10 (RX) ◄─────────────────────  Moduł 7" GPIO 17 (TX)
+   Moduł 7"  ~~~ WiFi 2,4 GHz (fallback) ~~~  Sterownik (AP TrassarV3, kanał 6)
 ```
 
 | Parametr | Wartość |
 |----------|---------|
 | Napięcie zasilania | 5 V DC |
 | Pobór prądu | zwykle 0,3–0,5 A zależnie od jasności (wartość szacunkowa — zmierzyć na egzemplarzu) |
-| Łączność | WiFi 802.11 b/g/n, klient sieci sterownika |
-| Limit klientów AP sterownika | 4 (moduł 7" zajmuje jednego; zostają 3 dla telefonów) |
+| Łącze przewodowe | UART 3,3 V bezpośrednio (RS-485 opcjonalnie dla długich przewodów), 230 400 baud 8N1, patrz LACZE_PRZEWODOWE.md |
+| Łączność zapasowa | WiFi 802.11 b/g/n, klient sieci sterownika |
+| Limit klientów AP sterownika | 4 (moduł 7" zajmuje jednego przy WiFi; zostają 3 dla telefonów) |
 
 ### 5.2 Piny wewnętrzne płytki Sunton ESP32-8048S070C (informacyjnie — nie używać zewnętrznie)
 
@@ -546,11 +560,11 @@ Interfejs panelu zajmuje niemal wszystkie GPIO ESP32-S3 (stąd wybór architektu
 Parametry taktowania panelu: PCLK 12 MHz; HSYNC front/pulse/back = 8/2/43; VSYNC front/pulse/back = 8/2/12.
 Zestaw ustawiony pod stabilną pracę z aktywnym WiFi i PSRAM (bez migotania).
 
-### 5.2a Wariant docelowy: pełny schemat sterownika (bez ekranu, z modułem Sunton po WiFi)
+### 5.2a Wariant docelowy: pełny schemat sterownika (bez ekranu, z modułem Sunton po kablu + WiFi)
 
 Pełny schemat wszystkich połączeń sterownika w wariancie docelowym (przekaźniki, enkoder, GPS, buzzer, I2C/RTC/
-MCP23017, karta SD, START/STOP/SELEKTOR, STOP awaryjny) — moduł Sunton **nie jest na nim narysowany jako
-okablowany**, bo nie jest: łączy się wyłącznie przez WiFi (patrz 5.1 wyżej).
+MCP23017, karta SD, joystick, START/STOP/SELEKTOR, STOP awaryjny, łącze przewodowe UART1 do modułu Sunton na
+GPIO 9/10) — łączność WiFi (fallback + telefony) patrz 5.1 wyżej.
 
 ![Schemat połączeń — wariant docelowy](schematy/schemat_polaczen_docelowy.svg)
 
@@ -762,7 +776,8 @@ Plik: [schematy/schemat_polaczen.svg](schematy/schemat_polaczen.svg) (generowany
     Przetwornica    Zawory           Enkoder na kole
       12/24→5 V   pistoletów        pomiarowym
            │
-           └──(osobne odgałęzienie 5 V)──► MODUŁ WYŚWIETLACZA 7" ~~~WiFi~~~ (do sterownika)
+           └──(osobne odgałęzienie 5 V)──► MODUŁ WYŚWIETLACZA 7" ──kabel UART (GPIO 9/10)──► sterownik
+                                                                  └──~~~WiFi (fallback)~~~──► sterownik
 ```
 
 ---
@@ -783,6 +798,7 @@ Plik: [schematy/schemat_polaczen.svg](schematy/schemat_polaczen.svg) (generowany
 | Zasilanie modułu 7" | AWG 20–22 | wg potrzeby | osobne odgałęzienie |
 | Zawory 12/24 V | AWG 16–20 | wg instalacji | Przewody zasilania mocy — osobno od sygnałowych |
 | Joystick | AWG 24–28, ekranowany | 50 cm | ADC wrażliwy na szum |
+| Łącze przewodowe do modułu 7" (UART, J6) | AWG 24, **skrętka + ekran** (para A/B); RS-485 dla dłuższych odcinków | 3–5 m bezpośrednio; do 1200 m przez RS-485 | 230 400 baud — patrz [LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md) §4 |
 
 ### 9.2 Kolory (zalecane)
 

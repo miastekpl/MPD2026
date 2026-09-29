@@ -45,10 +45,30 @@
 #ifndef HAS_ESTOP
   #define HAS_ESTOP       0    // 1 = monitorowanie statusu sprzetowego STOP-u awaryjnego (GPIO 21)
 #endif
+#ifndef HAS_SERIAL_LINK
+  #define HAS_SERIAL_LINK 1    // 1 = lacze przewodowe RS-485 z modulem Sunton (GPIO 9/10), patrz src/serial_link.h
+#endif
+#if HAS_SERIAL_LINK && HAS_DGUS_LINK
+  #error "HAS_SERIAL_LINK=1 wymaga HAS_DGUS_LINK=0 (GPIO 9/10 to piny UART1 ekranu DGUS)"
+#endif
+#if HAS_SERIAL_LINK && HAS_SMALL_TFT
+  #error "HAS_SERIAL_LINK=1 wymaga HAS_SMALL_TFT=0 (GPIO 9/10 to piny SPI wyswietlacza ILI9341)"
+#endif
 
 // ============ Lacze z ekranem DWIN DGUS (UART, bezposrednio, bez konwertera RS-485) ============
 #define PIN_DGUS_TX        9    // UART1 TX -> RX ekranu DGUS (bezposrednio, poziomy 3,3 V)
 #define PIN_DGUS_RX       10    // UART1 RX <- TX ekranu DGUS (PRZEZ DZIELNIK/LEVEL-SHIFTER! TX ekranu to 5 V)
+
+// ============ Lacze przewodowe (RS-485) z modulem wyswietlacza Sunton ============
+// Alternatywa/uzupelnienie WiFi (ktore zostaje dla telefonu i jako zapasowe dla modulu) —
+// patrz docs/LACZE_PRZEWODOWE.md. Piny fizycznie te same co DGUS (9/10) - oba lacza sa
+// wzajemnie wykluczajacymi sie wariantami budowy (#error wyzej), wiec kolizji nie ma.
+#define PIN_SERIAL_LINK_TX  9    // UART1 TX -> RX konwertera RS-485 (sterownik->modul)
+#define PIN_SERIAL_LINK_RX 10    // UART1 RX <- TX konwertera RS-485 (modul->sterownik)
+#define SERIAL_LINK_BAUD          230400
+#define SERIAL_LINK_LOSS_MS         1500   // brak ramek dluzej niz to = utrata lacza (wraca na WiFi po stronie modulu)
+#define SERIAL_LINK_STATUS_PAINT_MS  100   // odswiezanie statusu podczas malowania
+#define SERIAL_LINK_STATUS_IDLE_MS   500   // odswiezanie statusu w spoczynku
 
 // ============ STOP awaryjny (E-STOP) — status sprzetowego odciecia zasilania ============
 // Rzeczywiste ciecie pradu pistoletow/pomp NASTEPUJE SPRZETOWO: grzybek E-STOP (styk NC)

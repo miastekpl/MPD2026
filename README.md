@@ -8,7 +8,7 @@ Wszystkie nowe prace prowadzone są w tym repozytorium.
 | Element | Wersja | Katalog |
 |---------|--------|---------|
 | Firmware sterownika | 2.53.0 | `src/`, `platformio.ini` |
-| Moduł wyświetlacza 7" (wariant WiFi) | 0.1.1 | `display-module/` |
+| Moduł wyświetlacza 7" (kabel + WiFi) | 0.1.1 | `display-module/` |
 | Aplikacja Android | — | `android-app/` |
 
 ## Co robi system
@@ -33,7 +33,7 @@ flowchart LR
     OP["Operator"] --> MOD["Moduł 7 in<br/>(ekran dotykowy)"]
     OP --> PAN["Panel fizyczny sterownika<br/>przyciski, joystick, 15 wzorców"]
     OP --> WWW["Telefon / laptop<br/>panel WWW"]
-    MOD -- "WiFi: WebSocket :81 + HTTP :80" --> STER
+    MOD -- "kabel UART (priorytet) + WiFi (fallback)" --> STER
     WWW -- "WiFi" --> STER
     PAN --> STER["Sterownik Trassar<br/>ESP32-S3 N16R8"]
     STER --> REL["Przekaźniki x6"] --> ZAW["Zawory pistoletów P1-P6"]
@@ -45,16 +45,19 @@ flowchart LR
 Sterownik działa **samodzielnie**; moduł 7" jest panelem operatora i nie steruje pistoletami bezpośrednio.
 **Fizyczny STOP na sterowniku jest głównym zabezpieczeniem.**
 
-## Docelowa architektura (decyzja: sterownik "headless" + moduł Sunton po WiFi)
+## Docelowa architektura (decyzja: sterownik "headless" + moduł Sunton po kablu + WiFi)
 
 Sterownik **nie ma żadnego ekranu podłączonego bezpośrednio** — cała logika, stan i dane są w nim (master), a
 interfejs operatora to **moduł wyświetlacza 7" Sunton ESP32-8048S070C** (`display-module/`, LVGL), połączony
-przez WiFi (WebSocket :81 + HTTP :80). **Cały interfejs to kod C++, który można dowolnie zmieniać bez żadnego
-zewnętrznego narzędzia GUI.** Mały ekran ILI9341 i joystick są wyłączone (Sunton ma pełne menu i dotyk); status
-STOP-u awaryjnego (E-STOP, sprzętowe cięcie zasilania) jest włączony. Sterownik ma 23 zajęte i 6 wolnych pinów.
+**dwoma transportami naraz**: **łączem przewodowym UART** (priorytet, GPIO 9/10 ↔ GPIO 17/18 — patrz
+[docs/LACZE_PRZEWODOWE.md](docs/LACZE_PRZEWODOWE.md)) i **WiFi** (automatyczny fallback, WebSocket :81 + HTTP
+:80, oraz jedyne łącze dla telefonu/tabletu w panelu WWW). **Cały interfejs to kod C++, który można dowolnie
+zmieniać bez żadnego zewnętrznego narzędzia GUI.** Mały ekran ILI9341 jest wyłączony (Sunton ma pełne menu
+i dotyk); **joystick fizyczny jest zachowany** dla szybkiej nawigacji menu; status STOP-u awaryjnego (E-STOP,
+sprzętowe cięcie zasilania) jest włączony. Sterownik ma 28 zajętych i 1 wolny pin (GPIO 14).
 
 ```bash
-# wariant DOCELOWY: sterownik headless + moduł Sunton po WiFi
+# wariant DOCELOWY: sterownik headless + moduł Sunton po kablu (priorytet) + WiFi (fallback)
 pio run -e esp32s3 -t upload
 cd display-module && pio run -t upload
 ```
@@ -133,9 +136,10 @@ MPD2026/
 ## Sprzęt
 
 - **Sterownik:** ESP32-S3 N16R8 DevKitC-1, headless (bez ekranu bezpośrednio podłączonego) + SD (osobny moduł SPI),
-  DS1307, MCP23017 (przyciski wzorców: 15 klasycznych albo 10 + GRUPA), 3 przyciski + GAP, status STOP-u
-  awaryjnego (E-STOP), enkoder, GPS GY-NEO6MV2, moduł 6 przekaźników, buzzer, opcjonalnie DS18B20.
-- **Moduł 7" (docelowy, WiFi):** Sunton ESP32-8048S070C (7" IPS 800×480, dotyk GT911, 8 MB PSRAM) — jedyny ekran systemu.
+  DS1307, MCP23017 (przyciski wzorców: 15 klasycznych albo 10 + GRUPA), 3 przyciski + GAP, joystick KY-023,
+  status STOP-u awaryjnego (E-STOP), enkoder, GPS GY-NEO6MV2, moduł 6 przekaźników, buzzer, opcjonalnie DS18B20,
+  łącze przewodowe UART do modułu 7" (GPIO 9/10).
+- **Moduł 7" (docelowy, kabel + WiFi):** Sunton ESP32-8048S070C (7" IPS 800×480, dotyk GT911, 8 MB PSRAM) — jedyny ekran systemu.
 - **Ekran DGUS (alternatywa, wymaga DGUS Designer):** np. DWIN `DMG10600T070_09WTC` (7" IPS 1024×600, dotyk pojemnościowy, 650 cd/m²) — własna elektronika, bez ESP32, podłączony bezpośrednio przewodem UART zamiast modułu Sunton.
 - **Złącza maszynowe:** J1 zasilanie, J2 zawory, J3 enkoder, J4 pilot, J5 przycisk nożny.
 

@@ -5,6 +5,9 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WebSocketsClient.h>
+#include <HardwareSerial.h>
+#include <ArduinoJson.h>
+#include "serial_link_protocol.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <freertos/semphr.h>
@@ -15,6 +18,29 @@ struct Cmd { char body[192]; };
 
 SemaphoreHandle_t g_mtx = nullptr;
 QueueHandle_t     g_cmdQ = nullptr;
+
+// ---------- Lacze przewodowe (RS-485), patrz docs/LACZE_PRZEWODOWE.md ----------
+HardwareSerial       CableSerial(1);
+seriallink::Parser   g_cableParser;
+uint32_t             g_cableRxMs = 0;
+uint32_t             g_cableHbMs = 0;
+uint32_t             g_cableSeq = 0;
+
+// Korelacja odpowiedzi na polecenie wyslane kablem (przez numer sekwencji)
+volatile uint32_t    g_cableRespSeq = 0;
+volatile bool        g_cableRespPending = false;
+bool                 g_cableRespOk = false;
+char                 g_cableRespMsg[64] = "";
+
+bool cableLinkUp(uint32_t now) {
+    return g_cableRxMs != 0 && (now - g_cableRxMs) < CABLE_STALE_MS;
+}
+
+void cableSendRaw(const char* payload, size_t len) {
+    char frame[seriallink::MAX_PAYLOAD + 16];
+    size_t n = seriallink::encodeFrame(payload, len, frame, sizeof(frame));
+    if (n > 0) CableSerial.write((const uint8_t*)frame, n);
+}
 
 Status            g_status;
 uint32_t          g_rxMs = 0;
@@ -52,6 +78,104 @@ void setResult(bool ok, const char* msg) {
     strlcpy(g_resultMsg, msg ? msg : "", sizeof(g_resultMsg));
     g_resultSeq = g_resultSeq + 1;
     unlock();
+}
+
+void cableHandleFrame(const char* payload, size_t len) {
+    // Odpowiedz na polecenie: {"r":"...","seq":N}. Status sterownika (GET /api/status,
+    // dokladnie ten sam parser co dla WiFi): wszystko inne (w tym heartbeat {"hb":1}).
+    bool looksLikeResponse = (strstr(payload, "\"r\":") != nullptr) && (strstr(payload, "\"seq\":") != nullptr);
+    if (looksLikeResponse) {
+        JsonDocument doc;
+        if (deserializeJson(doc, payload, len) == DeserializationError::Ok) {
+            uint32_t seq = doc["seq"] | 0;
+            const char* msg = doc["r"] | "";
+            if (g_cableRespPending && seq == g_cableRespSeq) {
+                g_cableRespOk = (strcmp(msg, "ok") == 0);
+                strlcpy(g_cableRespMsg, msg, sizeof(g_cableRespMsg));
+                g_cableRespPending = false;
+            }
+        }
+        return;
+    }
+    Status tmp;
+    if (parseStatus(payload, len, tmp)) storeStatus(tmp);
+}
+
+void cablePoll(uint32_t now) {
+    while (CableSerial.available()) {
+        uint8_t b = (uint8_t)CableSerial.read();
+        if (g_cableParser.feed(b)) {
+            g_cableRxMs = now;
+            cableHandleFrame(g_cableParser.payload(), g_cableParser.payloadLen());
+        }
+    }
+    if (now - g_cableHbMs >= CABLE_HEARTBEAT_MS) {
+        g_cableHbMs = now;
+        static const char HB[] = "{\"hb\":1}";
+        cableSendRaw(HB, sizeof(HB) - 1);
+    }
+}
+
+// Rozbiera "action=xxx&value=yyy" (format uzywany juz dziś przez linkSend()/httpPost)
+// na para akcja+opcjonalna wartosc calkowita.
+bool parseFormBody(const char* body, String& action, bool& hasValue, int& value) {
+    String s(body);
+    int ai = s.indexOf("action=");
+    if (ai < 0) return false;
+    ai += 7;
+    int amp = s.indexOf('&', ai);
+    action = (amp < 0) ? s.substring(ai) : s.substring(ai, amp);
+    hasValue = false;
+    value = 0;
+    int vi = s.indexOf("value=");
+    if (vi >= 0) {
+        vi += 6;
+        int amp2 = s.indexOf('&', vi);
+        String vs = (amp2 < 0) ? s.substring(vi) : s.substring(vi, amp2);
+        value = vs.toInt();
+        hasValue = true;
+    }
+    return true;
+}
+
+// Wysyla polecenie kablem i czeka (nieblokujaco dla reszty systemu - tylko ten task)
+// na odpowiedz po numerze sekwencji. STOP ponawiany agresywniej, jak w httpPost/processCommand.
+void cableSendCommand(const Cmd& c) {
+    String action;
+    bool hasValue;
+    int value;
+    if (!parseFormBody(c.body, action, hasValue, value)) {
+        setResult(false, "zly format polecenia");
+        return;
+    }
+    bool isStop = (action == "stop");
+    int attempts = isStop ? 3 : 1;
+    for (int a = 0; a < attempts; a++) {
+        uint32_t seq = ++g_cableSeq;
+        JsonDocument doc;
+        doc["a"] = action;
+        if (hasValue) doc["v"] = value;
+        doc["seq"] = seq;
+        String json;
+        serializeJson(doc, json);
+
+        g_cableRespPending = true;
+        g_cableRespSeq = seq;
+        cableSendRaw(json.c_str(), json.length());
+
+        uint32_t waitStart = millis();
+        while (millis() - waitStart < 300) {
+            cablePoll(millis());
+            if (!g_cableRespPending) break;
+            vTaskDelay(pdMS_TO_TICKS(5));
+        }
+        if (!g_cableRespPending) {
+            setResult(g_cableRespOk, g_cableRespMsg);
+            return;
+        }
+        g_cableRespPending = false;
+    }
+    setResult(false, isStop ? "STOP NIE DOTARL (kabel) - uzyj fizycznego STOP" : "brak odpowiedzi (kabel)");
 }
 
 void onWsEvent(WStype_t type, uint8_t* payload, size_t length) {
@@ -141,11 +265,18 @@ void processCommand(const Cmd& c) {
 void drainCommands() {
     Cmd c;
     while (xQueueReceive(g_cmdQ, &c, 0) == pdTRUE) {
-        processCommand(c);
+        if (cableLinkUp(millis())) {
+            cableSendCommand(c);
+        } else {
+            processCommand(c);
+        }
     }
 }
 
 void netTask(void*) {
+    CableSerial.begin(CABLE_BAUD, SERIAL_8N1, CABLE_RX_PIN, CABLE_TX_PIN);
+    g_cableParser.reset();
+
     WiFi.persistent(false);
     WiFi.mode(WIFI_STA);
     WiFi.setSleep(false);
@@ -157,6 +288,8 @@ void netTask(void*) {
     bool     wsStarted = false;
 
     for (;;) {
+        cablePoll(millis());
+
         bool haveCreds = g_settings.wifiPass[0] != 0;
 
         if (g_reconnect) {
@@ -253,6 +386,13 @@ void linkSetPassword(const char* pass) {
 }
 
 LinkState linkState() {
+    if (cableLinkUp(millis())) {
+        lock();
+        bool have = g_haveStatus;
+        uint32_t age = millis() - g_rxMs;
+        unlock();
+        return (have && age < LINK_STALE_MS) ? LS_ONLINE : LS_NO_DATA;
+    }
     if (g_settings.wifiPass[0] == 0) return LS_NO_PASSWORD;
     if (WiFi.status() != WL_CONNECTED) return LS_WIFI_CONNECTING;
     lock();
@@ -261,6 +401,8 @@ LinkState linkState() {
     unlock();
     return (have && age < LINK_STALE_MS) ? LS_ONLINE : LS_NO_DATA;
 }
+
+bool linkIsCable() { return cableLinkUp(millis()); }
 
 int linkRssi() {
     return WiFi.status() == WL_CONNECTED ? WiFi.RSSI() : -127;

@@ -1,8 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1750" viewBox="0 0 2100 1750">
-<rect x="0" y="0" width="2100" height="1750" fill="#ffffff"/>
-<text x="40" y="46" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="28" fill="#0b1f4a" text-anchor="start" font-weight="bold" >MPD2026 — schemat połączeń, wariant DOCELOWY (sterownik headless + moduł Sunton po WiFi)</text>
-<text x="40" y="74" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#444" text-anchor="start" font-weight="normal" >Sterownik Trassar (ESP32-S3 N16R8, firmware 2.53.0, środowisko esp32s3_terminal) + moduł wyświetlacza Sunton 7" (ESP32-8048S070C) jako JEDYNY interfejs operatora — połączony WYŁĄCZNIE przez WiFi (bez żadnych przewodów danych). Numery = GPIO ESP32-S3 (src/config.h).</text>
-<text x="40" y="94" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#b71c1c" text-anchor="start" font-weight="bold" >Kod skompilowany i sprawdzony; POŁĄCZENIA nie były jeszcze zweryfikowane na fizycznym sprzęcie — sprawdź to na prototypie.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1830" viewBox="0 0 2100 1830">
+<rect x="0" y="0" width="2100" height="1830" fill="#ffffff"/>
+<text x="40" y="46" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="28" fill="#0b1f4a" text-anchor="start" font-weight="bold" >MPD2026 — schemat połączeń, wariant DOCELOWY (sterownik headless + moduł Sunton, kabel + WiFi)</text>
+<text x="40" y="74" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#444" text-anchor="start" font-weight="normal" >Sterownik Trassar (ESP32-S3 N16R8, firmware 2.53.0, środowisko esp32s3) + moduł wyświetlacza Sunton 7" (ESP32-8048S070C) jako JEDYNY interfejs operatora — połączony łączem przewodowym UART (priorytet, GPIO 9/10 &lt;-&gt; GPIO 17/18) i WiFi (fallback + telefony).</text>
+<text x="40" y="92" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#444" text-anchor="start" font-weight="normal" >Numery = GPIO ESP32-S3 (src/config.h). Joystick KY-023 zachowany na swoich pinach (GPIO 19/20/46).</text>
+<text x="40" y="112" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#b71c1c" text-anchor="start" font-weight="bold" >Kod skompilowany i sprawdzony (esp32s3, esp32s3_terminal, sunton7, sunton7_portrait); POŁĄCZENIA nie były jeszcze zweryfikowane na fizycznym sprzęcie — sprawdź to na prototypie.</text>
 <rect x="40" y="116" width="200" height="60" rx="6" fill="#fff3cd" stroke="#b8860b" stroke-width="2" />
 <text x="140" y="142" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="middle" font-weight="bold" >Akumulator / instalacja</text>
 <text x="140" y="162" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="middle" font-weight="normal" >maszyny 12 V / 24 V DC</text>
@@ -25,73 +26,105 @@
 <line x1="1030.0" y1="146" x2="1030.0" y2="200" stroke="#c1121f" stroke-width="3"/>
 <text x="1038.0" y="180" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#c1121f" text-anchor="start" font-weight="normal" >5 V (VBUS)</text>
 <text x="1030.0" y="862" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="middle" font-weight="normal" >3V3: SD, GPS, MCP23017, enkoder    GND: masa wspólna</text>
-<rect x="120" y="220" width="420" height="124" rx="8" fill="#e1f5fe" stroke="#01579b" stroke-width="2" />
+<rect x="120" y="220" width="420" height="174" rx="8" fill="#e1f5fe" stroke="#01579b" stroke-width="2" />
 <text x="330.0" y="242" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="middle" font-weight="bold" >Moduł wyświetlacza Sunton 7" (ESP32-8048S070C)</text>
 <text x="330.0" y="260" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#01579b" text-anchor="middle" font-weight="bold" >JEDYNY interfejs operatora — display-module/</text>
-<text x="330.0" y="278" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#444" text-anchor="middle" font-weight="normal" >BEZ przewodów danych do sterownika — tylko WiFi</text>
-<text x="330.0" y="296" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#444" text-anchor="middle" font-weight="normal" >Zasilanie: osobne 5 V (USB-C), min. 2 A, wspólna masa</text>
-<text x="330.0" y="314" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#444" text-anchor="middle" font-weight="normal" >z instalacją maszyny (patrz uwaga o wspólnym GND niżej)</text>
-<line x1="330.0" y1="344" x2="330.0" y2="368" stroke="#01579b" stroke-width="2" stroke-dasharray="6 4"/>
-<line x1="330.0" y1="368" x2="794" y2="368" stroke="#01579b" stroke-width="2" stroke-dasharray="6 4"/>
-<circle cx="794" cy="368" r="4" fill="#01579b" stroke="none" stroke-width="1"/>
-<text x="340.0" y="362" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#01579b" text-anchor="start" font-weight="normal" >WiFi: WebSocket :81 (status) + HTTP :80 (POST /api/control)</text>
-<rect x="120" y="388" width="420" height="162" rx="8" fill="#e3f2fd" stroke="#0d47a1" stroke-width="2" />
-<text x="330.0" y="410" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >Moduł microSD (osobny, SPI)</text>
-<text x="330.0" y="428" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal" >raporty, GPX, kopia ustawień</text>
-<text x="530" y="443" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >MOSI</text>
-<line x1="540" y1="438" x2="800" y2="438" stroke="#0d47a1" stroke-width="1.8"/>
-<line x1="794" y1="438" x2="800" y2="438" stroke="#0b1f4a" stroke-width="2"/>
-<circle cx="800" cy="438" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
-<text x="812" y="443" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 11</text>
-<text x="888" y="443" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >SPI MOSI</text>
-<text x="530" y="471" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >SCK</text>
-<line x1="540" y1="466" x2="800" y2="466" stroke="#0d47a1" stroke-width="1.8"/>
-<line x1="794" y1="466" x2="800" y2="466" stroke="#0b1f4a" stroke-width="2"/>
-<circle cx="800" cy="466" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
-<text x="812" y="471" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 12</text>
-<text x="888" y="471" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >SPI SCK</text>
-<text x="530" y="499" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >MISO</text>
-<line x1="540" y1="494" x2="800" y2="494" stroke="#0d47a1" stroke-width="1.8"/>
-<line x1="794" y1="494" x2="800" y2="494" stroke="#0b1f4a" stroke-width="2"/>
-<circle cx="800" cy="494" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
-<text x="812" y="499" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 13</text>
-<text x="888" y="499" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >SPI MISO</text>
-<text x="530" y="527" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >CS</text>
-<line x1="540" y1="522" x2="800" y2="522" stroke="#0d47a1" stroke-width="1.8"/>
-<line x1="794" y1="522" x2="800" y2="522" stroke="#0b1f4a" stroke-width="2"/>
-<circle cx="800" cy="522" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
-<text x="812" y="527" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 16</text>
-<text x="888" y="527" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >SD CS</text>
-<rect x="120" y="564" width="420" height="134" rx="8" fill="#e3f2fd" stroke="#0d47a1" stroke-width="2" />
-<text x="330.0" y="586" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >Magistrala I2C</text>
-<text x="330.0" y="604" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal" >DS1307 (0x68, 5 V) + MCP23017 (0x20, 3V3)</text>
-<text x="530" y="619" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >SDA</text>
-<line x1="540" y1="614" x2="800" y2="614" stroke="#0d47a1" stroke-width="1.8"/>
-<line x1="794" y1="614" x2="800" y2="614" stroke="#0b1f4a" stroke-width="2"/>
-<circle cx="800" cy="614" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
-<text x="812" y="619" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 17</text>
-<text x="888" y="619" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >I2C SDA</text>
-<text x="530" y="647" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >SCL</text>
-<line x1="540" y1="642" x2="800" y2="642" stroke="#0d47a1" stroke-width="1.8"/>
-<line x1="794" y1="642" x2="800" y2="642" stroke="#0b1f4a" stroke-width="2"/>
-<circle cx="800" cy="642" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
-<text x="812" y="647" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 18</text>
-<text x="888" y="647" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >I2C SCL</text>
-<rect x="120" y="694" width="420" height="106" rx="8" fill="#fff8e1" stroke="#e65100" stroke-width="2" />
-<text x="330.0" y="716" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >GPS GY-NEO6MV2 (NEO-6M)</text>
-<text x="330.0" y="734" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal" >UART2 9600 baud, zasilanie 3V3</text>
-<text x="530" y="749" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >TX</text>
-<line x1="540" y1="744" x2="800" y2="744" stroke="#e65100" stroke-width="1.8"/>
-<line x1="794" y1="744" x2="800" y2="744" stroke="#0b1f4a" stroke-width="2"/>
-<circle cx="800" cy="744" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
-<text x="812" y="749" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 47</text>
-<text x="888" y="749" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >RX &lt;- GPS TX</text>
-<text x="530" y="777" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >RX</text>
-<line x1="540" y1="772" x2="800" y2="772" stroke="#e65100" stroke-width="1.8"/>
-<line x1="794" y1="772" x2="800" y2="772" stroke="#0b1f4a" stroke-width="2"/>
-<circle cx="800" cy="772" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
-<text x="812" y="777" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 48</text>
-<text x="888" y="777" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >TX -&gt; GPS RX</text>
+<text x="330.0" y="278" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#444" text-anchor="middle" font-weight="normal" >Zasilanie: osobne 5 V (USB-C), min. 2 A, wspólna masa</text>
+<text x="330.0" y="296" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#444" text-anchor="middle" font-weight="normal" >z instalacją maszyny (patrz uwaga o wspólnym GND niżej)</text>
+<text x="530" y="325" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >RX (GPIO 18)</text>
+<text x="530" y="353" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >TX (GPIO 17)</text>
+<line x1="540" y1="320" x2="800" y2="320" stroke="#2e7d32" stroke-width="1.8"/>
+<line x1="540" y1="348" x2="800" y2="348" stroke="#2e7d32" stroke-width="1.8"/>
+<line x1="794" y1="320" x2="800" y2="320" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="320" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="325" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 9</text>
+<text x="888" y="325" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >UART1 TX -&gt; Sunton RX (kabel)</text>
+<line x1="794" y1="348" x2="800" y2="348" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="348" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="353" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 10</text>
+<text x="888" y="353" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >UART1 RX &lt;- Sunton TX (kabel)</text>
+<line x1="330.0" y1="394" x2="330.0" y2="418" stroke="#01579b" stroke-width="2" stroke-dasharray="6 4"/>
+<line x1="330.0" y1="418" x2="794" y2="418" stroke="#01579b" stroke-width="2" stroke-dasharray="6 4"/>
+<circle cx="794" cy="418" r="4" fill="#01579b" stroke="none" stroke-width="1"/>
+<text x="340.0" y="412" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="11" fill="#01579b" text-anchor="start" font-weight="normal" >WiFi (fallback): WebSocket :81 + HTTP :80 — gdy kabel odłączony, i telefony</text>
+<rect x="120" y="438" width="420" height="134" rx="8" fill="#f1f8e9" stroke="#33691e" stroke-width="2" />
+<text x="330.0" y="460" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >Joystick KY-023 (2-osiowy + przycisk)</text>
+<text x="330.0" y="478" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal" >zachowany mimo dotyku na Sunton — szybka nawigacja menu</text>
+<text x="530" y="493" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >VRx</text>
+<line x1="540" y1="488" x2="800" y2="488" stroke="#33691e" stroke-width="1.8"/>
+<line x1="794" y1="488" x2="800" y2="488" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="488" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="493" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 19</text>
+<text x="888" y="493" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >os pozioma (ADC2)</text>
+<text x="530" y="521" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >VRy</text>
+<line x1="540" y1="516" x2="800" y2="516" stroke="#33691e" stroke-width="1.8"/>
+<line x1="794" y1="516" x2="800" y2="516" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="516" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="521" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 20</text>
+<text x="888" y="521" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >os pionowa (ADC2)</text>
+<text x="530" y="549" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >SW</text>
+<line x1="540" y1="544" x2="800" y2="544" stroke="#33691e" stroke-width="1.8"/>
+<line x1="794" y1="544" x2="800" y2="544" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="544" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="549" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 46</text>
+<text x="888" y="549" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >przycisk (STRAP PIN!)</text>
+<rect x="120" y="586" width="420" height="162" rx="8" fill="#e3f2fd" stroke="#0d47a1" stroke-width="2" />
+<text x="330.0" y="608" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >Moduł microSD (osobny, SPI)</text>
+<text x="330.0" y="626" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal" >raporty, GPX, kopia ustawień</text>
+<text x="530" y="641" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >MOSI</text>
+<line x1="540" y1="636" x2="800" y2="636" stroke="#0d47a1" stroke-width="1.8"/>
+<line x1="794" y1="636" x2="800" y2="636" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="636" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="641" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 11</text>
+<text x="888" y="641" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >SPI MOSI</text>
+<text x="530" y="669" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >SCK</text>
+<line x1="540" y1="664" x2="800" y2="664" stroke="#0d47a1" stroke-width="1.8"/>
+<line x1="794" y1="664" x2="800" y2="664" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="664" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="669" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 12</text>
+<text x="888" y="669" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >SPI SCK</text>
+<text x="530" y="697" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >MISO</text>
+<line x1="540" y1="692" x2="800" y2="692" stroke="#0d47a1" stroke-width="1.8"/>
+<line x1="794" y1="692" x2="800" y2="692" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="692" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="697" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 13</text>
+<text x="888" y="697" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >SPI MISO</text>
+<text x="530" y="725" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >CS</text>
+<line x1="540" y1="720" x2="800" y2="720" stroke="#0d47a1" stroke-width="1.8"/>
+<line x1="794" y1="720" x2="800" y2="720" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="720" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="725" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 16</text>
+<text x="888" y="725" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >SD CS</text>
+<rect x="120" y="762" width="420" height="134" rx="8" fill="#e3f2fd" stroke="#0d47a1" stroke-width="2" />
+<text x="330.0" y="784" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >Magistrala I2C</text>
+<text x="330.0" y="802" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal" >DS1307 (0x68, 5 V) + MCP23017 (0x20, 3V3)</text>
+<text x="530" y="817" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >SDA</text>
+<line x1="540" y1="812" x2="800" y2="812" stroke="#0d47a1" stroke-width="1.8"/>
+<line x1="794" y1="812" x2="800" y2="812" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="812" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="817" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 17</text>
+<text x="888" y="817" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >I2C SDA</text>
+<text x="530" y="845" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >SCL</text>
+<line x1="540" y1="840" x2="800" y2="840" stroke="#0d47a1" stroke-width="1.8"/>
+<line x1="794" y1="840" x2="800" y2="840" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="840" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="845" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 18</text>
+<text x="888" y="845" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >I2C SCL</text>
+<rect x="120" y="892" width="420" height="106" rx="8" fill="#fff8e1" stroke="#e65100" stroke-width="2" />
+<text x="330.0" y="914" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >GPS GY-NEO6MV2 (NEO-6M)</text>
+<text x="330.0" y="932" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal" >UART2 9600 baud, zasilanie 3V3</text>
+<text x="530" y="947" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >TX</text>
+<line x1="540" y1="942" x2="800" y2="942" stroke="#e65100" stroke-width="1.8"/>
+<line x1="794" y1="942" x2="800" y2="942" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="942" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="947" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 47</text>
+<text x="888" y="947" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >RX &lt;- GPS TX</text>
+<text x="530" y="975" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="end" font-weight="bold" >RX</text>
+<line x1="540" y1="970" x2="800" y2="970" stroke="#e65100" stroke-width="1.8"/>
+<line x1="794" y1="970" x2="800" y2="970" stroke="#0b1f4a" stroke-width="2"/>
+<circle cx="800" cy="970" r="4" fill="#0b1f4a" stroke="none" stroke-width="1"/>
+<text x="812" y="975" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="13" fill="#0b1f4a" text-anchor="start" font-weight="bold" >GPIO 48</text>
+<text x="888" y="975" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >TX -&gt; GPS RX</text>
 <rect x="1400" y="220" width="300" height="308" rx="8" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2" />
 <text x="1550.0" y="242" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="15" fill="#111" text-anchor="middle" font-weight="bold" >Moduł przekaźników 6 kanałów</text>
 <text x="1550.0" y="260" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal" >5 V, opto-izolacja, wejścia HIGH = ON</text>
@@ -290,20 +323,24 @@
 <text x="120" y="1532" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >Legenda:</text>
 <line x1="200" y1="1527" x2="240" y2="1527" stroke="#c1121f" stroke-width="3"/>
 <text x="246" y="1532" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >zasilanie 5 V</text>
-<line x1="520" y1="1527" x2="560" y2="1527" stroke="#01579b" stroke-width="3"/>
-<text x="566" y="1532" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >WiFi (bez przewodu)</text>
-<line x1="840" y1="1527" x2="880" y2="1527" stroke="#0d47a1" stroke-width="3"/>
-<text x="886" y="1532" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >SPI / I2C</text>
-<line x1="200" y1="1549" x2="240" y2="1549" stroke="#e65100" stroke-width="3"/>
-<text x="246" y="1554" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >UART GPS / wyjścia mocy do zaworów</text>
-<line x1="520" y1="1549" x2="560" y2="1549" stroke="#1b5e20" stroke-width="3"/>
-<text x="566" y="1554" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >sygnały do przekaźników</text>
-<line x1="840" y1="1549" x2="880" y2="1549" stroke="#4527a0" stroke-width="3"/>
-<text x="886" y="1554" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >DS18B20 (OneWire)</text>
-<line x1="200" y1="1571" x2="240" y2="1571" stroke="#b71c1c" stroke-width="3"/>
-<text x="246" y="1576" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >status E-STOP</text>
-<text x="120" y="1606" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#b71c1c" text-anchor="start" font-weight="normal" >GPIO 26-37 zajęte (Flash + Octal PSRAM). GPIO 15 zajęte przez czujnik temperatury DS18B20 (nawet jeśli niezamontowany — pin zarezerwowany w firmware).</text>
-<text x="120" y="1626" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#1b5e20" text-anchor="start" font-weight="bold" >Bez ekranu bezpośredniego i joysticka (domyślnie wyłączony) WOLNE pozostają: GPIO 9, 10, 14, 19, 20, 46 (+ 40, jeśli pominiesz SELEKTOR) — 23 zajęte / 6 wolnych.</text>
-<text x="120" y="1650" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >Joystick KY-023 (opcja, GPIO 19/20/46) można podłączyć jak w wariancie z ekranem DGUS — ustaw HAS_JOYSTICK=1 w platformio.ini. Zajmie 3 z 6 wolnych pinów.</text>
-<text x="120" y="1674" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >Złącza maszynowe: J1 zasilanie 5 V, J2 zawory P1-P6, J3 enkoder, J4 pilot, J5 pedał.</text>
+<line x1="520" y1="1527" x2="560" y2="1527" stroke="#2e7d32" stroke-width="3"/>
+<text x="566" y="1532" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >kabel UART do modułu Sunton (priorytet)</text>
+<line x1="840" y1="1527" x2="880" y2="1527" stroke="#01579b" stroke-width="3"/>
+<text x="886" y="1532" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >WiFi (fallback)</text>
+<line x1="200" y1="1549" x2="240" y2="1549" stroke="#0d47a1" stroke-width="3"/>
+<text x="246" y="1554" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >SPI / I2C</text>
+<line x1="520" y1="1549" x2="560" y2="1549" stroke="#e65100" stroke-width="3"/>
+<text x="566" y="1554" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >UART GPS / wyjścia mocy do zaworów</text>
+<line x1="840" y1="1549" x2="880" y2="1549" stroke="#1b5e20" stroke-width="3"/>
+<text x="886" y="1554" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >sygnały do przekaźników</text>
+<line x1="200" y1="1571" x2="240" y2="1571" stroke="#33691e" stroke-width="3"/>
+<text x="246" y="1576" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >joystick KY-023</text>
+<line x1="520" y1="1571" x2="560" y2="1571" stroke="#4527a0" stroke-width="3"/>
+<text x="566" y="1576" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >DS18B20 (OneWire)</text>
+<line x1="840" y1="1571" x2="880" y2="1571" stroke="#b71c1c" stroke-width="3"/>
+<text x="886" y="1576" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >status E-STOP</text>
+<text x="120" y="1628" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#b71c1c" text-anchor="start" font-weight="normal" >GPIO 26-37 zajęte (Flash + Octal PSRAM). GPIO 15 zajęte przez czujnik temperatury DS18B20 (nawet jeśli niezamontowany — pin zarezerwowany w firmware).</text>
+<text x="120" y="1648" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#1b5e20" text-anchor="start" font-weight="bold" >Joystick zachowany i łącze przewodowe kablem UART zaimplementowane jednocześnie: 28 zajęte / 1 wolny (GPIO 14; + GPIO 40, jeśli pominiesz SELEKTOR).</text>
+<text x="120" y="1672" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >GPIO 9/10 wolne od ILI9341 w tym wariancie i wykorzystane przez łącze przewodowe (HAS_SERIAL_LINK=1) zamiast pozostawać wolne — patrz docs/LACZE_PRZEWODOWE.md.</text>
+<text x="120" y="1696" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#333" text-anchor="start" font-weight="normal" >Złącza maszynowe: J1 zasilanie 5 V, J2 zawory P1-P6, J3 enkoder, J4 pilot, J5 pedał, J6 (opcjonalny, dla łącza kablem/RS-485 gdy moduł montowany osobno).</text>
 </svg>

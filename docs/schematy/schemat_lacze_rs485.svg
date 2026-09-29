@@ -1,23 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2000" height="860" viewBox="0 0 2000 860">
 <rect x="0" y="0" width="2000" height="860" fill="#ffffff"/>
-<text x="40" y="46" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="28" fill="#0b1f4a" text-anchor="start" font-weight="bold" >Łącze przewodowe sterownik &lt;-&gt; moduł 7" (RS-485) — PROPOZYCJA</text>
-<text x="40" y="72" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#444" text-anchor="start" font-weight="normal" >Zamiast WiFi: UART 3,3 V przez konwerter RS-485 z automatycznym kierunkiem (bez pinu DE). Zasilanie modułu 7" tym samym kablem.</text>
+<text x="40" y="46" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="28" fill="#0b1f4a" text-anchor="start" font-weight="bold" >Łącze przewodowe sterownik &lt;-&gt; moduł 7" — opcja RS-485 dla długich kabli</text>
+<text x="40" y="72" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#444" text-anchor="start" font-weight="normal" >ZAIMPLEMENTOWANE (UART 3,3 V bezpośrednio, bez konwerterów — montaż w jednej obudowie). Ten diagram pokazuje wariant z konwerterami RS-485, gdy moduł montowany daleko od sterownika. Zasilanie modułu 7" tym samym kablem.</text>
 <rect x="60" y="140" width="380" height="520" rx="12" fill="#e8f0fe" stroke="#0b1f4a" stroke-width="3" />
 <text x="250" y="172" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="17" fill="#0b1f4a" text-anchor="middle" font-weight="bold" >Sterownik Trassar (ESP32-S3 N16R8)</text>
 <circle cx="440" cy="245" r="5" fill="#0b1f4a" stroke="none" stroke-width="1"/>
-<text x="80" y="250" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >GPIO 20  UART1 TX</text>
+<text x="80" y="250" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >GPIO 9  UART1 TX</text>
 <circle cx="440" cy="285" r="5" fill="#0b1f4a" stroke="none" stroke-width="1"/>
-<text x="80" y="290" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >GPIO 19  UART1 RX</text>
+<text x="80" y="290" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >GPIO 10  UART1 RX</text>
 <circle cx="440" cy="325" r="5" fill="#0b1f4a" stroke="none" stroke-width="1"/>
 <text x="80" y="330" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >3V3</text>
 <circle cx="440" cy="365" r="5" fill="#0b1f4a" stroke="none" stroke-width="1"/>
 <text x="80" y="370" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#111" text-anchor="start" font-weight="bold" >GND</text>
 <circle cx="440" cy="405" r="5" fill="#0b1f4a" stroke="none" stroke-width="1"/>
 <text x="80" y="410" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#c1121f" text-anchor="start" font-weight="bold" >+5 V (odgałęzienie, PTC)</text>
-<text x="80" y="470" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#b71c1c" text-anchor="start" font-weight="normal" >GPIO 19 i 20 są dziś używane przez joystick KY-023 —</text>
-<text x="80" y="488" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#b71c1c" text-anchor="start" font-weight="normal" >w wariancie przewodowym joystick jest pomijany</text>
-<text x="80" y="506" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#b71c1c" text-anchor="start" font-weight="normal" >(ekran dotykowy go zastępuje).</text>
-<text x="80" y="540" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >GPIO 15 zostaje wolny (T_CS / DS18B20).</text>
+<text x="80" y="470" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#1b5e20" text-anchor="start" font-weight="normal" >Joystick KY-023 zachowany na swoich pinach</text>
+<text x="80" y="488" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#1b5e20" text-anchor="start" font-weight="normal" >(GPIO 19/20/46) — nie koliduje z łączem</text>
+<text x="80" y="506" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#1b5e20" text-anchor="start" font-weight="normal" >przewodowym (GPIO 9/10).</text>
+<text x="80" y="540" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >GPIO 14 zostaje wolny.</text>
 <text x="80" y="574" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >Protokół: wiersze JSON, 230400 baud, 8N1,</text>
 <text x="80" y="592" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#555" text-anchor="start" font-weight="normal" >status co 100-200 ms, polecenia z sumą CRC.</text>
 <rect x="560" y="210" width="270" height="230" rx="10" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2.5" />
@@ -115,6 +115,6 @@
 <line x1="1520" y1="370" x2="1560" y2="370" stroke="#111" stroke-width="2"/>
 <text x="1000" y="620" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="12" fill="#111" text-anchor="middle" font-weight="bold" >GND (wspólna masa sygnałowa i zasilania)</text>
 <text x="40" y="700" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#0b1f4a" text-anchor="start" font-weight="normal" >Zalety: brak zależności od WiFi (zakłócenia, hasło, limit 4 klientów, czas łączenia), stały niski czas reakcji STOP, zasilanie i dane w jednym kablu.</text>
-<text x="40" y="726" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#0b1f4a" text-anchor="start" font-weight="normal" >Wymagania: nowy moduł komunikacyjny w firmware sterownika i modułu 7" (rozdz. wdrożenia w LACZE_PRZEWODOWE.md); WiFi zostaje jako łącze zapasowe i dla telefonów.</text>
+<text x="40" y="726" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#0b1f4a" text-anchor="start" font-weight="normal" >Zaimplementowane w src/serial_link.h/.cpp (sterownik) i display-module/src/link.cpp (moduł); WiFi zostaje jako łącze zapasowe (automatyczny fallback) i dla telefonów.</text>
 <text x="40" y="752" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="14" fill="#b71c1c" text-anchor="start" font-weight="normal" >Fizyczny STOP sterownika (panel, pilot, pedał) nadal jest głównym zabezpieczeniem — łącze przewodowe go nie zastępuje.</text>
 </svg>

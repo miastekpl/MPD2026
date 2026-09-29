@@ -506,13 +506,22 @@ void uiBuildMain() {
 
 // ---------- odświeżanie ----------
 static void updateTopBar(LinkState ls, const Status& st, bool have) {
+    // Kabel (RS-485) ma pierwszenstwo nad WiFi - patrz docs/LACZE_PRZEWODOWE.md.
+    // Gdy dane plyna kablem, ikonka/tekst pokazuja "KABEL" zamiast symbolu WiFi -
+    // stany LS_NO_PASSWORD/LS_WIFI_CONNECTING dotycza tylko WiFi wiec nie moga
+    // wystapic razem z linkIsCable()==true (patrz link.cpp: linkState()).
+    bool cable = linkIsCable();
+    const char* icon = cable ? LV_SYMBOL_USB : LV_SYMBOL_WIFI;
+    char lbl[48];
     switch (ls) {
         case LS_ONLINE:
-            setLbl(s_lblLink, LV_SYMBOL_WIFI " POLACZONO");
+            snprintf(lbl, sizeof(lbl), "%s %s", icon, cable ? "KABEL" : "POLACZONO");
+            setLbl(s_lblLink, lbl);
             setTxtColor(s_lblLink, C_GREENB);
             break;
         case LS_NO_DATA:
-            setLbl(s_lblLink, LV_SYMBOL_WIFI " BRAK DANYCH");
+            snprintf(lbl, sizeof(lbl), "%s %s", icon, cable ? "KABEL - BRAK DANYCH" : "BRAK DANYCH");
+            setLbl(s_lblLink, lbl);
             setTxtColor(s_lblLink, C_ORANGE);
             break;
         case LS_WIFI_CONNECTING:
@@ -688,7 +697,9 @@ static void updateCover(LinkState ls, bool show) {
             setLbl(s_lblCoverReason, "Laczenie z siecia " CTRL_SSID "...");
             break;
         default:
-            setLbl(s_lblCoverReason, "Polaczono z WiFi, brak danych ze sterownika");
+            setLbl(s_lblCoverReason, linkIsCable()
+                ? "Kabel podlaczony, brak danych ze sterownika"
+                : "Polaczono z WiFi, brak danych ze sterownika");
             break;
     }
 }

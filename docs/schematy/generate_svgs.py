@@ -549,17 +549,21 @@ def wiring_dgus():
 
 def wiring_headless():
     """Schemat połączeń wariantu DOCELOWEGO: sterownik "headless" (bez żadnego ekranu
-    podłączonego bezpośrednio) + moduł wyświetlacza Sunton 7" wyłącznie po WiFi.
-    Środowisko esp32s3 (domyślne), HAS_SMALL_TFT=0 HAS_JOYSTICK=0 HAS_DGUS_LINK=0 HAS_ESTOP=1."""
-    W, H = 2100, 1750
+    podłączonego bezpośrednio) + moduł wyświetlacza Sunton 7" połączony łączem przewodowym
+    UART (priorytet, GPIO 9/10) i WiFi (fallback). Joystick fizyczny zachowany (GPIO 19/20/46).
+    Środowisko esp32s3 (domyślne), HAS_SMALL_TFT=0 HAS_JOYSTICK=1 HAS_SERIAL_LINK=1 HAS_DGUS_LINK=0 HAS_ESTOP=1."""
+    W, H = 2100, 1830
     s = Svg(W, H, "#ffffff")
-    s.text(40, 46, "MPD2026 — schemat połączeń, wariant DOCELOWY (sterownik headless + moduł Sunton po WiFi)",
+    s.text(40, 46, "MPD2026 — schemat połączeń, wariant DOCELOWY (sterownik headless + moduł Sunton, kabel + WiFi)",
            28, "#0b1f4a", weight="bold")
-    s.text(40, 74, "Sterownik Trassar (ESP32-S3 N16R8, firmware 2.53.0, środowisko esp32s3_terminal) + moduł"
+    s.text(40, 74, "Sterownik Trassar (ESP32-S3 N16R8, firmware 2.53.0, środowisko esp32s3) + moduł"
                    " wyświetlacza Sunton 7\" (ESP32-8048S070C) jako JEDYNY interfejs operatora — połączony"
-                   " WYŁĄCZNIE przez WiFi (bez żadnych przewodów danych). Numery = GPIO ESP32-S3 (src/config.h).",
+                   " łączem przewodowym UART (priorytet, GPIO 9/10 <-> GPIO 17/18) i WiFi (fallback + telefony).",
            15, "#444")
-    s.text(40, 94, "Kod skompilowany i sprawdzony; POŁĄCZENIA nie były jeszcze zweryfikowane na fizycznym sprzęcie — sprawdź to na prototypie.",
+    s.text(40, 92, "Numery = GPIO ESP32-S3 (src/config.h). Joystick KY-023 zachowany na swoich pinach (GPIO 19/20/46).",
+           15, "#444")
+    s.text(40, 112, "Kod skompilowany i sprawdzony (esp32s3, esp32s3_terminal, sunton7, sunton7_portrait); POŁĄCZENIA"
+                   " nie były jeszcze zweryfikowane na fizycznym sprzęcie — sprawdź to na prototypie.",
            13, "#b71c1c", weight="bold")
 
     # --- zasilanie ---
@@ -616,21 +620,40 @@ def wiring_headless():
     LX, LW = 120, 420
     y = EY + 40
 
-    # Modul Sunton 7" - JEDYNY ekran, BEZ zadnych przewodow danych (wylacznie WiFi)
+    # Modul Sunton 7" - JEDYNY ekran, kabel UART (priorytet) + WiFi (fallback)
     top = y - 20
-    s.rect(LX, top, LW, pitch + 96, "#e1f5fe", "#01579b", 2, 8)
+    s.rect(LX, top, LW, pitch * 2 + 118, "#e1f5fe", "#01579b", 2, 8)
     s.text(LX + LW / 2, top + 22, "Moduł wyświetlacza Sunton 7\" (ESP32-8048S070C)", 14, "#111", "middle", "bold")
     s.text(LX + LW / 2, top + 40, "JEDYNY interfejs operatora — display-module/", 12, "#01579b", "middle", weight="bold")
-    s.text(LX + LW / 2, top + 58, "BEZ przewodów danych do sterownika — tylko WiFi", 11, "#444", "middle")
-    s.text(LX + LW / 2, top + 76, "Zasilanie: osobne 5 V (USB-C), min. 2 A, wspólna masa", 11, "#444", "middle")
-    s.text(LX + LW / 2, top + 94, "z instalacją maszyny (patrz uwaga o wspólnym GND niżej)", 11, "#444", "middle")
-    box_bottom = top + pitch + 96
+    s.text(LX + LW / 2, top + 58, "Zasilanie: osobne 5 V (USB-C), min. 2 A, wspólna masa", 11, "#444", "middle")
+    s.text(LX + LW / 2, top + 76, "z instalacją maszyny (patrz uwaga o wspólnym GND niżej)", 11, "#444", "middle")
+    cable_y1 = top + 100
+    cable_y2 = top + 100 + pitch
+    s.text(LX + LW - 10, cable_y1 + 5, "RX (GPIO 18)", 12, "#111", "end", "bold")
+    s.text(LX + LW - 10, cable_y2 + 5, "TX (GPIO 17)", 12, "#111", "end", "bold")
+    wire(LX + LW, cable_y1, EX, "#2e7d32")
+    wire(LX + LW, cable_y2, EX, "#2e7d32")
+    pin_left(cable_y1, "9", "UART1 TX -> Sunton RX (kabel)")
+    pin_left(cable_y2, "10", "UART1 RX <- Sunton TX (kabel)")
+    box_bottom = top + pitch * 2 + 118
     wifi_y = box_bottom + 24
     s.line(LX + LW / 2, box_bottom, LX + LW / 2, wifi_y, "#01579b", 2, "6 4")
     s.line(LX + LW / 2, wifi_y, EX - 6, wifi_y, "#01579b", 2, "6 4")
     s.circle(EX - 6, wifi_y, 4, "#01579b")
-    s.text(LX + LW / 2 + 10, wifi_y - 6, "WiFi: WebSocket :81 (status) + HTTP :80 (POST /api/control)", 11, "#01579b")
+    s.text(LX + LW / 2 + 10, wifi_y - 6, "WiFi (fallback): WebSocket :81 + HTTP :80 — gdy kabel odłączony, i telefony", 11, "#01579b")
     y = wifi_y + 40
+
+    # Joystick KY-023 - zachowany mimo dotyku na module Sunton (szybka nawigacja menu)
+    top = y - 20
+    module(LX, top, LW, 3 * pitch + 50, "Joystick KY-023 (2-osiowy + przycisk)",
+           "zachowany mimo dotyku na Sunton — szybka nawigacja menu", "#f1f8e9", "#33691e")
+    for i, (g, port, lab) in enumerate([("19", "VRx", "os pozioma (ADC2)"), ("20", "VRy", "os pionowa (ADC2)"),
+                                         ("46", "SW", "przycisk (STRAP PIN!)")]):
+        yy = y + 30 + i * pitch
+        s.text(LX + LW - 10, yy + 5, port, 12, "#111", "end", "bold")
+        wire(LX + LW, yy, EX, "#33691e")
+        pin_left(yy, g, lab)
+    y = y + 30 + 3 * pitch + 34
 
     # Karta SD - osobny modul
     top = y - 20
@@ -771,20 +794,22 @@ def wiring_headless():
 
     ly = ky + 270
     s.text(120, ly, "Legenda:", 14, weight="bold")
-    for i, (c, t) in enumerate([("#c1121f", "zasilanie 5 V"), ("#01579b", "WiFi (bez przewodu)"), ("#0d47a1", "SPI / I2C"),
+    for i, (c, t) in enumerate([("#c1121f", "zasilanie 5 V"), ("#2e7d32", "kabel UART do modułu Sunton (priorytet)"),
+                                ("#01579b", "WiFi (fallback)"), ("#0d47a1", "SPI / I2C"),
                                 ("#e65100", "UART GPS / wyjścia mocy do zaworów"), ("#1b5e20", "sygnały do przekaźników"),
-                                ("#4527a0", "DS18B20 (OneWire)"), ("#b71c1c", "status E-STOP")]):
+                                ("#33691e", "joystick KY-023"), ("#4527a0", "DS18B20 (OneWire)"), ("#b71c1c", "status E-STOP")]):
         col, row = i % 3, i // 3
         s.line(200 + col * 320, ly - 5 + row * 22, 240 + col * 320, ly - 5 + row * 22, c, 3)
         s.text(246 + col * 320, ly + row * 22, t, 12, "#333")
-    ly2 = ly + 2 * 22 + 30
+    ly2 = ly + 3 * 22 + 30
     s.text(120, ly2, "GPIO 26-37 zajęte (Flash + Octal PSRAM). GPIO 15 zajęte przez czujnik temperatury DS18B20"
                       " (nawet jeśli niezamontowany — pin zarezerwowany w firmware).", 12, "#b71c1c")
-    s.text(120, ly2 + 20, "Bez ekranu bezpośredniego i joysticka (domyślnie wyłączony) WOLNE pozostają: GPIO 9, 10,"
-                          " 14, 19, 20, 46 (+ 40, jeśli pominiesz SELEKTOR) — 23 zajęte / 6 wolnych.", 12, "#1b5e20", weight="bold")
-    s.text(120, ly2 + 44, "Joystick KY-023 (opcja, GPIO 19/20/46) można podłączyć jak w wariancie z ekranem DGUS —"
-                          " ustaw HAS_JOYSTICK=1 w platformio.ini. Zajmie 3 z 6 wolnych pinów.", 12, "#333")
-    s.text(120, ly2 + 68, "Złącza maszynowe: J1 zasilanie 5 V, J2 zawory P1-P6, J3 enkoder, J4 pilot, J5 pedał.", 12, "#333")
+    s.text(120, ly2 + 20, "Joystick zachowany i łącze przewodowe kablem UART zaimplementowane jednocześnie:"
+                          " 28 zajęte / 1 wolny (GPIO 14; + GPIO 40, jeśli pominiesz SELEKTOR).", 12, "#1b5e20", weight="bold")
+    s.text(120, ly2 + 44, "GPIO 9/10 wolne od ILI9341 w tym wariancie i wykorzystane przez łącze przewodowe"
+                          " (HAS_SERIAL_LINK=1) zamiast pozostawać wolne — patrz docs/LACZE_PRZEWODOWE.md.", 12, "#333")
+    s.text(120, ly2 + 68, "Złącza maszynowe: J1 zasilanie 5 V, J2 zawory P1-P6, J3 enkoder, J4 pilot, J5 pedał,"
+                          " J6 (opcjonalny, dla łącza kablem/RS-485 gdy moduł montowany osobno).", 12, "#333")
     s.save("schemat_polaczen_docelowy.svg")
 
 
@@ -1327,21 +1352,22 @@ def harness():
 def rs485():
     W, H = 2000, 860
     s = Svg(W, H, "#ffffff")
-    s.text(40, 46, "Łącze przewodowe sterownik <-> moduł 7\" (RS-485) — PROPOZYCJA", 28, "#0b1f4a", weight="bold")
-    s.text(40, 72, "Zamiast WiFi: UART 3,3 V przez konwerter RS-485 z automatycznym kierunkiem (bez pinu DE)."
+    s.text(40, 46, "Łącze przewodowe sterownik <-> moduł 7\" — opcja RS-485 dla długich kabli", 28, "#0b1f4a", weight="bold")
+    s.text(40, 72, "ZAIMPLEMENTOWANE (UART 3,3 V bezpośrednio, bez konwerterów — montaż w jednej obudowie)."
+                   " Ten diagram pokazuje wariant z konwerterami RS-485, gdy moduł montowany daleko od sterownika."
                    " Zasilanie modułu 7\" tym samym kablem.", 14, "#444")
     # --- sterownik ---
     s.rect(60, 140, 380, 520, "#e8f0fe", "#0b1f4a", 3, 12)
     s.text(250, 172, "Sterownik Trassar (ESP32-S3 N16R8)", 17, "#0b1f4a", "middle", "bold")
-    ports_l = [(250, "GPIO 20  UART1 TX", "#111"), (290, "GPIO 19  UART1 RX", "#111"),
+    ports_l = [(250, "GPIO 9  UART1 TX", "#111"), (290, "GPIO 10  UART1 RX", "#111"),
                (330, "3V3", "#111"), (370, "GND", "#111"), (410, "+5 V (odgałęzienie, PTC)", "#c1121f")]
     for yy, lab, col in ports_l:
         s.circle(440, yy - 5, 5, "#0b1f4a")
         s.text(80, yy, lab, 14, col, weight="bold")
-    s.text(80, 470, "GPIO 19 i 20 są dziś używane przez joystick KY-023 —", 12, "#b71c1c")
-    s.text(80, 488, "w wariancie przewodowym joystick jest pomijany", 12, "#b71c1c")
-    s.text(80, 506, "(ekran dotykowy go zastępuje).", 12, "#b71c1c")
-    s.text(80, 540, "GPIO 15 zostaje wolny (T_CS / DS18B20).", 12, "#555")
+    s.text(80, 470, "Joystick KY-023 zachowany na swoich pinach", 12, "#1b5e20")
+    s.text(80, 488, "(GPIO 19/20/46) — nie koliduje z łączem", 12, "#1b5e20")
+    s.text(80, 506, "przewodowym (GPIO 9/10).", 12, "#1b5e20")
+    s.text(80, 540, "GPIO 14 zostaje wolny.", 12, "#555")
     s.text(80, 574, "Protokół: wiersze JSON, 230400 baud, 8N1,", 12, "#555")
     s.text(80, 592, "status co 100-200 ms, polecenia z sumą CRC.", 12, "#555")
     # --- konwerter po stronie sterownika ---
@@ -1406,8 +1432,8 @@ def rs485():
     # --- opis ---
     s.text(40, 700, "Zalety: brak zależności od WiFi (zakłócenia, hasło, limit 4 klientów, czas łączenia), stały niski czas reakcji STOP, zasilanie i dane w jednym kablu.",
            14, "#0b1f4a")
-    s.text(40, 726, "Wymagania: nowy moduł komunikacyjny w firmware sterownika i modułu 7\" (rozdz. wdrożenia w LACZE_PRZEWODOWE.md); "
-                    "WiFi zostaje jako łącze zapasowe i dla telefonów.", 14, "#0b1f4a")
+    s.text(40, 726, "Zaimplementowane w src/serial_link.h/.cpp (sterownik) i display-module/src/link.cpp (moduł); "
+                    "WiFi zostaje jako łącze zapasowe (automatyczny fallback) i dla telefonów.", 14, "#0b1f4a")
     s.text(40, 752, "Fizyczny STOP sterownika (panel, pilot, pedał) nadal jest głównym zabezpieczeniem — łącze przewodowe go nie zastępuje.",
            14, "#b71c1c")
     s.save("schemat_lacze_rs485.svg")

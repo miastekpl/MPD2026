@@ -5,8 +5,9 @@ bezpieczeństwo i checklisty. Dane elektryczne (piny, prądy, schematy) są w [S
 i na diagramach SVG — ten dokument mówi **w jakiej kolejności** i **na co uważać**, nie powtarza tabel pinów.
 
 **Architektura, którą montujesz:** sterownik **bez żadnego ekranu podłączonego bezpośrednio** ("headless") +
-moduł wyświetlacza **Sunton 7" łączący się wyłącznie przez WiFi**. To jest wariant **docelowy** — prostszy w
-montażu niż warianty z ekranem na przewodzie, bo moduł 7" wymaga tylko zasilania, żadnych sygnałów.
+moduł wyświetlacza **Sunton 7"**, połączony **łączem przewodowym UART** (priorytet — patrz
+[LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md)) **oraz WiFi** (automatyczny fallback, gdy kabel odłączony, i jedyne
+łącze dla telefonu/tabletu). To jest wariant **docelowy**. Joystick fizyczny na panelu sterownika jest zachowany.
 
 ## Spis treści
 
@@ -37,7 +38,7 @@ Montujesz dwa niezależne urządzenia:
 | Urządzenie | Gdzie w kabinie | Połączenie ze sterownikiem |
 |---|---|---|
 | **Sterownik** (ESP32-S3, w obudowie pionowej) | blisko przekaźników/zaworów — krótsze przewody mocy | — (to on jest centrum) |
-| **Moduł Sunton 7"** (osobna obudowa/ramka) | w zasięgu wzroku operatora | **wyłącznie WiFi** — zero przewodów danych |
+| **Moduł Sunton 7"** (osobna obudowa/ramka) | w zasięgu wzroku operatora | **kabel UART (priorytet) + WiFi (fallback)** |
 
 Obudowa sterownika: [WIZUALIZACJE.md](WIZUALIZACJE.md), rysunki
 [obudowa_pionowa_os.svg](schematy/obudowa_pionowa_os.svg) / [obudowa_pionowa_krawedz.svg](schematy/obudowa_pionowa_krawedz.svg)
@@ -172,14 +173,25 @@ Pilot (złącze J4) i pedał (J5) są **elektrycznie równoległe** do przycisk�
 — podłączasz je do **tych samych** linii GPIO co odpowiadające przyciski, nie do osobnych pinów. Sterownik nie
 rozróżnia, czy sygnał przyszedł z panelu, pilota czy pedału.
 
-## Krok 10 — Moduł wyświetlacza Sunton 7"
+## Krok 10 — Moduł wyświetlacza Sunton 7" i łącze przewodowe
 
-To jedyny krok, w którym moduł Sunton **nie** łączy się przewodem danych ze sterownikiem — tylko zasilanie.
+Moduł Sunton łączy się ze sterownikiem **kablem UART** (priorytet — patrz
+[LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md)) i zasilaniem; WiFi (krok 12) jest automatycznym łączem zapasowym,
+uruchamianym gdy kabel jest odłączony, oraz jedynym łączem dla telefonu/tabletu w panelu WWW.
 
 1. Zamontuj moduł Sunton w miejscu widocznym dla operatora (osobna obudowa/ramka, niezależnie od obudowy
    sterownika).
 2. Podłącz zasilanie 5 V z **osobnego odczepu** przygotowanego w kroku 3 (nie z linii logiki sterownika).
-3. To wszystko — żadnych innych przewodów. Parowanie WiFi robisz w kroku 12.
+3. Podłącz kabel danych (skrętka, 2 żyły + wspólna masa, do kilku metrów bez konwerterów RS-485 — patrz
+   [LACZE_PRZEWODOWE.md](LACZE_PRZEWODOWE.md) §2/§4 dla dłuższych odcinków):
+   - **Sterownik GPIO 9 (TX) → moduł Sunton GPIO 18 (RX)**
+   - **Sterownik GPIO 10 (RX) ← moduł Sunton GPIO 17 (TX)**
+   - GND wspólna (może iść tym samym kablem co zasilanie 5 V modułu).
+4. Poprowadź kabel danych **osobno** od przewodów mocy zaworów/przekaźników (patrz [SCHEMAT_PODLACZEN.md](SCHEMAT_PODLACZEN.md)
+   §9.1) — ogranicza to zakłócenia, choć UART działa również bez tego na krótkich odcinkach.
+5. Po pierwszym uruchomieniu (krok 11) sprawdź na ekranie Sunton wskaźnik **„KABEL"** w pasku górnym — jeśli
+   pokazuje **„POLACZONO"** (WiFi), sprawdź okablowanie z punktu 3 (styk, kolejność TX/RX, wspólna masa).
+   Parowanie WiFi (na wypadek odłączenia kabla) robisz w kroku 12.
 
 ## Krok 11 — Pierwsze uruchomienie
 
@@ -207,7 +219,7 @@ To jedyny krok, w którym moduł Sunton **nie** łączy się przewodem danych ze
 
 - [ ] Multimetr: brak zwarć, poprawna polaryzacja, pętla E-STOP ciągła w spoczynku
 - [ ] POST przez USB: SD OK, RTC OK, MCP OK (GPS może pokazywać brak fixa — normalne na start)
-- [ ] Moduł Sunton połączony (zielone „POŁĄCZONO")
+- [ ] Moduł Sunton połączony kablem (wskaźnik „KABEL" u góry ekranu; WiFi tylko jako zapasowe)
 - [ ] Enkoder skalibrowany
 - [ ] Test E-STOP: wciśnięcie grzybka **natychmiast** odcina napięcie na wyjściach przekaźników (zmierz
       multimetrem albo obserwuj zawory) — zrób to **przed** pierwszym wyjazdem w teren
@@ -226,7 +238,8 @@ To jedyny krok, w którym moduł Sunton **nie** łączy się przewodem danych ze
 | MCP/RTC „BŁĄD" w diagnostyce startowej | Przerwa na magistrali I2C, zła adresacja (A0/A1/A2 nie do GND), brak zasilania 3V3 |
 | Enkoder pokazuje losowe skoki dystansu | Brak kondensatorów 100 nF, zbyt długi przewód (>2 m), przewód nieskrętkowy |
 | E-STOP nie odcina zasilania | Grzybek wpięty tylko w pętlę statusu (GPIO 21), a nie fizycznie w tor mocy — wróć do kroku 7.2 |
-| Moduł Sunton nie widzi sterownika | Zbyt duża odległość / przeszkody dla WiFi 2,4 GHz; sprawdź hasło (wielkość liter nie ma znaczenia) |
+| Moduł Sunton pokazuje „POLACZONO" (WiFi) zamiast „KABEL" | Sprawdź okablowanie kroku 10.3: TX/RX zamienione miejscami, brak wspólnej masy, przerwa w kablu |
+| Moduł Sunton nie widzi sterownika wcale (ani kablem, ani WiFi) | Kabel: sprawdź krok 10.3. WiFi (zapasowe): zbyt duża odległość / przeszkody dla 2,4 GHz; sprawdź hasło (wielkość liter nie ma znaczenia) |
 | Brak fixa GPS przez długi czas | Antena wewnątrz metalowej kabiny — musi mieć widok nieba |
 
 ---

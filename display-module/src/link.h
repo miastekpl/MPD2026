@@ -18,6 +18,9 @@ void      linkBegin();
 void      linkSetPassword(const char* pass);   // zapis w ustawieniach i ponowne łączenie
 LinkState linkState();
 int       linkRssi();
+// true, gdy dane aktualnie plyna lączem przewodowym (RS-485), nie WiFi - do wskaznika
+// "KABEL"/"WiFi" w UI (patrz docs/LACZE_PRZEWODOWE.md). Kabel ma pierwszenstwo nad WiFi.
+bool      linkIsCable();
 
 // Ostatni status; zwraca false gdy nigdy nie otrzymano ramki. ageMs = wiek ramki.
 bool      linkGetStatus(Status& out, uint32_t* ageMs);

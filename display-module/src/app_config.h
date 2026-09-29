@@ -26,13 +26,24 @@ constexpr int SCR_W = 800;
 constexpr int SCR_H = 480;
 #endif
 
-// Ten moduł (Sunton ESP32-8048S070C) jest teraz WYŁĄCZNIE wariantem WiFi ("gruby klient").
-// Wariant docelowy dużego ekranu to sterownik + wyświetlacz inteligentny DWIN DGUS
-// (DMG10600T070_09WTC) na łączu UART bez pośredniczącego ESP32 — patrz src/dgus_link.cpp
-// w projekcie sterownika i docs/ARCHITEKTURA_TERMINAL.md. Ten katalog nie bierze w tym udziału.
+// Ten moduł (Sunton ESP32-8048S070C) jest jedynym ekranem architektury docelowej.
+// Łączy się ze sterownikiem DWOMA równoległymi transportami: łączem przewodowym
+// (RS-485, UART1, priorytet) i WiFi (zapasowe, jedyne dla telefonu/tabletu w panelu
+// WWW) — patrz docs/LACZE_PRZEWODOWE.md i src/serial_link.h w projekcie sterownika.
+// Alternatywa (nie zalecana): wyświetlacz DWIN DGUS zamiast tego modułu, na osobnym
+// UART bez żadnego pośredniczącego ESP32 — patrz docs/ARCHITEKTURA_TERMINAL.md
+// w projekcie sterownika. Ten katalog nie bierze w niej udziału.
 
 // Brak ramek statusu dłużej niż to = utrata łączności
 #define LINK_STALE_MS    2500
+
+// Łącze przewodowe (RS-485) do sterownika - UART1 na wolnych pinach płytki Sunton
+// (patrz docs/SCHEMAT_PODLACZEN.md sekcja 5.2 - GPIO 17/18 nie są używane przez panel RGB/dotyk/SD)
+#define CABLE_TX_PIN     17
+#define CABLE_RX_PIN     18
+#define CABLE_BAUD       230400
+#define CABLE_STALE_MS   1500    // brak ramek dluzej niz to = powrot na WiFi
+#define CABLE_HEARTBEAT_MS 300   // wlasny heartbeat, zeby lacze bylo wykrywalne nawet bez polecen
 
 #define DISPLAY_FW_VERSION "0.1.1"
 
