@@ -28,13 +28,26 @@ System składa się z **dwóch urządzeń** połączonych bezprzewodowo. Sterown
 sterującym pistoletami; moduł 7" jest panelem operatora (nie ma żadnego przewodowego połączenia sygnałowego
 ze sterownikiem — tylko zasilanie).
 
-> **Architektura docelowa:** jeden duży ekran — wyświetlacz inteligentny DWIN DGUS podłączony **bezpośrednio** do sterownika (UART,
-> bez WiFi, bez drugiego ESP32), bez ILI9341 — [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md) i [EKRAN_DGUS.md](EKRAN_DGUS.md)
-> (nowy bilans pinów: 27 zajęte, 1 wolny). Poniższy opis (rozdz. 1-2, 4.1, 5) dotyczy wariantu przejściowego; wariant docelowy: rozdz. 3.2.
+> **Architektura docelowa:** sterownik **bez żadnego ekranu podłączonego bezpośrednio** ("headless") — jedynym
+> interfejsem operatora jest moduł Sunton 7" **wyłącznie po WiFi** (zero przewodów danych, zero ILI9341, zero
+> joysticka domyślnie). Bilans pinów: 23 zajęte, 6 wolnych. Pełny opis: rozdz. 3.2, schemat:
+> [schematy/schemat_polaczen_docelowy.svg](schematy/schemat_polaczen_docelowy.svg).
+>
+> **Poniższy opis w rozdz. 1-2, 4.1 i BOM sekcji 2.1 (mermaid wyżej, mapa GPIO w rozdz. 3, ILI9341+joystick)
+> opisuje wariant PRZEJŚCIOWY** (starszy, z małym ekranem na sterowniku) — zachowany w repozytorium, ale
+> **nie jest tym, co dziś montujesz domyślnie**. Różnice wariantu docelowego: rozdz. 3.2.
+>
+> **Alternatywa (nie zalecana):** wyświetlacz inteligentny DWIN DGUS podłączony bezpośrednio do sterownika (UART,
+> bez WiFi) zamiast modułu Sunton — wymaga ręcznej budowy projektu w DGUS Designer.
+> [ARCHITEKTURA_TERMINAL.md](ARCHITEKTURA_TERMINAL.md), [EKRAN_DGUS.md](EKRAN_DGUS.md), rozdz. 3.3.
 
-**Role ekranów:** **duży ekran 7"** (moduł Sunton) to ekran **roboczy** operatora; **mały ekran ILI9341 2,8"** sterownika
-jest ekranem **technicznym / serwisowym / awaryjnym** i mieści slot karty SD. Widok kompletny (oba ekrany, wszystkie
-przyciski, panel złączy): [schematy/komputer_kompletny.svg](schematy/komputer_kompletny.svg).
+**Role ekranów w wariancie przejściowym** (patrz uwaga wyżej — **nie dotyczy wariantu docelowego, który nie ma
+żadnego ekranu na sterowniku**): **duży ekran 7"** (moduł Sunton) to ekran **roboczy** operatora; **mały ekran
+ILI9341 2,8"** sterownika jest ekranem **technicznym / serwisowym / awaryjnym** i mieści slot karty SD. Widok
+kompletny tego wariantu (oba ekrany, wszystkie przyciski, panel złączy): [schematy/komputer_kompletny.svg](schematy/komputer_kompletny.svg).
+
+**Diagram niżej pokazuje wariant PRZEJŚCIOWY** (ILI9341 + joystick na sterowniku). Wariant docelowy nie ma
+bloku `TFT`/`BTN`-joystick — pełny schemat: [schematy/schemat_polaczen_docelowy.svg](schematy/schemat_polaczen_docelowy.svg).
 
 ```mermaid
 flowchart LR
@@ -97,29 +110,44 @@ Szczegóły API: [API_WWW.md](API_WWW.md). Moduł 7": [MODUL_WYSWIETLACZA.md](MO
 
 ## 2. Lista materiałów (BOM)
 
-### 2.1 Sterownik
+### 2.1 Sterownik — wariant DOCELOWY (headless + Sunton po WiFi, dziś domyślny)
 
 | # | Komponent | Model | Ilość | Uwagi |
 |---|-----------|-------|-------|-------|
 | 1 | Mikrokontroler | ESP32-S3 N16R8 DevKitC-1 | 1 | 16 MB Flash, 8 MB Octal PSRAM, USB-C |
-| 2 | Ekran serwisowy (techniczny / awaryjny) | ILI9341 2.8" TFT SPI 240×320 (z SD i Touch) | 1 | Slot MicroSD na module — karta SD sterownika; dostęp do slotu z boku obudowy |
-| 3 | Karta pamięci | MicroSD FAT32, min. 1 GB, klasa 4+ | 1 | Raporty, trasy, backup NVS |
-| 4 | Zegar RTC | DS1307 AT24C32 (moduł z gniazdem CR2032) | 1 | I2C 0x68, zasilanie 5 V |
-| 5 | Bateria RTC | CR2032 | 1 | |
-| 6 | Enkoder | KY-040 / HW-040 (inkrementalny + przycisk SW) | 1 | 5-pin, na kole pomiarowym |
-| 7 | Przyciski sterujące | BS-33B monostabilne NO | 3 | START, STOP, SELEKTOR (panel) |
-| 8 | Ekspander I/O | MCP23017 DIP-28 | 1 | I2C 0x20, zasilanie 3,3 V |
-| 9 | Przyciski wzorców | Monostabilne NO, montaż panelowy | 15 (układ klasyczny) albo **11** (soft-key: 10 + GRUPA) | Klasyczny: po jednym na wzorzec P-1a … P-7d. Soft-key: S1–S10 przy krawędziach ekranu 7" + GRUPA |
-| 10 | Moduł przekaźników | 6-kanałowy 5 V, opto-izolowany, SRD-05VDC-SL-C | 1 | Wejścia aktywne stanem HIGH |
-| 11 | GPS | GY-NEO6MV2 (u-blox NEO-6M + antena) | 1 | UART2, 9600 baud |
-| 12 | Joystick | KY-023 analogowy 2-osiowy + przycisk | 1 | 3,3 V |
-| 13 | Buzzer | Pasywny 5 V (np. TMB12A05) | 1 | Sterowany PWM |
-| 14 | Czujnik temperatury (opcja) | DS18B20 + rezystor 4,7 kΩ | 0–1 | GPIO 15 |
-| 15 | Przetwornica DC-DC | 12/24 V → 5 V, min. 3 A | 1 | Na maszynie |
-| 16 | Zawory pistoletów | Elektromagnetyczne 12/24 V DC | 6 | Zasilane z instalacji maszyny |
-| 17 | Złącza maszynowe | J1 TS13CP03, J2 TS17CP10, J3 TS13CP05, J4 TS13PS06, J5 TS21CP04 | po 1 | Patrz [sekcja 7](#7-złącza-maszynowe-j1j5) |
-| 18 | Kondensatory | 100 nF ceramiczne | 2+ | Filtr CLK/DT enkodera |
-| 19 | Bezpiecznik | PTC 1,5 A (linia 5 V) + dioda TVS 5,5 V | 1+1 | Zalecane |
+| 2 | Moduł microSD (osobny) | Czytnik SPI + karta MicroSD FAT32, min. 1 GB, klasa 4+ | 1 | Raporty, trasy, backup NVS; **nie na płycie ekranu** (nie ma go) — osobny moduł, slot z boku obudowy |
+| 3 | Zegar RTC | DS1307 AT24C32 (moduł z gniazdem CR2032) | 1 | I2C 0x68, zasilanie 5 V |
+| 4 | Bateria RTC | CR2032 | 1 | |
+| 5 | Enkoder | KY-040 / HW-040 (inkrementalny + przycisk SW) | 1 | 5-pin, na kole pomiarowym |
+| 6 | Przyciski sterujące | BS-33B monostabilne NO | 2–3 | START, STOP; SELEKTOR opcjonalny (dotyk na Sunton robi to samo) |
+| 7 | Ekspander I/O | MCP23017 DIP-28 | 1 | I2C 0x20, zasilanie 3,3 V |
+| 8 | Przyciski wzorców | Monostabilne NO, montaż panelowy | 15 (układ klasyczny) albo **11** (soft-key: 10 + GRUPA) | Klasyczny: po jednym na wzorzec P-1a … P-7d. Soft-key: S1–S10 przy krawędziach ekranu 7" + GRUPA |
+| 9 | Moduł przekaźników | 6-kanałowy 5 V, opto-izolowany, SRD-05VDC-SL-C | 1 | Wejścia aktywne stanem HIGH |
+| 10 | GPS | GY-NEO6MV2 (u-blox NEO-6M + antena) | 1 | UART2, 9600 baud |
+| 11 | Buzzer | Pasywny 5 V (np. TMB12A05) | 1 | Sterowany PWM |
+| 12 | **Przycisk grzybkowy E-STOP** | Styk **NC**, zatrzaskowy, montaż panelowy Ø22 mm | 1 | Wpięty fizycznie w tor zasilania przekaźników — patrz [INSTRUKCJA_MONTAZU.md](INSTRUKCJA_MONTAZU.md) krok 7 |
+| 13 | Czujnik temperatury (opcja) | DS18B20 + rezystor 4,7 kΩ | 0–1 | GPIO 15 (pin zarezerwowany zawsze, nawet bez czujnika) |
+| 14 | Przetwornica DC-DC | 12/24 V → 5 V, min. 3 A | 1 | Na maszynie |
+| 15 | Zawory pistoletów | Elektromagnetyczne 12/24 V DC | 6 | Zasilane z instalacji maszyny |
+| 16 | Złącza maszynowe | J1 TS13CP03, J2 TS17CP10, J3 TS13CP05, J4 TS13PS06, J5 TS21CP04 | po 1 | Patrz [sekcja 7](#7-złącza-maszynowe-j1j5) |
+| 17 | Kondensatory | 100 nF ceramiczne | 2+ | Filtr CLK/DT enkodera |
+| 18 | Bezpiecznik | PTC 1,5 A (linia 5 V) + dioda TVS 5,5 V | 1+1 | Zalecane |
+
+**Opcjonalne, tylko jeśli fizycznie dodajesz je do wariantu docelowego** (kod je obsługuje, ale nie są domyślnie
+montowane — patrz [SCHEMAT_PODLACZEN.md](#3-sterownik-mapa-gpio) rozdz. 3.2):
+
+| Komponent | Model | Uwagi |
+|---|---|---|
+| Joystick | KY-023 analogowy 2-osiowy + przycisk | Wymaga `-DHAS_JOYSTICK=1`; Sunton ma dotyk, więc niepotrzebny w typowym montażu |
+
+**Wariant PRZEJŚCIOWY (starszy, z małym ekranem na sterowniku)** — jeśli świadomie budujesz ten wariant zamiast
+docelowego, komponent 2 wyżej zastępujesz przez:
+
+| Komponent | Model | Uwagi |
+|---|---|---|
+| Ekran serwisowy (techniczny / awaryjny) | ILI9341 2.8" TFT SPI 240×320 (z SD i Touch) | Slot MicroSD **na module ekranu** (nie osobny) |
+| Joystick | KY-023 analogowy 2-osiowy + przycisk | W tym wariancie domyślnie włączony |
+| Przycisk SELEKTOR | BS-33B monostabilny NO | Trzeci przycisk panelu (w docelowym opcjonalny) |
 
 ### 2.2 Moduł wyświetlacza 7"
 
@@ -132,6 +160,10 @@ Szczegóły API: [API_WWW.md](API_WWW.md). Moduł 7": [MODUL_WYSWIETLACZA.md](MO
 ---
 
 ## 3. Sterownik: mapa GPIO
+
+> **Tabela niżej to baza wspólna dla obu wariantów, opisana z pinami ILI9341/joysticka wariantu PRZEJŚCIOWEGO
+> zajętymi.** W wariancie docelowym (domyślnym) te piny (9, 10, 14, 19, 20, 46) są wolne — pełna, gotowa tabela
+> dla wariantu docelowego jest w [rozdz. 3.2](#32-wariant-docelowy-esp32s3-domyślny--sterownik-headless--moduł-sunton-po-wifi).
 
 > **UWAGA:** GPIO 26–37 są zajęte przez Flash i Octal PSRAM w wariancie N16R8 — **nie podłączać niczego**.
 > GPIO 46 (joystick SW) jest pinem strapping — **nie wciskać joysticka przy włączaniu zasilania**.
@@ -257,7 +289,11 @@ Piny 9/10 są w wariancie przejściowym pinami SPI ekranu — flaga `HAS_DGUS_LI
 
 ## 4. Sterownik: schematy modułów
 
-### 4.1 Wyświetlacz ILI9341 + karta SD (wspólna magistrala SPI)
+> Sekcje 4.1 (ekran ILI9341) i 4.5 (joystick) dotyczą **wariantu przejściowego** — w wariancie docelowym
+> (domyślnym) tych komponentów nie montujesz. Pozostałe sekcje (przekaźniki, enkoder, przyciski, GPS, RTC,
+> E-STOP) są wspólne dla obu wariantów.
+
+### 4.1 Wyświetlacz ILI9341 + karta SD (wspólna magistrala SPI) — wariant przejściowy
 
 ```
    ESP32-S3                        Moduł ILI9341 2.8" (14-pin)
@@ -397,7 +433,7 @@ Wszystkie wejścia używają wewnętrznych rezystorów pull-up (aktywny stan nis
 podłączone **równolegle** do przycisków panelowych i nie wymagają zmian w firmware. Debounce 50 ms,
 długie naciśnięcie 1,5 s.
 
-### 4.5 Joystick KY-023
+### 4.5 Joystick KY-023 (wariant przejściowy; opcjonalny dodatek w docelowym — patrz rozdz. 3.2)
 
 ```
    KY-023        ESP32-S3
